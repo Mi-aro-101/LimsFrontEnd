@@ -5,6 +5,18 @@
 @using LimsFrontEnd.Models
 @using LimsFrontEnd.Utils
 @using System.Text.Json;
+@inject NavigationManager NavigationManager
+
+<style>
+    .bordered-cell-one{
+        border-right: none;
+        text-align: center;
+    }
+    .bordered-cell-two{
+        border-left: none;
+        text-align: center;
+    }
+</style>
 
 @if (departements == null)
     {
@@ -23,11 +35,12 @@
             var pageSize = int.Parse(apiResponse.ViewBag["nbrPerPage"].ToString());
             var totalPages = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
 
-            <table class="table table-bordered">
+            <table class="table table-bordered" border="1">
                 <thead>
                     <tr>
                         <th scope="col">Code</th>
                         <th scope="col">Designation</th>
+                        <th scope="col" colspan="2"><center>Actions</center></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -36,6 +49,12 @@
                         <tr>
                             <td>@departement.Code</td>
                             <td>@departement.Designation</td>
+                            <td class="bordered-cell-one"> 
+                                <MudNavLink Icon="@Icons.Material.Filled.Edit" @onclick="@(() => HandleUpdate(@departement.IdDepartement))" IconColor=Color.Warning Title="Favorite"></MudNavLink>
+                            </td>
+                            <td class="bordered-cell-two">
+                                <MudNavLink Icon="@Icons.Material.Filled.DeleteForever" @onclick="@(() => HandleDelete(@departement.IdDepartement))" IconColor=Color.Error Title="Favorite" ></MudNavLink>
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -100,5 +119,15 @@
         {
             Console.WriteLine($"Error while calling LoadDpt: {ex.Message}");
         }
+    }
+
+    private async Task HandleDelete(int id)
+    {
+        
+    }
+
+    private async Task HandleUpdate(int id)
+    {
+        NavigationManager.NavigateTo($"/departement/{id}");
     }
 }
