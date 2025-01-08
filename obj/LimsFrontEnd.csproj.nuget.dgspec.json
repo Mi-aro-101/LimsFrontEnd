@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/home/miaro/ASA/OMNIS/LIMS/PROJECT/LimsFrontEnd/LimsFrontEnd.csproj": {}
+    "/home/liantsiky/travail/omnis/LimsFrontEnd/LimsFrontEnd.csproj": {}
   },
   "projects": {
-    "/home/miaro/ASA/OMNIS/LIMS/PROJECT/LimsFrontEnd/LimsFrontEnd.csproj": {
+    "/home/liantsiky/travail/omnis/LimsFrontEnd/LimsFrontEnd.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/miaro/ASA/OMNIS/LIMS/PROJECT/LimsFrontEnd/LimsFrontEnd.csproj",
+        "projectUniqueName": "/home/liantsiky/travail/omnis/LimsFrontEnd/LimsFrontEnd.csproj",
         "projectName": "LimsFrontEnd",
-        "projectPath": "/home/miaro/ASA/OMNIS/LIMS/PROJECT/LimsFrontEnd/LimsFrontEnd.csproj",
-        "packagesPath": "/home/miaro/.nuget/packages/",
-        "outputPath": "/home/miaro/ASA/OMNIS/LIMS/PROJECT/LimsFrontEnd/obj/",
+        "projectPath": "/home/liantsiky/travail/omnis/LimsFrontEnd/LimsFrontEnd.csproj",
+        "packagesPath": "/home/liantsiky/.nuget/packages/",
+        "outputPath": "/home/liantsiky/travail/omnis/LimsFrontEnd/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/miaro/.nuget/NuGet/NuGet.Config"
+          "/home/liantsiky/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -50,13 +50,13 @@
             "Microsoft.NET.ILLink.Tasks": {
               "suppressParent": "All",
               "target": "Package",
-              "version": "[8.0.11, )",
+              "version": "[8.0.10, )",
               "autoReferenced": true
             },
             "Microsoft.NET.Sdk.WebAssembly.Pack": {
               "suppressParent": "All",
               "target": "Package",
-              "version": "[8.0.11, )",
+              "version": "[8.0.10, )",
               "autoReferenced": true
             },
             "MudBlazor": {
@@ -75,12 +75,18 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.NETCore.App.Runtime.Mono.browser-wasm",
+              "version": "[8.0.10, 8.0.10]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.111/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.110/PortableRuntimeIdentifierGraph.json"
         }
       },
       "runtimes": {
