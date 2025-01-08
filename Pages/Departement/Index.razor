@@ -7,43 +7,48 @@
 @using LimsFrontEnd.Utils
 @using System.Text.Json;
 
-<h3>Departement</h3>
 
-@if (departements == null)
-{
-    <p><em>No data on the row</em></p>
-}
-else
-{
-    @if (apiResponse.ViewBag.ContainsKey("position") && apiResponse.ViewBag.ContainsKey("TotalCount") && apiResponse.ViewBag.ContainsKey("nbrPerPage"))
-    {
-        <p>
-            Page @apiResponse.ViewBag["position"] of
-            @apiResponse.ViewBag["nbrLinks"]
-        </p>
-    }
-    else
-    {
-        <p>Pagination information not available.</p>
-    }
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Code</th>
-                <th>Designation</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var departement in departements)
+<h3>Departements</h3>
+    <div class="row">
+        <div class="col">
+            @if (departements == null)
             {
-                <tr>
-                    <td>@departement.Code</td>
-                    <td>@departement.Designation</td>
-                </tr>
+                <p><em>No data on the row</em></p>
             }
-        </tbody>
-    </table>
-}
+            else
+            {
+                @if (apiResponse.ViewBag.ContainsKey("position") && apiResponse.ViewBag.ContainsKey("TotalCount") && apiResponse.ViewBag.ContainsKey("nbrPerPage"))
+                {
+                    <p>
+                        Page @apiResponse.ViewBag["position"] of
+                        @apiResponse.ViewBag["nbrLinks"]
+                    </p>
+                }
+                else
+                {
+                    <p>Pagination information not available.</p>
+                }
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">Code</th>
+                            <th scope="col">Designation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var departement in departements)
+                        {
+                            <tr>
+                                <td>@departement.Code</td>
+                                <td>@departement.Designation</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+        <div class="col"></div>
+    </div>
 
 @code {
     private List<DepartementDto>? departements = new List<DepartementDto>();
@@ -61,7 +66,7 @@ else
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"Error on Initializing : {ex.Message}");
         }
     }
 
@@ -82,7 +87,7 @@ else
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"Error while calling LoadDpt: {ex.Message}");
         }
     }
 }
