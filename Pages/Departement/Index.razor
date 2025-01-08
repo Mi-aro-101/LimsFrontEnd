@@ -1,0 +1,88 @@
+﻿@page "/departement"
+@inject HttpClient Http
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models
+@using LimsFrontEnd.Utils
+@using System.Text.Json;
+
+<h3>Departement</h3>
+
+@if (departements == null)
+{
+    <p><em>No data on the row</em></p>
+}
+else
+{
+    @if (apiResponse.ViewBag.ContainsKey("position") && apiResponse.ViewBag.ContainsKey("TotalCount") && apiResponse.ViewBag.ContainsKey("nbrPerPage"))
+    {
+        <p>
+            Page @apiResponse.ViewBag["position"] of
+            @apiResponse.ViewBag["nbrLinks"]
+        </p>
+    }
+    else
+    {
+        <p>Pagination information not available.</p>
+    }
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Designation</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var departement in departements)
+            {
+                <tr>
+                    <td>@departement.Code</td>
+                    <td>@departement.Designation</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<DepartementDto>? departements = new List<DepartementDto>();
+    private ApiResponse? apiResponse;
+    private int currentPage = 2;
+    private int pageSize = 2;
+    string url = "http://localhost:5077/api/departement";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadDepartements();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task LoadDepartements()
+    {
+        try
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+$"?position={currentPage}&pageSize={pageSize}", options);
+            Console.WriteLine(url+$"?position={currentPage}&pageSize={pageSize}");
+            if(apiResponse.Data != null){
+                Console.WriteLine(apiResponse.ViewBag["position"]);
+                Console.WriteLine(apiResponse.ViewBag["nbrPerPage"]);
+                Console.WriteLine(apiResponse.ViewBag["TotalCount"]);
+                apiResponse.HandleResponse<List<DepartementDto>>();
+                departements = (List<DepartementDto>)apiResponse.Data;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}
