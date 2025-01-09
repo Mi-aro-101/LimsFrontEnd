@@ -6,6 +6,7 @@
 @using LimsFrontEnd.Utils
 @using System.Text.Json;
 @inject NavigationManager NavigationManager
+@using Microsoft.JSInterop;
 
 <style>
     .bordered-cell-one{
@@ -17,8 +18,12 @@
         text-align: center;
     }
 </style>
+<div class="col">
+    <CreateComponent OnDepartementCreated="@HandleDepartementCreated" />
+</div>
 
-@if (departements == null)
+<div class="col">
+    @if (departements == null)
     {
         <p><em>No data on the row</em></p>
     }
@@ -26,10 +31,6 @@
     {
         @if (apiResponse.ViewBag.ContainsKey("position") && apiResponse.ViewBag.ContainsKey("TotalCount") && apiResponse.ViewBag.ContainsKey("nbrPerPage"))
         {
-            <p>
-                Page @apiResponse.ViewBag["position"] sur
-                @apiResponse.ViewBag["nbrLinks"]
-            </p>
 
             var currentPage = int.Parse(apiResponse.ViewBag["position"].ToString());
             var pageSize = int.Parse(apiResponse.ViewBag["nbrPerPage"].ToString());
@@ -49,11 +50,11 @@
                         <tr>
                             <td>@departement.Code</td>
                             <td>@departement.Designation</td>
-                            <td class="bordered-cell-one"> 
-                                <MudNavLink Icon="@Icons.Material.Filled.Edit" @onclick="@(() => HandleUpdate(@departement.IdDepartement))" IconColor=Color.Warning Title="Favorite"></MudNavLink>
+                            <td class="bordered-cell-one">
+                                <MudButton Size="Size.Small" @onclick="@(() => HandleUpdate(@departement.IdDepartement))" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Warning"></MudButton>
                             </td>
                             <td class="bordered-cell-two">
-                                <MudNavLink Icon="@Icons.Material.Filled.DeleteForever" @onclick="@(() => HandleDelete(@departement.IdDepartement))" IconColor=Color.Error Title="Favorite" ></MudNavLink>
+                                <MudButton Size="Size.Small" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" @onclick="@(() => HandleDelete(currentPage, @departement.IdDepartement, @departement.Designation))" Color="Color.Error"></MudButton> 
                             </td>
                         </tr>
                     }
@@ -72,12 +73,17 @@
                 </ul>
             </nav>
 
+            <center><p>
+                Page @apiResponse.ViewBag["position"] sur
+                @apiResponse.ViewBag["nbrLinks"]
+            </p></center>
         }
         else
         {
             <p>Information sur la pagination indisponible</p>
         }
     }
+</div>
 
 @code {
     private List<DepartementDto>? departements = new List<DepartementDto>();
@@ -85,7 +91,16 @@
     private int currentPage = 1;
     private int pageSize = 2;
     string url = "http://localhost:5077/api/departement";
+    [Inject] IJSRuntime JSRuntime { get; set; }
 
+    private async Task HandleDepartementCreated() // The callback handler
+    {
+        int pageLoaded = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
+        int elementNumberOnLastPage = departements.Count;
+        if(elementNumberOnLastPage == pageSize)
+            pageLoaded = pageLoaded + 1;
+        await LoadDepartements(pageLoaded);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -106,13 +121,12 @@
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+$"?position={currentPage}&pageSize={pageSize}", options);
-            Console.WriteLine(url+$"?position={currentPage}&pageSize={pageSize}");
-            if(apiResponse.Data != null){
-                Console.WriteLine(apiResponse.ViewBag["position"]);
-                Console.WriteLine(apiResponse.ViewBag["nbrPerPage"]);
-                Console.WriteLine(apiResponse.ViewBag["TotalCount"]);
+            if(currentPage <= int.Parse(apiResponse.ViewBag["nbrLinks"].ToString())){
                 apiResponse.HandleResponse<List<DepartementDto>>();
                 departements = (List<DepartementDto>)apiResponse.Data;
+            }
+            else{
+                await LoadDepartements(int.Parse(apiResponse.ViewBag["nbrLinks"].ToString()));
             }
         }
         catch (Exception ex)
@@ -121,9 +135,31 @@
         }
     }
 
-    private async Task HandleDelete(int id)
+    private async Task DeleteDepartement(int position, int id)
     {
-        
+        try
+        {
+
+            var response = await Http.DeleteAsync(url+$"/{id}");
+            response.EnsureSuccessStatusCode(); // Throw if not successful
+            // Optionally handle the response (e.g., show a success message)
+            await LoadDepartements(position);
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine("Exception : " +ex.Message);
+        }
+    }
+
+    private async Task HandleDelete(int? position, int id, string designation)
+    {
+        int currPage;
+        if(position.HasValue) currPage = position.Value;
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Etes-vous sûr de supprimer {designation}");
+        if (confirmed)
+        {
+            await DeleteDepartement(currentPage, id);
+        }
     }
 
     private async Task HandleUpdate(int id)
