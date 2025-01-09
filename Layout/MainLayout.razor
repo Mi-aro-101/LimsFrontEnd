@@ -1,0 +1,53 @@
+﻿@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 navbar">
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            <div class="dropdown">
+                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                    Options
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                    <li><a class="dropdown-item" href="#option1">Option 1</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#option2">Option 2</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#option3">Option 3</a></li>
+                </ul>
+            </div>
+            <a href="#" class="profile">
+                <center><img src="./profile.png" alt="Profile"></center>
+                <figcaption>Christine</figcaption>
+            </a>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    private bool isDropdownOpen;
+
+    private void ToggleDropdown()
+    {
+        isDropdownOpen = !isDropdownOpen;
+    }
+}
+
+<script>
+    var marginTop = false;
+    function marginTopNav(){
+        var element = document.querySelector(".top-row");
+        var setMarginTopValue = marginTop ? "6rem" : "0"
+        element.style.marginTop arguments = setMarginTopValue;
+        marginTop = !marginTop;
+    }
+</script>
