@@ -1,0 +1,176 @@
+@page "/employe/new"
+
+@inject HttpClient Http
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models
+@using LimsFrontEnd.Utils
+@using System.Text.Json;
+@inject NavigationManager NavigationManager
+
+<center><h2>Inscription</h2></center>
+
+<hr>
+<br>
+    <div class="row">
+        <div class="card border-dark mb-3" style="max-width: 45rem;">
+            <div class="card-header">Nouveau(elle) employé(e)</div>
+            <div class="card-body text-dark">
+                <EditForm Model="@employe" OnValidSubmit="@HandleOnSubmit">
+                    @if(postes == null || departements == null)
+                    {
+                        <p>Loading</p>
+                    }
+                    else
+                    {
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-2 col-form-label">Matricule</label>
+                            <div class="col-sm-8">
+                            <InputText class="form-control" @bind-Value="employe.Matricule" placeholder="EMP0000" />
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Nom</label>
+                            <div class="col-sm-8">
+                            <InputText class="form-control" @bind-Value="employe.Nom" placeholder="" />
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Prenom</label>
+                            <div class="col-sm-8">
+                            <InputText class="form-control" @bind-Value="employe.Prenom" placeholder="" />
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Departement</label>
+                            <div class="col-sm-8">
+                            <InputSelect class="form-control" @bind-Value="employe.IdDepartement">
+                                    <option value=""></option>"
+                                @foreach(DepartementDto departement in departements)
+                                {
+                                    <option value=@departement.IdDepartement>@departement.Designation</option>
+                                }
+                            </InputSelect>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Poste</label>
+                            <div class="col-sm-8">
+                            <InputSelect class="form-control" @bind-Value="employe.IdPoste">
+                                @foreach(PosteDto poste in postes)
+                                {
+                                    <option value=@poste.IdPoste>@poste.Designation</option>
+                                }
+                            </InputSelect>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Genre</label>
+                            <div class="col-sm-8">
+                            <InputSelect class="form-control" id="exampleFormControlSelect1" @bind-Value="employe.Genre">
+                                <option value=0>Homme</option>
+                                <option value=1>Femme</option>
+                            </InputSelect>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">CIN</label>
+                            <div class="col-sm-8">
+                            <InputText class="form-control" @bind-Value="employe.Cin" placeholder="" />
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Contact</label>
+                            <div class="col-sm-8">
+                            <InputText class="form-control" @bind-Value="employe.Contact" placeholder="" />
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Adresse</label>
+                            <div class="col-sm-8">
+                            <InputText class="form-control" @bind-Value="employe.Adresse" placeholder="" />
+                            </div>
+                        </div>
+                        <br>
+                        <center>
+                            <button type="submit" class="btn btn-primary">Creer</button>
+                        </center>
+                    }
+                </EditForm>
+            </div>
+        </div>
+    </div>
+
+@code
+{
+    int pageSize = 5;
+    string url = "http://localhost:5077/api/";
+    EmployeDto employe = new EmployeDto();
+    List<DepartementDto>? departements;
+    List<PosteDto>? postes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDepartement();
+        await LoadPoste();
+    }
+
+    private async Task LoadDepartement()
+    {
+        try
+        {
+            ApiResponse? apiResponse;
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+"departement/all");
+            apiResponse.HandleResponse<List<DepartementDto>>();
+            departements = (List<DepartementDto>)apiResponse.Data;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error while calling LoadDepartement {ex.Message}");
+        }
+    }
+
+    private async Task LoadPoste()
+    {
+        try
+        {
+            ApiResponse? apiResponse;
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+"poste/all");
+            apiResponse.HandleResponse<List<PosteDto>>();
+            postes = (List<PosteDto>)apiResponse.Data;
+            // Set initial values in case it is set to null if I do not touch it
+            employe.IdPoste = postes.ElementAt(0).IdPoste;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error while calling LoadPoste{ex.Message}");
+        }
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync(url+"employe", employe);
+            Console.WriteLine(JsonSerializer.Serialize(employe));
+
+            // Should reload to the last page of the pagination to show the added one
+            NavigationManager.NavigateTo("/employe");
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine("Exception : " +ex);
+        }
+    }
+}
