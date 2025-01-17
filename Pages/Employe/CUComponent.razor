@@ -1,0 +1,84 @@
+@using LimsFrontEnd.Components
+
+@inherits CUBaseComponent
+
+@using LimsFrontEnd.Models
+
+@if(postes == null || departements == null)
+    {
+        <p>Loading</p>
+    }
+    else
+    {
+        <div class="form-group row">
+            <label for="staticEmail" class="col-sm-2 col-form-label">Matricule</label>
+            <div class="col-sm-8">
+            <InputText class="form-control" @bind-Value="Employe.Matricule" placeholder="EMP0000" />
+            </div>
+        </div>
+        <br>
+        <div class="form-group row">
+            <label for="inputPassword" class="col-sm-2 col-form-label">Nom</label>
+            <div class="col-sm-8">
+            <InputText class="form-control" @bind-Value="Employe.Nom" placeholder="" />
+            </div>
+        </div>
+        <br>
+        <div class="form-group row">
+            <label for="inputPassword" class="col-sm-2 col-form-label">Prenom</label>
+            <div class="col-sm-8">
+            <InputText class="form-control" @bind-Value="Employe.Prenom" placeholder="" />
+            </div>
+        </div>
+        <br>
+        <div class="form-group row">
+            <label for="inputPassword" class="col-sm-2 col-form-label">Departement</label>
+            <div class="col-sm-8">
+            <InputSelect class="form-control" @bind-Value="Employe.IdDepartement">
+                    <option value=""></option>"
+                @foreach(DepartementDto departement in departements)
+                {
+                    <option value=@departement.IdDepartement>@departement.Designation</option>
+                }
+            </InputSelect>
+            </div>
+        </div>
+        <br>
+        <div class="form-group row">
+            <label for="inputPassword" class="col-sm-2 col-form-label">Poste</label>
+            <div class="col-sm-8">
+            <InputSelect class="form-control" @bind-Value="Employe.IdPoste">
+                @foreach(PosteDto poste in postes)
+                {
+                    <option value=@poste.IdPoste>@poste.Designation</option>
+                }
+            </InputSelect>
+            </div>
+        </div>
+        <br>
+        <div class="form-group row">
+            <label for="inputPassword" class="col-sm-2 col-form-label">Contact</label>
+            <div class="col-sm-8">
+            <InputText class="form-control" @bind-Value="Employe.Contact" placeholder="" />
+            </div>
+        </div>
+        <br>
+        <div class="form-group row">
+            <label for="inputPassword" class="col-sm-2 col-form-label">Adresse</label>
+            <div class="col-sm-8">
+            <InputText class="form-control" @bind-Value="Employe.Adresse" placeholder="" />
+            </div>
+        </div>
+        <br>
+    }
+
+@code
+{
+    [Parameter]
+    public EmployeDto? Employe {get; set;}
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDepartement();
+        await LoadPoste();
+    }
+}
