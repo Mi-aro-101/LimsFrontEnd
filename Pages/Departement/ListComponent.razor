@@ -19,7 +19,7 @@
     }
 </style>
 <div class="col">
-    <CreateComponent OnDepartementCreated="@HandleDepartementCreated" />
+    <CreateComponent/>
 </div>
 
 <div class="col">
@@ -91,16 +91,7 @@
     private int currentPage = 1;
     private int pageSize = 2;
     string url = "http://localhost:5077/api/departement";
-    [Inject] IJSRuntime JSRuntime { get; set; }
-
-    private async Task HandleDepartementCreated() // The callback handler
-    {
-        int pageLoaded = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
-        int elementNumberOnLastPage = departements.Count;
-        if(elementNumberOnLastPage == pageSize)
-            pageLoaded = pageLoaded + 1;
-        await LoadDepartements(pageLoaded);
-    }
+    [Inject] IJSRuntime? JSRuntime { get; set; }
 
     protected override async Task OnInitializedAsync()
     {

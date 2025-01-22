@@ -6,7 +6,10 @@
 
 @if(postes == null || departements == null)
     {
-        <p>Loading</p>
+        <center><div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p>Veuillez patienter un moment</p><br/></center>
     }
     else
     {
@@ -44,18 +47,27 @@
             </div>
         </div>
         <br>
-        <div class="form-group row">
-            <label for="inputPassword" class="col-sm-2 col-form-label">Poste</label>
-            <div class="col-sm-8">
-            <InputSelect class="form-control" @bind-Value="Employe.IdPoste">
-                @foreach(PosteDto poste in postes)
-                {
-                    <option value=@poste.IdPoste>@poste.Designation</option>
-                }
-            </InputSelect>
+        <fieldset>
+            <div class="form-group row">
+                <label for="inputPassword" class="col-sm-2 col-form-label">Poste</label>
+                <div class="col-sm-8">
+                <InputSelect class="form-control" @bind-Value="Employe.IdPoste">
+                    @foreach(PosteDto poste in postes)
+                    {
+                        <option value=@poste.IdPoste>@poste.Designation</option>
+                    }
+                </InputSelect>
+                </div>
             </div>
-        </div>
-        <br>
+            <br>
+            <div class="form-group row">
+                <label for="inputPassword" class="col-sm-2 col-form-label">Date</label>
+                <div class="col-sm-8">
+                <InputDate class="form-control" @bind-Value="HistoriqueEmploye.DateDebut" />
+                </div>
+            </div>
+            <br>
+        </fieldset>
         <div class="form-group row">
             <label for="inputPassword" class="col-sm-2 col-form-label">Contact</label>
             <div class="col-sm-8">
@@ -76,6 +88,9 @@
 {
     [Parameter]
     public EmployeDto? Employe {get; set;}
+    [Parameter]
+    public HistoriqueEmployeDto? HistoriqueEmploye {get; set;}
+
     protected override async Task OnInitializedAsync()
     {
         await LoadDepartement();
