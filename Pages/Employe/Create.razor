@@ -5,7 +5,7 @@
 @inject NavigationManager NavigationManager
 @using System.Text.Json;
 @using LimsFrontEnd.Models
-
+@using MudBlazor
 
 <center><h2>Inscription</h2></center>
 
@@ -17,7 +17,7 @@
             <div class="card-body text-dark">
                 <EditForm Model="@employe" OnValidSubmit="@HandleOnSubmit">
 
-                        <CUComponent Employe="@employe" />
+                        <CUComponent Employe="@employe" HistoriqueEmploye="@historique"/>
                     
                         <div class="form-group row">
                             <label for="inputPassword" class="col-sm-2 col-form-label">Genre</label>
@@ -63,6 +63,8 @@
 @code
 {
     EmployeDto employe = new EmployeDto();
+    HistoriqueEmployeDto historique = new HistoriqueEmployeDto();
+
     int pageSize = 5;
     string url = "http://localhost:5077/api/";
 
@@ -75,6 +77,10 @@
     {
         try
         {
+            historique.IdPoste = employe.IdPoste;
+            employe.HistoriqueEmployes = new List<HistoriqueEmployeDto>();
+            employe.HistoriqueEmployes.Add(historique);
+            Console.WriteLine(JsonSerializer.Serialize(employe));
             var response = await Http.PostAsJsonAsync(url+"employe", employe);
             Console.WriteLine(JsonSerializer.Serialize(employe));
 

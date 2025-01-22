@@ -8,9 +8,7 @@
 @inject NavigationManager NavigationManager
 @using Microsoft.JSInterop
 
-@* 
-    // TODO this is not over yet, insert works but now the redirection doesn't work
-*@
+
 
 
 <style>
@@ -21,6 +19,9 @@
     .bordered-cell-two{
         border-left: none;
         text-align: center;
+    }
+    tr:hover{
+        cursor: pointer;
     }
 </style>
     @if (employes == null)
@@ -36,7 +37,7 @@
             var pageSize = int.Parse(apiResponse.ViewBag["nbrPerPage"].ToString());
             var totalPages = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
 
-            <table class="table table-bordered" border="1">
+            <table class="table table-bordered table-hover" border="1">
                 <thead>
                     <tr>
                         <th scope="col">Matricule</th>
@@ -53,19 +54,19 @@
                 <tbody>
                     @foreach (var employe in employes)
                     {
-                        <tr>
-                            <td>@employe.Matricule</td>
-                            <td>@employe.Nom @employe.Prenom</td>
-                            <td>@employe.GetGenre()</td>
-                            <td>@employe.GetDepartementDesignation()</td>
-                            <td>@employe.Poste.Designation</td>
-                            <td>@employe.Cin</td>
-                            <td>@employe.Contact</td>
-                            <td>@employe.Adresse</td>
-                            <td class="bordered-cell-one">
-                                <MudButton Size="Size.Small" @onclick="@(() => HandleUpdate(@employe.IdEmploye))" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Warning"></MudButton>
-                            </td>
-                        </tr>
+                            <tr @onclick="@(() => NavigateToEmploye(@employe.IdEmploye))">
+                                <td>@employe.Matricule</td>
+                                <td>@employe.Nom @employe.Prenom</td>
+                                <td>@employe.GetGenre()</td>
+                                <td>@employe.GetDepartementDesignation()</td>
+                                <td>@employe.Poste.Designation</td>
+                                <td>@employe.Cin</td>
+                                <td>@employe.Contact</td>
+                                <td>@employe.Adresse</td>
+                                <td class="bordered-cell-one">
+                                    <MudButton Size="Size.Small" @onclick="@(() => HandleUpdate(@employe.IdEmploye))" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Warning"></MudButton>
+                                </td>
+                            </tr>
                     }
                 </tbody>
             </table>
@@ -136,5 +137,10 @@
     private async Task HandleUpdate(int id)
     {
         NavigationManager.NavigateTo($"/employe/{id}");
+    }
+
+    private async Task NavigateToEmploye(int id)
+    {
+        NavigationManager.NavigateTo($"/employe/details/{id}");
     }
 }

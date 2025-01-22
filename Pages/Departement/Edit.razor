@@ -8,15 +8,10 @@
 @using LimsFrontEnd.Utils
 @using System.Text.Json;
 @inject NavigationManager NavigationManager
-@inject IJSRuntime JSRuntime
 
 <div class="card border-dark mb-3" style="max-width: 39rem;">
-  <div class="card-header">Creer un departement</div>
+  <div class="card-header">Mettre à jour ce departement</div>
   <div class="card-body text-dark">
-        @if (!string.IsNullOrEmpty(message))
-        {
-            <div class="alert alert-success">@message</div>
-        }
     <EditForm Model="@departement" OnValidSubmit="@HandleOnSubmit">
         <div class="form-group row">
             <label for="staticEmail" class="col-sm-2 col-form-label">Code</label>
@@ -74,8 +69,6 @@
         try
         {
             var response = await Http.PutAsJsonAsync(url+$"/{Id}", departement);
-            response.EnsureSuccessStatusCode(); // Throw if not successful
-            message = "Le département a été modifié";
             // Optionally handle the response (e.g., show a success message)
             NavigationManager.NavigateTo("/departement"); // Redirect to product list
         }

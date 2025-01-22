@@ -1,0 +1,50 @@
+@page "/employe/details/{Id:int}"
+
+@inject HttpClient Http
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models
+@using LimsFrontEnd.Utils
+@using System.Text.Json;
+@inject NavigationManager NavigationManager
+
+<div class="row">
+    <div class="card" style="width: 40rem;">
+        <div class="card-body">
+            <h3 class="card-title">@employe.Nom @employe.Prenom</h3>
+            <h5 class="card-subtitle mb-2 text-body-secondary">@employe.Poste.Designation @(employe.Departement == null ? "" : employe.Departement.Designation)</h5>
+            <hr>
+            <p class="card-text">Matricule : <strong> @employe.Matricule </strong></p>
+            <p class="card-text">Genre : <strong> @employe.GetGenre() </strong></p>
+            <p class="card-text">Contact : <strong> @employe.Contact </strong></p>
+            <p class="card-text">Adresse : <strong> @employe.Adresse </strong></p>
+            <p class="card-text">Date d'embauche : <strong>  </strong></p>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public int Id { get; set; }
+
+    string url = "http://localhost:5077/api/employe";
+
+    EmployeDto? employe;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmploye();
+    }
+
+    private async Task LoadEmploye()
+    {
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+$"/{Id}", options);
+            if(apiResponse != null){
+                apiResponse.HandleResponse<EmployeDto>();
+                employe = (EmployeDto)apiResponse.Data;
+            }
+    }
+}
