@@ -10,11 +10,10 @@ public class CUBaseComponent : ComponentBase
 {
     [Inject] 
     protected HttpClient? Http { get; set; }
-    protected List<DepartementDto>? departements { get; set; }
-    protected List<PosteDto>? postes { get; set; }
     protected string url = "http://localhost:5077/api/";
-    protected async Task LoadDepartement()
+    protected async Task<ICollection<DepartementDto>> LoadDepartement()
     {
+        ICollection<DepartementDto> departements = new List<DepartementDto>();
         try
         {
             ApiResponse? apiResponse;
@@ -27,10 +26,13 @@ public class CUBaseComponent : ComponentBase
         {
             Console.WriteLine($"Error while calling LoadDepartement {ex.Message}");
         }
+
+        return departements;
     }
 
-    protected async Task LoadPoste()
+    protected async Task<ICollection<PosteDto>> LoadPoste()
     {
+        ICollection<PosteDto> postes = new List<PosteDto>();
         try
         {
             ApiResponse? apiResponse;
@@ -44,5 +46,7 @@ public class CUBaseComponent : ComponentBase
         {
             Console.WriteLine($"Error while calling LoadPoste : {ex.Message}");
         }
+
+        return postes;
     }
 }

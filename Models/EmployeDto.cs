@@ -4,7 +4,6 @@ namespace LimsFrontEnd.Models;
 
 public class EmployeDto
 {
-
     public string GetGenre()
     {
         string result = "Homme";
@@ -19,6 +18,21 @@ public class EmployeDto
         {
             result = this.Departement.Designation;
         }
+        return result;
+    }
+
+    public HistoriqueEmployeDto? GetLastPoste()
+    {
+        HistoriqueEmployeDto? result = null;
+        if(this.HistoriqueEmployes != null)
+        {
+            if(this.HistoriqueEmployes.Count > 0)
+            {
+                int lastIndex = this.HistoriqueEmployes.Count - 1;
+                result = this.HistoriqueEmployes.ElementAtOrDefault(lastIndex);
+            }
+        }
+
         return result;
     }
 
@@ -48,6 +62,38 @@ public class EmployeDto
     public int IdPoste { get; set; }
     [JsonPropertyName("poste")]
     public PosteDto? Poste { get; set; }
+    [JsonIgnore]
+    public DateOnly? _dateNouveauPoste;
+    [JsonIgnore]
+    public DateOnly? _dateFinPoste;
+    [JsonPropertyName("dateNouveauPoste")]
+    public DateOnly? DateNouveauPoste { 
+        get => _dateNouveauPoste;
+        set {
+            if(value > DateOnly.FromDateTime(DateTime.Now)){
+                throw new ArgumentException("Date de nouveau poste ne peut pas être dans le futur.");
+            }
+            if(_dateFinPoste != null){
+                if(value < _dateFinPoste.Value){
+                    throw new ArgumentException("Date de fin de poste ne peut pas être antérieure à la date de début de poste.");
+                }
+            }
+            _dateNouveauPoste = value;
+        }
+    }
+    [JsonPropertyName("dateFinAncienPoste")]
+    public DateOnly? DateFinPoste { 
+        get => _dateFinPoste;
+        set {
+            if(value != null || this.GetLastPoste() != null){
+                if(value < this.GetLastPoste().DateDebut) {
+                    throw new ArgumentException("Date de fin de poste ne peut pas être antérieure à la date de début de poste.");
+                }
+            }
+            _dateFinPoste = value;
+        }
+    }
+    [JsonPropertyName("historiqueEmployes")]
+    public ICollection<HistoriqueEmployeDto> HistoriqueEmployes { get; set; } = new List<HistoriqueEmployeDto>();
 
-    public ICollection<HistoriqueEmployeDto> HistoriqueEmployes { get; set; }
 }
