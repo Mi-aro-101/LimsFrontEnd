@@ -132,7 +132,6 @@
         {
 
             var response = await Http.DeleteAsync(url+$"/{id}");
-            response.EnsureSuccessStatusCode(); // Throw if not successful
             // Optionally handle the response (e.g., show a success message)
             await LoadDepartements(position);
         }
