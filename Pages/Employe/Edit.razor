@@ -19,7 +19,7 @@
             <div class="alert alert-success">@message</div>
         }
     <EditForm Model="@employe" OnValidSubmit="@HandleOnSubmit">
-        <CUComponent Employe="@employe" Departements="@departements" Postes="postes" />
+        <CUComponent Employe="@employe" Departements="@departements" Postes="@postes" />
         @* Date quitter ancien poste *@
         <br>
         <div class="form-group row">
@@ -38,7 +38,7 @@
         <br>
 
         <center>
-            <button type="submit" class="btn btn-primary">Mettre à jour</button>
+            <button type="submit" class="btn btn-warning">Mettre à jour</button>
         </center>
     </EditForm>
   </div>

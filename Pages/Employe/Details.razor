@@ -13,6 +13,14 @@
 @using System.Globalization
 @using System
 
+<style>
+    .warning {
+        color: rgb(179, 176, 42); /* Or any other warning color */
+        font-size: smaller; /* Make the text smaller */
+        margin-top: 5px; /* Add some spacing above the warning */
+    }
+</style>
+
 
 <div class="row">
     <div class="card" style="width: 40rem;">
@@ -56,7 +64,8 @@
                                 {
                                     <p>Présent</p>
                                 }
-                                else{
+                                else
+                                {
                                     <p>@string.Format(new CultureInfo("fr-FR"), "{0:dd MMMM yyyy}", historique.DateFin)</p>;
                                 }
                             </td>
@@ -64,7 +73,15 @@
                         }
                     </tbody>
                 </table>
-                <center><MudButton Size="Size.Small" @onclick="@(() => NavigateToDeletion(@employe.IdEmploye))" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error"></MudButton></center>
+                <div class="form-group row forDate" style="@(showDateInput ? "" : "display: none;")">
+                    <label for="inputPassword" class="col-sm-2 col-form-label">Date de renvoi</label>
+                    <div class="col-sm-8">
+                        <InputDate class="form-control" @bind-Value="employe.DateFinPoste" />
+                    </div>
+                    <center><div class="warning">Remplir ce champ pour confirmer la suppression</div></center>
+                </div>
+                <br>
+                <center><MudButton Size="Size.Small" @onclick="@(() => HandleDeletion())" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error"></MudButton></center>
             }
         </div>
     </div>
@@ -79,6 +96,7 @@
     ICollection<PosteDto> postes = new List<PosteDto>();
 
     EmployeDto? employe;
+    private bool showDateInput = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -97,8 +115,20 @@
             }
     }
 
-    private async Task NavigateToDeletion(int id)
+    private async Task HandleDeletion()
     {
-        NavigationManager.NavigateTo($"/employe/delete/{id}");
+        if(showDateInput == false)
+        {
+            showDateInput = true;
+        }
+        else
+        {
+             // Setting date nouveau poste to ancien because it is non nullabla
+            // It will be changed the microservice itself
+            employe.DateNouveauPoste = employe.DateFinPoste;
+            Console.WriteLine(JsonSerializer.Serialize(employe));
+            await Http.PutAsJsonAsync(url+$"employe/delete/{Id}", employe);
+            NavigationManager.NavigateTo("/employe");
+        }
     }
 }
