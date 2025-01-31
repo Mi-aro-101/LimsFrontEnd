@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 using LimsFrontEnd.Models;
-using LimsFrontEnd.Utils;
+using LimsUtils.Api;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 
