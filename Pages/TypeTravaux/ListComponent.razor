@@ -17,6 +17,9 @@
         border-left: none;
         text-align: center;
     }
+    tr:hover{
+        cursor: pointer;
+    }
 </style>
 <div class="col">
     <CreateComponent Departements="departements" OnTypeTravauxCreated="@LoadTypeTravaux"/>
@@ -36,7 +39,7 @@
             var pageSize = int.Parse(apiResponse.ViewBag["nbrPerPage"].ToString());
             var totalPages = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
 
-            <table class="table table-bordered" border="1">
+            <table class="table table-bordered table-hover" border="1">
                 <thead>
                     <tr>
                         <th scope="col">Code</th>
@@ -48,7 +51,7 @@
                 <tbody>
                     @foreach (var typetravail in typetravaux)
                     {
-                        <tr>
+                        <tr @onclick="@(() => NavigateTo(@typetravail.IdTypeTravaux))">
                             <td>@typetravail.Code</td>
                             <td>@typetravail.Designation</td>
                             <td>@typetravail.Tarif</td>
@@ -125,7 +128,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error while calling LoadDpt: {ex.Message}");
+            Console.WriteLine($"Error while calling LoadTypeTravaux: {ex.Message}");
         }
     }
 
@@ -149,5 +152,10 @@
             Console.WriteLine($"Error while calling LoadDepartement {ex.Message}");
         }
 
+    }
+
+    private async Task NavigateTo(int IdTypeTravaux)
+    {
+        NavigationManager.NavigateTo($"/type/travaux/details/{IdTypeTravaux}");
     }
 }

@@ -19,7 +19,7 @@ public class TypeTravauxDto
     public DepartementDto? Departement { get; set; }
     [JsonPropertyName("tarif")]
     public decimal? Tarif { get; set; }
-    private DateTime _dateCreation;
+    private DateTime _dateCreation = DateTime.Now;
     [JsonPropertyName("dateCreation")]
     public DateTime DateCreation { 
         get => _dateCreation; 
@@ -27,7 +27,12 @@ public class TypeTravauxDto
             if(value > DateTime.Now){
                 throw new ArgumentException("Date de création ne peut pas être dans le futur.");
             }
+            _dateCreation = value;
         } 
     }
+    [JsonPropertyName("dateChangement")]
+    public DateTime? DateChangement { get; set; }
+    [JsonPropertyName("historiqueTarifs")]
+    public List<HistoriqueTarifDto>? HistoriqueTarifs { get; set; } = new List<HistoriqueTarifDto>();
 
 }
