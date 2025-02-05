@@ -1,0 +1,54 @@
+@inject HttpClient Http
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using System.Text.Json;
+@inject NavigationManager NavigationManager
+@using BlazorBootstrap
+
+<div class="card border-dark mb-3" style="max-width: 39rem;">
+  <div class="card-header">Creer un type d'echantillon</div>
+  <div class="card-body text-dark">
+    <EditForm Model="@typeechantillon" OnValidSubmit="@HandleOnSubmit">
+        
+        <div class="form-group row">
+            <label for="inputPassword" class="col-sm-2 col-form-label">Designation</label>
+            <div class="col-sm-8">
+            <InputText class="form-control" @bind-Value="typeechantillon.Designation" placeholder="" />
+            </div>
+        </div>
+        <br>
+        <center>
+            <button type="submit" class="btn btn-primary">Creer</button>
+        </center>
+    </EditForm>
+  </div>
+</div>
+
+@code
+{
+    private TypeEchantillonDto typeechantillon = new();
+    private string url = "http://localhost:5077/api/";
+    [Parameter]
+    public EventCallback OnTypeEchantillonCreated { get; set; }
+
+    private async Task HandleOnSubmit()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync(url+$"type/echantillon", typeechantillon);
+            // Optionally handle the response (e.g., show a success message)
+            if(OnTypeEchantillonCreated.HasDelegate)
+                await OnTypeEchantillonCreated.InvokeAsync();
+
+            else
+                Console.WriteLine("No delegate for the event");
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine("Exception : " +ex.Message);
+        }
+    }
+}
