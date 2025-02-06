@@ -24,7 +24,7 @@ public class CUUtilisateurBaseComponent : ComponentBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error while calling LoadRole {ex.Message}");
+            Console.WriteLine($"Error while calling LoadRole {ex.Message} on calling : {url+"role/all"}");
         }
 
         return roles;
