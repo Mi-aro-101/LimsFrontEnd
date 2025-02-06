@@ -44,7 +44,7 @@
                     <tr>
                         <th scope="col">Code</th>
                         <th scope="col">Designation</th>
-                        <th scope="col">PU</th>
+                        <th scope="col">PU en Ar</th>
                         <th scope="col"><center>Actions</center></th>
                     </tr>
                 </thead>
@@ -54,7 +54,7 @@
                         <tr @onclick="@(() => NavigateTo(@typetravail.IdTypeTravaux))">
                             <td>@typetravail.Code</td>
                             <td>@typetravail.Designation</td>
-                            <td>@typetravail.Tarif</td>
+                            <td>@(typetravail.Tarif ?? 0)</td>
                             <td class="bordered-cell-one">
                                 <MudButton Size="Size.Small" @onclick="@(() => HandleUpdate(@typetravail.IdTypeTravaux))" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Warning"></MudButton>
                             </td>

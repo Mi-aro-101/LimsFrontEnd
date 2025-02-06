@@ -27,9 +27,19 @@
         </div>
         <br>
         <div class="form-group row">
+            <label for="inputPassword" class="col-sm-2 col-form-label">Tarif dynamique</label>
+            <div class="col-sm-8">
+            <InputSelect class="form-control" @bind-Value="typetravaux.HaveFormule">
+                    <option value=0>Oui</option>
+                    <option value=1>Non</option>
+            </InputSelect>
+            </div>
+        </div>
+        <br>
+        <div class="form-group row">
             <label for="inputPassword" class="col-sm-2 col-form-label">Tarif</label>
             <div class="col-sm-8">
-            <InputNumber class="form-control" @bind-Value="typetravaux.Tarif" placeholder="0000.00" />
+            <InputNumber class="form-control" disabled="@(typetravaux.HaveFormule == 0)" @bind-Value="typetravaux.Tarif" placeholder="0000.00" />
             </div>
         </div>
         <br>
@@ -83,6 +93,10 @@
     {
         try
         {
+            if(typetravaux.HaveFormule == 0)
+            {
+                typetravaux.Tarif = null;
+            }
             var response = await Http.PostAsJsonAsync(url+$"type/travaux", typetravaux);
             // Optionally handle the response (e.g., show a success message)
             if(OnTypeTravauxCreated.HasDelegate)
