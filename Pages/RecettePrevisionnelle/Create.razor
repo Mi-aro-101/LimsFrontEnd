@@ -1,0 +1,87 @@
+@page "/recette/previsionnelle/nouveau"
+
+@inject HttpClient Http
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using System.Text.Json;
+@inject NavigationManager NavigationManager
+
+<center><h2>Recette prévisionnelle</h2></center>
+
+<hr>
+<br>
+    <div class="row">
+        <div class="card border-dark mb-3" style="max-width: 60rem;">
+            <div class="card-header">Nouvelle Recette prévisionnelle</div>
+            <div class="card-body text-dark">
+            @if(message != null)
+            {
+                <div>
+                    <p>@message</p>
+                </div>
+            }
+                <EditForm Model="@recettePrevisionnelle" OnValidSubmit="@HandleOnSubmit">
+
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Date</label>
+                            <div class="col-sm-8">
+                            <InputDate class="form-control" @bind-Value="recettePrevisionnelle.DateRecettePrevisionnelle"/>
+                            </div>
+                        </div>
+                        <br>
+
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Debut exercice</label>
+                            <div class="col-sm-8">
+                            <InputDate class="form-control" @bind-Value="recettePrevisionnelle.Exercice.DateDebut"/>
+                            </div>
+                        </div>
+                        <br>
+
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Fin exercice</label>
+                            <div class="col-sm-8">
+                            <InputDate class="form-control" @bind-Value="recettePrevisionnelle.Exercice.DateFin"/>
+                            </div>
+                        </div>
+                        <br>
+
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Montant</label>
+                            <div class="col-sm-8">
+                            <InputNumber class="form-control" @bind-Value="recettePrevisionnelle.MontantTotal"/>
+                            </div>
+                        </div>
+                        <br>
+
+                        <center>
+                            <button type="submit" class="btn btn-primary">Creer</button>
+                        </center>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+
+
+@code
+{
+    RecettePrevisionnelleDto recettePrevisionnelle = new RecettePrevisionnelleDto();
+    private string urlRecette = "http://localhost:5077/api/";
+    string? message;
+    private async Task HandleOnSubmit()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync(urlRecette+"recette/previsionnelle", recettePrevisionnelle);
+            message = "Recette insérée";
+            StateHasChanged();
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine("Exception : " +ex.Message);
+        }
+    }
+}
