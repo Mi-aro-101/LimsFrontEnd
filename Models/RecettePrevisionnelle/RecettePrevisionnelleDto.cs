@@ -14,4 +14,6 @@ public class RecettePrevisionnelleDto
     public ExerciceDto? Exercice { get; set; } = new ExerciceDto();
     [JsonPropertyName("montantTotal")]
     public decimal MontantTotal { get; set; }
+    [JsonPropertyName("detailsRecettePrevisionnelles")]
+    public ICollection<DetailsRecettePrevisionnelleDto> DetailsRecettePrevisionnelles { get; set;} = new List<DetailsRecettePrevisionnelleDto>();
 }

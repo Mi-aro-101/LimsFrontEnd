@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json.Serialization;
 
 namespace LimsFrontEnd.Models;
@@ -9,7 +10,7 @@ public class ExerciceDto
     [JsonPropertyName("dateDebut")]
     public DateOnly DateDebut { get; set; } = DateOnly.FromDateTime(DateTime.Now);
 
-    public DateOnly _dateFin;
+    private DateOnly _dateFin;
     [JsonPropertyName("dateFin")]
     public DateOnly DateFin { 
         get => _dateFin; 
@@ -20,5 +21,12 @@ public class ExerciceDto
             }
             _dateFin = value;
         } 
+    }
+    private string _designation;
+    public string Designation {
+        get => DateDebut.Year.ToString();
+        set {
+            _designation = value;
+        }
     }
 }
