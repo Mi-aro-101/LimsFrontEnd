@@ -19,6 +19,12 @@
 <div class="row">
     <div class="card" style="width: 40rem;">
         <div class="card-body">
+            @if(!(string.IsNullOrEmpty(exception)))
+            {
+                <div class="error">
+                    @exception
+                </div>
+            }
             @if(recettePrevisionnelle == null)
             {
                 <center><div class="spinner-border text-primary" role="status">

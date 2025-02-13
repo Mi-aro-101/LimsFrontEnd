@@ -10,6 +10,12 @@
 <div class="card border-dark mb-3" style="max-width: 39rem;">
   <div class="card-header">Creer un departement</div>
   <div class="card-body text-dark">
+    @if(!(string.IsNullOrEmpty(exception)))
+    {
+        <div class="error">
+            @exception
+        </div>
+    }
     <EditForm Model="@departement" OnValidSubmit="@HandleOnSubmit">
         <div class="form-group row">
             <label for="staticEmail" class="col-sm-2 col-form-label">Code</label>
@@ -38,6 +44,7 @@
     private string url = "http://localhost:5077/api/departement";
     [Parameter]
     public EventCallback OnDepartementCreated { get; set; }
+    private string? exception;
     private async Task HandleOnSubmit()
     {
         try
@@ -53,7 +60,8 @@
         }
         catch(Exception ex)
         {
-            Console.WriteLine("Exception : " +ex.Message);
+            exception = ex.Message;
+            StateHasChanged();
         }
     }
 }
