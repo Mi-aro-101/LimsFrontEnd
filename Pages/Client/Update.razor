@@ -1,0 +1,78 @@
+@page "/client/modifier/{Id:int}"
+
+@using LimsFrontEnd.Models;
+@using System.Text.Json;
+@using LimsUtils.Api;
+@inject HttpClient Http;
+@inject NavigationManager NavigationManager;
+
+<center><h2>Modifier</h2></center>
+
+<hr>
+<br>
+    <div class="row">
+        <div class="card border-dark mb-3" style="max-width: 60rem;">
+            <div class="card-header">Modifier un client</div>
+            <div class="card-body text-dark">
+                @if(!string.IsNullOrEmpty(exception))
+                {
+                    <p>@exception</p>
+                }
+                else
+                {
+                    <EditForm Model="@client" OnValidSubmit="@HandleOnSubmit">
+
+                        <CUComponent Client="@client"/>
+                        <center>
+                            <button type="submit" class="btn btn-primary">Inserer</button>
+                        </center>
+                    </EditForm>
+                }
+            </div>
+        </div>
+    </div>
+
+@code
+{
+    [Parameter]
+    public int Id { get; set; }
+    ClientDto? client;
+    string url = "http://localhost:5077/api/";
+    string? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await FetchDetails();
+        }catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    private async Task FetchDetails()
+    {
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+$"client/{Id}", options);
+        if(apiResponse?.IsSuccess == true){
+            apiResponse.HandleResponse<ClientDto>();
+            client = (ClientDto)apiResponse.Data;
+            Console.WriteLine(JsonSerializer.Serialize(client));
+        }
+        else exception = apiResponse.Message;
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync(url+$"client/{Id}", client);
+            // Optionally handle the response (e.g., show a success message)
+            NavigationManager.NavigateTo("/client"); // Redirect to product list
+        }catch(Exception e)
+        {
+            Console.Write(e);
+        }
+    }
+}    
