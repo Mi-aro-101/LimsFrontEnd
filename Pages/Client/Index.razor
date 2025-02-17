@@ -1,0 +1,106 @@
+@page "/client"
+
+@inject HttpClient Http
+@using LimsFrontEnd.Models;
+@using LimsUtils.Api
+@using System.Text.Json;
+@inject NavigationManager NavigationManager
+
+<center><h2>Client</h2></center>
+
+<hr>
+<br>
+    <div class="row">
+        
+        <style>
+    .bordered-cell-one{
+        border-right: none;
+        text-align: center;
+    }
+    .bordered-cell-two{
+        border-left: none;
+        text-align: center;
+    }
+</style>
+
+ @if(!(string.IsNullOrEmpty(exception)))
+    {
+        <div class="error">
+            @exception
+        </div>
+    }
+
+<div class="col">
+    @if (clients == null)
+    {
+        <p><em>Il n'y pas de données dans la base</em></p>
+    }
+    else
+    {
+            <table class="table table-bordered" border="1">
+                <thead>
+                    <tr>
+                        <th scope="col">Nom</th>
+                        <th scope="col">Contact</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Adresse</th>
+                        <th scope="col">Interne</th>
+                        <th scope="col">Sous contrat</th>
+                        <th scope="col" colspan="2"><center>Actions</center></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @* //TODO Eto isika e *@
+                    @foreach (var client in clients)
+                    {
+                        <tr>
+                            <td>@client.Nom</td>
+                            <td>@client.Contact</td>
+                            <td>@client.Email</td>
+                            <td>@client.Adresse</td>
+                            <td>@client.GetInterne()</td>
+                            <td>@client.GetSousContrat()</td>
+                            <td class="bordered-cell-one">
+                                <MudButton Size="Size.Small" @onclick="@(() => HandleUpdate(@client.IdClient))" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Warning"></MudButton>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+    }
+</div>
+        
+    </div>
+
+@code
+{
+    private ICollection<ClientDto>? clients;
+    private readonly string url = "http://localhost:5077/api/";
+    private string? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetClients();
+    }
+
+    private async Task GetClients()
+    {
+        ApiResponse? apiResponse;
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+"client");
+        if(apiResponse?.IsSuccess == true)
+        {
+            apiResponse.HandleResponse<List<ClientDto>>();
+            clients = (List<ClientDto>)apiResponse.Data;
+        }
+        else{
+            exception = (string?)apiResponse.Message;
+        }
+    }
+
+    private void HandleUpdate(int id)
+    {
+        NavigationManager.NavigateTo($"/client/modifier/{id}");
+    }
+    
+}
