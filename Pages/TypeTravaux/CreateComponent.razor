@@ -72,6 +72,18 @@
             </div>
         </div>
         <br>
+        <div class="form-group row">
+            <label for="inputPassword" class="col-sm-2 col-form-label">Type Echantillon</label>
+            <div class="col-sm-8">
+                <MudSelect T="int" Label="Type Echantillon" MultiSelection="true" @bind-SelectedValues="typetravaux.IdTypeEchantillons">
+                    @foreach (TypeEchantillonDto typeEchantillon in TypeEchantillons)
+                    {
+                        <MudSelectItem T="int" Value="@typeEchantillon.IdTypeEchantillon">@typeEchantillon.Designation</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+        </div>
+        <br>
         <center>
             <button type="submit" class="btn btn-primary">Creer</button>
         </center>
@@ -83,11 +95,13 @@
 {
     private TypeTravauxDto typetravaux = new();
     private string url = "http://localhost:5077/api/";
-    private ICollection<DepartementDto> departements = new List<DepartementDto>();
     [Parameter]
     public ICollection<DepartementDto> Departements {  get; set; }
     [Parameter]
+    public ICollection<TypeEchantillonDto> TypeEchantillons { get; set; }
+    [Parameter]
     public EventCallback<int?> OnTypeTravauxCreated { get; set; }
+    private string _value = "Nothing selected";
 
     private async Task HandleOnSubmit()
     {
