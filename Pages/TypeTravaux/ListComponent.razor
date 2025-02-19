@@ -22,7 +22,7 @@
     }
 </style>
 <div class="col">
-    <CreateComponent Departements="departements" OnTypeTravauxCreated="@LoadTypeTravaux"/>
+    <CreateComponent Departements="departements" TypeEchantillons="typeEchantillons" OnTypeTravauxCreated="@LoadTypeTravaux"/>
 </div>
 
 <div class="col">
@@ -94,6 +94,7 @@
     private int pageSize = 3;
 
     ICollection<DepartementDto> departements = new List<DepartementDto>();
+    ICollection<TypeEchantillonDto> typeEchantillons  = new List<TypeEchantillonDto>(); 
 
     string url = "http://localhost:5077/api/";
     [Inject] IJSRuntime? JSRuntime { get; set; }
@@ -104,6 +105,7 @@
         {
             await LoadTypeTravaux(currentPage);
             await LoadDepartement();
+            await LoadTypeEchantillon();
         }
         catch (Exception ex)
         {
@@ -150,6 +152,23 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Error while calling LoadDepartement {ex.Message}");
+        }
+
+    }
+
+    private async Task LoadTypeEchantillon()
+    {
+        try
+        {
+            ApiResponse? apiResponse;
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+"type/echantillon/all");
+            apiResponse.HandleResponse<List<TypeEchantillonDto>>();
+            typeEchantillons = (List<TypeEchantillonDto>)apiResponse.Data;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error while calling LoadTypeEchantillon {ex.Message}");
         }
 
     }

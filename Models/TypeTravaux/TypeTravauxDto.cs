@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using LimsFrontEnd.Models;
 
 namespace LimsFrontEnd.Models;
 
@@ -38,5 +37,10 @@ public class TypeTravauxDto
     public int HaveFormule { get; set; } = 1;
     [JsonPropertyName("formuleString")]
     public string? FormuleString { get; set; }
+    [JsonPropertyName("idTypeEchantillons")]
+    public IEnumerable<int>? IdTypeEchantillons { get; set; } = new HashSet<int>();
+    [JsonPropertyName("typeTravauxTypeEchantillons")]
+    public ICollection<TypeTravauxTypeEchantillonDto>? TypeTravauxTypeEchantillons { get; set; } = new List<TypeTravauxTypeEchantillonDto>();
+
 
 }
