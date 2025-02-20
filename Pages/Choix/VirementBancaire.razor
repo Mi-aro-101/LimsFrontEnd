@@ -1,0 +1,26 @@
+﻿@page "/virementBancaire"
+
+<MudItem>
+    <MudText Typo="Typo.h3" GutterBottom="true"> <center>Virement bancaire</center> </MudText>
+    <MudGrid Gutter="true">
+        <!-- client contractuel -->
+        <MudItem xs="4" sm="4" md="4" lg="4" xl="4" Style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center">Contractuel</MudText>
+            <MudLink class="nav-link" href="souscontrat" Style="text-decoration: none;">
+                <MudImage Src="img/contrat.jpg" Alt="logo contrat" Style="width: 150px; height: 150px; margin-bottom: 8px; margin-left: 12px;" />
+            </MudLink>
+        </MudItem>
+
+        <!-- client non contractuel -->
+        <MudItem xs="4" sm="4" md="4" lg="4" xl="4" Style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center">Non contractuel</MudText>
+            <MudLink class="nav-link" href="formulaireVirement" Style="text-decoration: none;">
+                <MudImage Src="img/noncontrat.jpg" Alt="logo non contrat" Style="width: 150px; height: 150px; margin-bottom: 8px; margin-left: 12px;" />
+            </MudLink>
+        </MudItem>
+    </MudGrid>
+</MudItem>
+
+@code {
+
+}

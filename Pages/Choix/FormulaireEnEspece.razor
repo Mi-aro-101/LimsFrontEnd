@@ -1,0 +1,120 @@
+﻿@page "/formulaireEspece/{id_etat_decompte:int}"
+
+@using System.Text.Json
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@inject HttpClient http
+@inject NavigationManager navigationManager
+
+<MudItem Class="pa-4">
+    <MudText Typo="Typo.h3" GutterBottom="true"> Formulaire de paiement en espèce</MudText>
+    <MudForm Model="@espece" @ref="reference">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudTextField T="string" label="Titre" @bind-Value="espece.titre" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Clients" @bind-Value="espece.clients" Required="true" Variant="Variant.Text" Margin="Margin.Dense" HelperText="Particulier ou Entreprise" HelperTextOnFocus="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Identité" @bind-Value="espece.identite" Required="true" Variant="Variant.Text" Margin="Margin.Dense" HelperText="CIN ou NIF/STAT ou Passeport" HelperTextOnFocus="true" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="string" Label="Adresse" @bind-Value="espece.adresse" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="string" Label="Contact" @bind-Value="espece.contact" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Email" @bind-Value="espece.email" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Etat de décompte" @bind-Value="espece.etatDecompte" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudDatePicker Label="Date" Date="@SelectedDate" DateChange="OnDateChange" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="double" Label="Montant" Required="true" @bind-Value="espece.montant" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudHidden T="int" @bind-Value="espece.id_etat_decompte" />
+            </MudItem>
+            <MudItem xs="12" class="d-flex justify-center">
+                <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8" OnClick="SubmitPaiementEspece">Continue to Payment</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+</MudItem>
+
+@code {
+    [Parameter] public int id_etat_decompte { get; set; }
+    private DateTime SelectedDate { get; set; } = DateTime.Now;
+    MudForm? reference;
+    private PaiementDto espece = new PaiementDto();
+    private List<PaiementDto>? especes;
+    private ApiResponse? apiResponse;
+    string url = "http://localhost:5077/api/paiementenespece";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"{url}/{id_etat_decompte}", option);
+            apiResponse.HandleResponse<List<PaiementDto>>();
+            especes = apiResponse.Data as List<PaiementDto> ?? new List<PaiementDto>();
+
+            // Initialisez demandeNote
+            espece = especes?.FirstOrDefault() ?? new PaiementDto
+                {
+                    id_etat_decompte = id_etat_decompte
+                };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception levé ici: " + ex.Message);
+        }
+    }
+
+    private void OnDateChanged(DateTime newDate)
+    {
+        SelectedDate = newDate;
+    }
+
+    private async Task SubmitPaiementEspece()
+    {
+        try
+        {
+            if (espece == null)
+            {
+                Console.WriteLine("demandeNote est null");
+                return;
+            }
+
+            var nouvellePaiementEspece = new PaiementDto
+                {
+                    DatePaiement = SelectedDate,
+                    ModePaiement = 1,
+                    EtatPaiement = 11,
+                    id_etat_decompte = espece.id_etat_decompte
+                };
+
+            var response = await http.PostAsJsonAsync(url, nouvellePaiementEspece);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Erreur de l'API: " + errorContent);
+            }
+            else
+            {
+                navigationManager.NavigateTo("/success");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+}

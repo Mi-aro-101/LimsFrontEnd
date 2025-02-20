@@ -1,0 +1,120 @@
+﻿@page "/formulaireVirement/{id_etat_decompte:int}"
+
+@using System.Text.Json
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@inject HttpClient http
+@inject NavigationManager navigationManager
+
+<MudItem Class="pa-4">
+    <MudText Typo="Typo.h3" GutterBottom="true"> Formulaire de paiement par virement</MudText>
+    <MudForm Model="@virement" @ref="reference">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudTextField T="string" label="Titre" @bind-Value="virement.titre" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Clients" @bind-Value="virement.clients" Required="true" Variant="Variant.Text" Margin="Margin.Dense" HelperText="Particulier ou Entreprise" HelperTextOnFocus="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Identité" @bind-Value="virement.identite" Required="true" Variant="Variant.Text" Margin="Margin.Dense" HelperText="CIN ou NIF/STAT ou Passeport" HelperTextOnFocus="true" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="string" Label="Adresse" @bind-Value="virement.adresse" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="string" Label="Contact" @bind-Value="virement.contact" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Email" @bind-Value="virement.email" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Etat de décompte" @bind-Value="virement.etatDecompte" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudDatePicker Label="Date" Date="@SelectedDate" DateChange="OnDateChange" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="double" Label="Montant" Required="true" @bind-Value="virement.montant" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudHidden T="int" @bind-Value="virement.id_etat_decompte" />
+            </MudItem>
+            <MudItem xs="12" class="d-flex justify-center">
+                <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8" OnClick="SubmitPaiementMobile">Continue to Payment</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+</MudItem>
+
+@code {
+    [Parameter] public int id_etat_decompte { get; set; }
+    private DateTime SelectedDate { get; set; } = DateTime.Now;
+    MudForm? reference;
+    private PaiementDto virement = new PaiementDto();
+    private List<PaiementDto>? virements;
+    private ApiResponse? apiResponse;
+    string url = "http://localhost:5077/api/paiementparvirement";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"{url}/{id_etat_decompte}", option);
+            apiResponse.HandleResponse<List<PaiementDto>>();
+            virements = apiResponse.Data as List<PaiementDto> ?? new List<PaiementDto>();
+
+            // Initialisez demandeNote
+            virement = virements?.FirstOrDefault() ?? new PaiementDto
+                {
+                    id_etat_decompte = id_etat_decompte
+                };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception levé ici: " + ex.Message);
+        }
+    }
+
+    private void OnDateChanged(DateTime newDate)
+    {
+        SelectedDate = newDate;
+    }
+
+    private async Task SubmitPaiementMobile()
+    {
+        try
+        {
+            if (virement == null)
+            {
+                Console.WriteLine("demandeNote est null");
+                return;
+            }
+
+            var nouvellePaiementVirement = new PaiementDto
+                {
+                    DatePaiement = SelectedDate,
+                    ModePaiement = 3,
+                    EtatPaiement = 13,
+                    id_etat_decompte = virement.id_etat_decompte
+                };
+
+            var response = await http.PostAsJsonAsync(url, nouvellePaiementVirement);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Erreur de l'API: " + errorContent);
+            }
+            else
+            {
+                navigationManager.NavigateTo("/success");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+}
