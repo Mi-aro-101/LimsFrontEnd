@@ -1,0 +1,70 @@
+@page "/details/recette/previsionnelle/{Id:int}"
+
+@using LimsFrontEnd.Models
+@using LimsFrontEnd.Components
+@using System.Text.Json
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+
+@inherits CUBaseComponent
+
+<center><h2>Recette previsionnelle</h2></center>
+
+<hr>
+<br>
+    <div class="row">
+        <div class="card border-dark mb-3" style="max-width: 60rem;">
+            <div class="card-header">Nouveau(elle) employé(e)</div>
+            <div class="card-body text-dark">
+                <EditForm Model="@detailsRecettePrevisionnelle" OnValidSubmit="@HandleOnSubmit">
+
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Montant</label>
+                            <div class="col-sm-8">
+                            <InputNumber class="form-control" @bind-Value="detailsRecettePrevisionnelle.Montant" />
+                            </div>
+                        </div>
+                        <br>
+                    
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Departement</label>
+                            <div class="col-sm-8">
+                            <InputSelect class="form-control" id="exampleFormControlSelect1" @bind-Value="detailsRecettePrevisionnelle.IdDepartement">
+                                @foreach(DepartementDto departement in departements)
+                                {
+                                    <option value=@departement.IdDepartement>@departement.Designation</option>
+                                }
+                            </InputSelect>
+                            </div>
+                        </div>
+                        <br>
+                        <center>
+                            <button type="submit" class="btn btn-primary">Creer</button>
+                        </center>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+
+@code
+{
+    [Parameter]
+    public int Id { get; set; }
+    private DetailsRecettePrevisionnelleDto detailsRecettePrevisionnelle = new DetailsRecettePrevisionnelleDto();
+
+    private ICollection<DepartementDto> departements;
+
+    protected override async Task OnInitializedAsync()
+    {
+        departements = await LoadDepartement();
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        detailsRecettePrevisionnelle.IdRecettePrevisionnelle = Id;
+        var response = await Http.PostAsJsonAsync(url+"details/recette/previsionnelle", detailsRecettePrevisionnelle);
+        Console.WriteLine(JsonSerializer.Serialize(detailsRecettePrevisionnelle));
+
+        NavigationManager.NavigateTo($"/recette/previsionnelle/details/{Id}");
+    }
+}

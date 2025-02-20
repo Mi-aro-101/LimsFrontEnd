@@ -1,0 +1,94 @@
+@inject HttpClient Http
+@using LimsFrontEnd.Models;
+@using LimsUtils.Api
+@using System.Text.Json;
+@inject NavigationManager NavigationManager
+
+<hr>
+<br>
+    <div class="row">
+        
+        <style>
+    .bordered-cell-one{
+        border-right: none;
+        text-align: center;
+    }
+    .bordered-cell-two{
+        border-left: none;
+        text-align: center;
+    }
+</style>
+
+ @if(!(string.IsNullOrEmpty(exception)))
+    {
+        <div class="error">
+            @exception
+        </div>
+    }
+<div class="col">
+    <CreateComponent RefreshList="@Reload"/>
+</div>
+
+<div class="col">
+    @if (avanceeTravails == null)
+    {
+        <p><em>Il n'y pas de données dans la base</em></p>
+    }
+    else
+    {
+            <table class="table table-bordered" border="1">
+                <thead>
+                    <tr>
+                        <th scope="col">Niveau</th>
+                        <th scope="col">Desgnation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @* //TODO Eto isika e *@
+                    @foreach (var avanceeTravail in avanceeTravails)
+                    {
+                        <tr>
+                            <td>@avanceeTravail.Niveau</td>
+                            <td>@avanceeTravail.Designation</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+    }
+</div>
+        
+    </div>
+
+@code
+{
+    private ICollection<AvanceeTravailDto>? avanceeTravails;
+    private readonly string url = "http://localhost:5077/api/";
+    private string? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetavanceeTravails();
+    }
+
+    private async Task GetavanceeTravails()
+    {
+        ApiResponse? apiResponse;
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+"avancee/travail");
+        if(apiResponse?.IsSuccess == true)
+        {
+            apiResponse.HandleResponse<List<AvanceeTravailDto>>();
+            avanceeTravails = (List<AvanceeTravailDto>)apiResponse.Data;
+        }
+        else{
+            exception = (string?)apiResponse.Message;
+        }
+    }
+
+    public async Task Reload()
+    {
+        await GetavanceeTravails();
+        StateHasChanged();
+    }
+    
+}

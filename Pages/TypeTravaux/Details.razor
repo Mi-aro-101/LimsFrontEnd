@@ -82,6 +82,28 @@
         </div>
     </div>
 </div>
+<div class="row">
+     <div class="col">
+        <div class="card" style="width: 40rem;">
+            <div class="card-body">
+                <h3 class="card-title">Liste echantillon applicables</h3>
+                <table class="table table-bordered" border="1">
+                        <thead>
+                            <th>Designation</th>
+                        </thead>
+                        <tbody>
+                            @foreach(var echantillon in typetravaux.TypeTravauxTypeEchantillons)
+                            {
+                            <tr>
+                                <td>@echantillon.TypeEchantillon.Designation</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code
 {
