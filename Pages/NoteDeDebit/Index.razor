@@ -1,0 +1,174 @@
+﻿@page "/demandenotedebit/{id_etat_decompte:int}"
+
+@using LimsFrontEnd.Models
+@using System.Text.Json
+@using LimsUtils.Api
+@inject HttpClient http
+@inject NavigationManager navigationManager
+
+
+<MudItem Class="pa-4">
+    <MudForm Model="@demandeNote" @ref="reference">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Clients" @bind-Value="demandeNote.clients" Required="true" Variant="Variant.Text" Margin="Margin.Dense" HelperText="Particulier ou Entreprise" HelperTextOnFocus="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Identité" @bind-Value="demandeNote.identite" Required="true" Variant="Variant.Text" Margin="Margin.Dense" HelperText="CIN ou NIF/STAT ou Passeport" HelperTextOnFocus="true" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="string" Label="Adresse" @bind-Value="demandeNote.adresse" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="string" Label="Contact" @bind-Value="demandeNote.contact" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Email" @bind-Value="demandeNote.email" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Etat de décompte" @bind-Value="demandeNote.etatDecompte" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="string" Label="Nom de l'objet" @bind-Value="demandeNote.objet" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="int" Label="Nombre d'échantillons" @bind-Value="demandeNote.nombreEchantillon" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudDatePicker  @bind-Date="demandeNote.datePaiement" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="double" Label="Montant" @bind-Value="demandeNote.montant" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Montant litéral" @bind-Value="demandeNote.montant_literal" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudHidden T="int" @bind-Value="demandeNote.idEtatDecompte" />
+            </MudItem>
+            <MudItem xs="12" class="d-flex justify-center">
+                <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8" OnClick="SubmitNoteDebit">add demande</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+</MudItem>
+
+
+
+@code {
+    [Parameter] public int id_etat_decompte { get; set; }
+    MudForm? reference;
+    private DemandeDto demandeNote = new DemandeDto();
+    private List<DemandeDto>? demandeNotes;
+    private ApiResponse? apiResponse;
+    string url = "http://localhost:5077/api/notedebit";
+
+    /*protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>(url+"/{id_etat_decompte}", option);
+            apiResponse.HandleResponse<List<DemandeDto>>();
+            demandeNotes = (List<DemandeDto>)apiResponse.Data;
+            if (demandeNotes != null && demandeNotes.Any())
+            {
+                demandeNote = demandeNotes.First();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception levé ici: " + ex.Message);
+        }
+    }
+
+    private async Task SubmitNoteDebit()
+    {
+        try
+        {
+            var nouvelleDemande = new DemandeDto
+                {
+                    reference = 0,  // Toujours 0 pour le moment
+                    //dateDemande = DateTime.Now, // Date actuelle
+                    dateDemande = demandeNote.datePaiement, // Date actuelle
+                    objet = demandeNote.objet, // Récupéré du formulaire
+                    montant = demandeNote.montant, // Récupéré du formulaire
+                    montant_literal = demandeNote.montant_literal, // Récupéré du formulaire
+                    idEtatDecompte = demandeNote.idEtatDecompte // Récupéré du formulaire
+                };
+            var response = await http.PostAsJsonAsync(url, nouvelleDemande);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Erreur de l'API: " + errorContent);
+            }
+            else
+            {
+                navigationManager.NavigateTo("/success");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }*/
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"{url}/{id_etat_decompte}", option);
+            apiResponse.HandleResponse<List<DemandeDto>>();
+            demandeNotes = apiResponse.Data as List<DemandeDto> ?? new List<DemandeDto>();
+
+            // Initialisez demandeNote
+            demandeNote = demandeNotes?.FirstOrDefault() ?? new DemandeDto
+            {
+                idEtatDecompte = id_etat_decompte
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception levé ici: " + ex.Message);
+        }
+    }
+
+    private async Task SubmitNoteDebit()
+    {
+        try
+        {
+            if (demandeNote == null)
+            {
+                Console.WriteLine("demandeNote est null");
+                return;
+            }
+
+            var nouvelleDemande = new DemandeDto
+            {
+                reference = 0,
+                dateDemande = demandeNote.datePaiement,
+                objet = demandeNote.objet,
+                montant = demandeNote.montant,
+                montant_literal = demandeNote.montant_literal,
+                idEtatDecompte = demandeNote.idEtatDecompte
+            };
+
+            var response = await http.PostAsJsonAsync(url, nouvelleDemande);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Erreur de l'API: " + errorContent);
+            }
+            else
+            {
+                navigationManager.NavigateTo("/success");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+}

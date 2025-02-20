@@ -1,0 +1,56 @@
+﻿@page "/choixpaiement/{id_etat_decompte:int}"
+
+<MudItem>
+    <MudText Typo="Typo.h2" GutterBottom="true"><center>Choix de paiement</center></MudText>
+    <MudGrid Gutter="true">
+        <!-- Paiement en espèce -->
+        <MudItem xs="4" sm="4" md="4" lg="4" xl="4"  Style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center">Espèce</MudText>
+            <MudLink class="nav-link" href="@($"formulaireEspece/{id_etat_decompte}")" Style="text-decoration: none;">
+                <MudImage Src="img/espece.png" Alt="logo paiement en espèce" Style="width: 150px; height: 150px; margin-bottom: 8px; margin-left: 12px;" />
+            </MudLink>
+        </MudItem>
+
+        <!-- Paiement mobile -->
+        <MudItem xs="4" sm="4" md="4" lg="4" xl="4"  Style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center">Mobile</MudText>
+            <MudLink class="nav-link" href="@($"choixoperateur/{id_etat_decompte}")" Style="text-decoration: none;">
+                <MudImage Src="img/mobile.png" Alt="logo paiement mobile" Style="width: 150px; height: 150px; margin-bottom: 8px; margin-left: 12px;" />
+            </MudLink>
+        </MudItem>
+
+        <!-- Paiement par virement -->
+        <MudItem xs="4" sm="4" md="4" lg="4" xl="4"  Style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center">Virement</MudText>
+            <MudLink class="nav-link" href="virementBancaire" Style="text-decoration: none;">
+                <MudImage Src="img/virement.png" Alt="logo paiement par virement" Style="width: 150px; height: 150px; margin-bottom: 8px; margin-left: 12px;" />    
+            </MudLink>
+        </MudItem>
+    </MudGrid>
+    <!---<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ShowDialog">
+        Ouvrir le Formulaire
+    </MudButton>-->
+
+    <!--<MudDialogProvider FullWidth="true" MaxWidth="MaxWidth.ExtraLarge" CloseButton="true" BackdropClick="false" NoHeader="true" Position="DialogPosition.Center" CloseOnEscapeKey="true" />-->
+</MudItem>
+
+@code {
+    /*[Inject] private IDialogService DialogService { get; set; } = null!;
+
+    private void ShowDialog()
+    {
+        var options = new DialogOptions
+            {
+                MaxWidth = MaxWidth.ExtraLarge,
+                FullWidth = true,
+                CloseOnEscapeKey = true,
+                BackdropClick = true,
+                CloseButton = true
+            };
+        var diag = DialogService.Show<DelaiDto>("Donnée un délai de paiement", options);
+        var result = diag.Result;
+    }*/
+    [Parameter]
+    public int id_etat_decompte { get; set; }
+
+}
