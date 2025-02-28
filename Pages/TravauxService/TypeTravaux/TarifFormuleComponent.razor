@@ -35,7 +35,6 @@
 {
     [Parameter]
     public TypeTravauxDto TypeTravauxDesigne { get; set; }
-    private Double? tarif;
     [Parameter]
     public Formule FormuleDesigne { get; set;} 
     private string url = "http://localhost:5077/api/type/travaux/tarifier";
@@ -52,7 +51,7 @@
             using var responseStream = await response.Content.ReadAsStreamAsync();
             ApiResponse? apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
             Console.WriteLine(url+$"/{TypeTravauxDesigne.IdTypeTravaux}");
-            if(apiResponse != null){
+            if(apiResponse?.Data != null && apiResponse != null){
                 apiResponse.HandleResponse<Formule>();
                 reponse = (Formule)apiResponse.Data;
                 Console.WriteLine(JsonSerializer.Serialize(apiResponse));

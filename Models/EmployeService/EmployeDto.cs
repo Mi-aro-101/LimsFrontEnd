@@ -16,20 +16,20 @@ public class EmployeDto
         string result = "";
         if(this.Departement != null)
         {
-            result = this.Departement.Designation;
+            result = Departement.Designation;
         }
         return result;
     }
 
-    public HistoriqueEmployeDto? GetLastPoste()
+    public HistoriqueEmployeDto GetLastPoste()
     {
-        HistoriqueEmployeDto? result = null;
+        HistoriqueEmployeDto result = new HistoriqueEmployeDto();
         if(this.HistoriqueEmployes != null)
         {
             if(this.HistoriqueEmployes.Count > 0)
             {
                 int lastIndex = this.HistoriqueEmployes.Count - 1;
-                result = this.HistoriqueEmployes.ElementAtOrDefault(lastIndex);
+                result = this.HistoriqueEmployes.ElementAt(lastIndex);
             }
         }
 

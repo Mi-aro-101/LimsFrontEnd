@@ -1,0 +1,82 @@
+@page "/prestation"
+
+@inject HttpClient Http
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using System.Text.Json
+@using System.Globalization;
+
+@* <SortComponent /> *@
+<style>
+    .chiffre{
+        text-align: right;
+    }
+</style>
+
+<div class="col">
+    @if (!string.IsNullOrEmpty(exception))
+    {
+        <p><em>@exception</em></p>
+        <p>Here boy</p>
+    }
+    else
+    {
+            <table class="table table-bordered" border="1">
+                <thead>
+                    <tr>
+                        <th scope="col">Reference</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Montant</th>
+                        <th scope="col">Remise</th>
+                        <th scope="col">Montant net</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var prestation in prestations)
+                    {
+                        <tr>
+                            <td>@prestation.Reference</td>
+                            <td>@string.Format(new CultureInfo("fr-FR"), "{0:dd MMMM yyyy}", prestation.DatePrestation)</td>
+                            <td class="chiffre">@string.Format(CultureInfo.InvariantCulture, "{0:#,##0.00}", prestation.Montant).Replace(",", " ").Replace(".", ",") Ar</td>
+                            <td class="chiffre">@prestation.Remise %</td>
+                            <td class="chiffre">@string.Format(CultureInfo.InvariantCulture, "{0:#,##0.00}", prestation.MontantTotal).Replace(",", " ").Replace(".", ",") Ar</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+    }
+</div>
+
+@code
+{
+    VPrestationEtatDecompteDto[] prestations = new VPrestationEtatDecompteDto[0];
+    private string url = "http://localhost:5077/api/";
+    string exception = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPrestations();
+    }
+
+    private async Task LoadPrestations()
+    {
+        ApiResponse? apiResponse;
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+"prestation");
+        if(apiResponse?.IsSuccess == true || apiResponse != null)
+        {
+            apiResponse.HandleResponse<VPrestationEtatDecompteDto[]>();
+            if(apiResponse.Data == null)
+            {
+                exception = "Il n'y a pas de données dans la base";
+            }
+            else
+            {
+                prestations = (VPrestationEtatDecompteDto[])apiResponse.Data;
+            }
+        }
+        else{
+            exception = "Une erreur s'est produite";
+        }
+    }
+}

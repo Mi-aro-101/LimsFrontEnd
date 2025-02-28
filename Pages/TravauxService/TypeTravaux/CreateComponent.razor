@@ -93,15 +93,17 @@
 
 @code
 {
-    private TypeTravauxDto typetravaux = new();
+    private TypeTravauxDto typetravaux = new TypeTravauxDto{
+        Code = "",
+        Designation =""
+    };
     private string url = "http://localhost:5077/api/";
     [Parameter]
-    public ICollection<DepartementDto> Departements {  get; set; }
+    public ICollection<DepartementDto> Departements {  get; set; } = new List<DepartementDto>();
     [Parameter]
-    public ICollection<TypeEchantillonDto> TypeEchantillons { get; set; }
+    public ICollection<TypeEchantillonDto> TypeEchantillons { get; set; } = new List<TypeEchantillonDto>();
     [Parameter]
     public EventCallback<int?> OnTypeTravauxCreated { get; set; }
-    private string _value = "Nothing selected";
 
     private async Task HandleOnSubmit()
     {

@@ -35,6 +35,6 @@ public class Formule
     [JsonPropertyName("tarif")]
     public Double? Tarif { get; set; }
     [JsonPropertyName("formuleChosed")]
-    public string FormuleChosed { get; set; }
+    public string? FormuleChosed { get; set; }
     public Dictionary<string, string> ConditionFormula { get; set; } = new Dictionary<string, string>();
 }

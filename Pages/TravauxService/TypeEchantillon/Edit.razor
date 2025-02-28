@@ -30,7 +30,9 @@
 
 @code
 {
-    private TypeEchantillonDto? typeechantillon;
+    private TypeEchantillonDto typeechantillon = new TypeEchantillonDto{
+        Designation = ""
+    };
     private string url = "http://localhost:5077/api/";
     [Parameter]
     public int Id { get; set; }
@@ -47,7 +49,7 @@
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+$"type/echantillon/{Id}", options);
             Console.WriteLine(url+$"/{Id}");
-            if(apiResponse.Data != null){
+            if(apiResponse?.Data != null && apiResponse.IsSuccess == true){
                 apiResponse.HandleResponse<TypeEchantillonDto>();
                 typeechantillon = (TypeEchantillonDto)apiResponse.Data;
             }

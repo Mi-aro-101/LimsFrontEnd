@@ -73,14 +73,12 @@
     EmployeDto employe = new EmployeDto();
     ICollection<DepartementDto> departements = new List<DepartementDto>(); 
     ICollection<PosteDto> postes = new List<PosteDto>();
-    int pageSize = 5;
-    string url = "http://localhost:5077/api/";
 
     protected override async Task OnInitializedAsync()
     {
         departements = await LoadDepartement();
         postes = await LoadPoste();
-        employe.IdPoste = postes.ElementAtOrDefault(0).IdPoste;
+        employe.IdPoste = postes.ElementAt(0).IdPoste;
     }
 
     private async Task HandleOnSubmit()

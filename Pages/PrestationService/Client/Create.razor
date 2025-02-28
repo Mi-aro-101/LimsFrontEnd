@@ -60,14 +60,23 @@
 
 @code
 {
-    ClientDto client = new ClientDto();
+    ClientDto client = new ClientDto{
+        Nom = "",
+        Adresse = "",
+        Contact = "",
+        Email = "@gmail.com",
+    };
     string url = "http://localhost:5077/api/";
-    string? exception;
+    string exception = "";
 
     private async Task HandleOnSubmit()
     {
         Console.WriteLine(JsonSerializer.Serialize(client));
         var response = await Http.PostAsJsonAsync(url+"client", client);
+        if(response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            exception = await response.Content.ReadAsStringAsync();
+        }
         Console.WriteLine(JsonSerializer.Serialize(client));
 
         // Should reload to the last page of the pagination to show the added one

@@ -11,7 +11,7 @@ public class RecettePrevisionnelleDto
     [JsonPropertyName("idExercice")]
     public int IdExercice { get; set; } = 0;
     [JsonPropertyName("exercice")]
-    public ExerciceDto? Exercice { get; set; } = new ExerciceDto();
+    public ExerciceDto Exercice { get; set; } = new ExerciceDto();
     [JsonPropertyName("montantTotal")]
     public decimal MontantTotal { get; set; }
     [JsonPropertyName("detailsRecettePrevisionnelles")]

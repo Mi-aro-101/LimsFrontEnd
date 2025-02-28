@@ -62,7 +62,10 @@
 
 @code
 {
-    private TypeTravauxDto? typetravaux;
+    private TypeTravauxDto typetravaux = new TypeTravauxDto{
+        Code = "",
+        Designation = ""
+    };
     private string url = "http://localhost:5077/api/";
     [Parameter]
     public int Id { get; set; }
@@ -81,7 +84,7 @@
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+$"type/travaux/{Id}", options);
             Console.WriteLine(url+$"/{Id}");
-            if(apiResponse.Data != null){
+            if(apiResponse?.Data != null){
                 apiResponse.HandleResponse<TypeTravauxDto>();
                 typetravaux = (TypeTravauxDto)apiResponse.Data;
             }
@@ -114,8 +117,11 @@
             ApiResponse? apiResponse;
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+"departement/all");
-            apiResponse.HandleResponse<List<DepartementDto>>();
-            departements = (List<DepartementDto>)apiResponse.Data;
+            if(apiResponse?.Data != null && apiResponse != null)
+            {
+                apiResponse.HandleResponse<List<DepartementDto>>();
+                departements = (List<DepartementDto>)apiResponse.Data;
+            }
         }
         catch (Exception ex)
         {
