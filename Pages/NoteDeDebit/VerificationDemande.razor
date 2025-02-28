@@ -4,7 +4,7 @@
 @using LimsUtils.Api
 @using System.Text.Json
 @inject HttpClient http
-
+@inject NavigationManager navigationManager
 
 <MudPaper Class="pa-4">
     <MudText Typo="Typo.h5" Class="mb-4">Demande de note de débit oublié</MudText>
@@ -39,7 +39,7 @@
             <MudTd>
                 @if (demandeNote == context)
                 {
-                    <MudButton Color="Color.Success" OnClick="SaveRow">Faire la demande</MudButton>
+                    <MudButton Color="Color.Success" OnClick="() => SaveRow(context.idEtatDecompte)">Faire la demande</MudButton>
                     <MudButton Color="Color.Error" OnClick="CancelEdit">Cancel</MudButton>
                 }
                 else
@@ -102,9 +102,9 @@
         demandeNote = demande;
     }
 
-    private void SaveRow()
+    private async Task SaveRow(int id)
     {
-        demandeNote = null; // Enregistrer les modifications
+        navigationManager.NavigateTo($"/demandenotedebit/{id}");
     }
 
     private void CancelEdit()

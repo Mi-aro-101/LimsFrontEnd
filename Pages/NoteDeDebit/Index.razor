@@ -38,10 +38,10 @@
                 <MudDatePicker  @bind-Date="demandeNote.datePaiement" Margin="Margin.Dense" />
             </MudItem>
             <MudItem xs="12">
-                <MudTextField T="double" Label="Montant" @bind-Value="demandeNote.montant" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+                <MudTextField T="double" Label="Montant en chiffre" @bind-Value="demandeNote.montant" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
             </MudItem>
             <MudItem xs="12">
-                <MudTextField T="string" Label="Montant litéral" @bind-Value="demandeNote.montant_literal" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+                <MudTextField T="string" Label="Montant en lettre" @bind-Value="demandeNote.montant_literal" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
             </MudItem>
             <MudItem xs="12">
                 <MudHidden T="int" @bind-Value="demandeNote.idEtatDecompte" />
@@ -154,7 +154,7 @@
                 idEtatDecompte = demandeNote.idEtatDecompte
             };
 
-            var response = await http.PostAsJsonAsync(url, nouvelleDemande);
+            var response = await http.PostAsJsonAsync(url, nouvelleDemande);            
 
             if (!response.IsSuccessStatusCode)
             {

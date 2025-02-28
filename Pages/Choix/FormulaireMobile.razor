@@ -93,12 +93,12 @@
             }
 
             var nouvellePaiementMobile = new PaiementDto
-                {
-                    DatePaiement = SelectedDate,
-                    ModePaiement = 2,
-                    EtatPaiement = 12,
-                    id_etat_decompte = mobile.id_etat_decompte
-                };
+            {
+                DatePaiement = SelectedDate,
+                ModePaiement = 2,
+                EtatPaiement = 12,
+                id_etat_decompte = mobile.id_etat_decompte
+            };
 
             var response = await http.PostAsJsonAsync(url, nouvellePaiementMobile);
 
@@ -109,7 +109,7 @@
             }
             else
             {
-                navigationManager.NavigateTo("/success");
+                navigationManager.NavigateTo("/receptionMobile");
             }
         }
         catch (Exception ex)
