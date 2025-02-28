@@ -3,16 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Pages\\Choix\\OperateurMobile.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Pages\\Choix\\OperateurMobile.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{DAC4C092-C2F4-4783-B9B3-CFA5F543BFB7}|LimsFrontEnd.csproj|c:\\users\\andymickael\\desktop\\omnis\\tests\\limsfrontend\\pages\\partenaire\\index.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{DAC4C092-C2F4-4783-B9B3-CFA5F543BFB7}|LimsFrontEnd.csproj|solutionrelative:pages\\partenaire\\index.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DAC4C092-C2F4-4783-B9B3-CFA5F543BFB7}|LimsFrontEnd.csproj|c:\\users\\andymickael\\desktop\\omnis\\tests\\limsfrontend\\pages\\choix\\formulaireenespece.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{DAC4C092-C2F4-4783-B9B3-CFA5F543BFB7}|LimsFrontEnd.csproj|solutionrelative:pages\\choix\\formulaireenespece.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{DAC4C092-C2F4-4783-B9B3-CFA5F543BFB7}|LimsFrontEnd.csproj|c:\\users\\andymickael\\desktop\\omnis\\tests\\limsfrontend\\pages\\partenaire\\testpagination.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{DAC4C092-C2F4-4783-B9B3-CFA5F543BFB7}|LimsFrontEnd.csproj|solutionrelative:pages\\partenaire\\testpagination.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DAC4C092-C2F4-4783-B9B3-CFA5F543BFB7}|LimsFrontEnd.csproj|c:\\users\\andymickael\\desktop\\omnis\\tests\\limsfrontend\\pages\\delai\\paiement.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{DAC4C092-C2F4-4783-B9B3-CFA5F543BFB7}|LimsFrontEnd.csproj|solutionrelative:pages\\delai\\paiement.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{DAC4C092-C2F4-4783-B9B3-CFA5F543BFB7}|LimsFrontEnd.csproj|c:\\users\\andymickael\\desktop\\omnis\\tests\\limsfrontend\\pages\\partenaire\\createcomponent.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{DAC4C092-C2F4-4783-B9B3-CFA5F543BFB7}|LimsFrontEnd.csproj|solutionrelative:pages\\partenaire\\createcomponent.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DAC4C092-C2F4-4783-B9B3-CFA5F543BFB7}|LimsFrontEnd.csproj|c:\\users\\andymickael\\desktop\\omnis\\tests\\limsfrontend\\models\\contratdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DAC4C092-C2F4-4783-B9B3-CFA5F543BFB7}|LimsFrontEnd.csproj|solutionrelative:models\\contratdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,7 +26,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Bookmark",
@@ -35,39 +39,52 @@
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "FormulaireEnEspece.razor",
-              "DocumentMoniker": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Pages\\Choix\\FormulaireEnEspece.razor",
-              "RelativeDocumentMoniker": "Pages\\Choix\\FormulaireEnEspece.razor",
-              "ToolTip": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Pages\\Choix\\FormulaireEnEspece.razor",
-              "RelativeToolTip": "Pages\\Choix\\FormulaireEnEspece.razor",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAXAAAAAAAAAA==",
+              "Title": "TestPagination.razor",
+              "DocumentMoniker": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Pages\\Partenaire\\TestPagination.razor",
+              "RelativeDocumentMoniker": "Pages\\Partenaire\\TestPagination.razor",
+              "ToolTip": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Pages\\Partenaire\\TestPagination.razor",
+              "RelativeToolTip": "Pages\\Partenaire\\TestPagination.razor",
+              "ViewState": "AgIAABUAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-02-19T20:47:10.744Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "OperateurMobile.razor",
-              "DocumentMoniker": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Pages\\Choix\\OperateurMobile.razor",
-              "RelativeDocumentMoniker": "Pages\\Choix\\OperateurMobile.razor",
-              "ToolTip": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Pages\\Choix\\OperateurMobile.razor",
-              "RelativeToolTip": "Pages\\Choix\\OperateurMobile.razor",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAABMAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-02-19T20:40:37.886Z",
+              "WhenOpened": "2025-02-28T06:32:14.283Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ContratDto.cs",
+              "DocumentMoniker": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Models\\ContratDto.cs",
+              "RelativeDocumentMoniker": "Models\\ContratDto.cs",
+              "ToolTip": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Models\\ContratDto.cs",
+              "RelativeToolTip": "Models\\ContratDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-02-25T17:17:35.945Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "Paiement.razor",
-              "DocumentMoniker": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Pages\\Delai\\Paiement.razor",
-              "RelativeDocumentMoniker": "Pages\\Delai\\Paiement.razor",
-              "ToolTip": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Pages\\Delai\\Paiement.razor",
-              "RelativeToolTip": "Pages\\Delai\\Paiement.razor",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAABAAAABQAAAAAAAAAA==",
+              "Title": "CreateComponent.razor",
+              "DocumentMoniker": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Pages\\Partenaire\\CreateComponent.razor",
+              "RelativeDocumentMoniker": "Pages\\Partenaire\\CreateComponent.razor",
+              "ToolTip": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Pages\\Partenaire\\CreateComponent.razor",
+              "RelativeToolTip": "Pages\\Partenaire\\CreateComponent.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAFUAAAAcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-02-19T10:47:26.635Z"
+              "WhenOpened": "2025-02-25T09:19:22.792Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Index.razor",
+              "DocumentMoniker": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Pages\\Partenaire\\Index.razor",
+              "RelativeDocumentMoniker": "Pages\\Partenaire\\Index.razor",
+              "ToolTip": "C:\\Users\\AndyMickael\\Desktop\\OMNIS\\tests\\LimsFrontEnd\\Pages\\Partenaire\\Index.razor",
+              "RelativeToolTip": "Pages\\Partenaire\\Index.razor",
+              "ViewState": "AgIAAGgAAAAAAAAAAAAAAIYAAABVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-02-25T09:18:23.925Z",
+              "EditorCaption": ""
             }
           ]
         }

@@ -67,9 +67,9 @@
 
             // Initialisez demandeNote
             espece = especes?.FirstOrDefault() ?? new PaiementDto
-                {
-                    id_etat_decompte = id_etat_decompte
-                };
+            {
+                id_etat_decompte = id_etat_decompte
+            };
         }
         catch (Exception ex)
         {
@@ -88,17 +88,17 @@
         {
             if (espece == null)
             {
-                Console.WriteLine("demandeNote est null");
+                Console.WriteLine("la formulaire est null");
                 return;
             }
 
             var nouvellePaiementEspece = new PaiementDto
-                {
-                    DatePaiement = SelectedDate,
-                    ModePaiement = 1,
-                    EtatPaiement = 11,
-                    id_etat_decompte = espece.id_etat_decompte
-                };
+            {
+                DatePaiement = SelectedDate,
+                ModePaiement = 1,
+                EtatPaiement = 11,
+                id_etat_decompte = espece.id_etat_decompte
+            };
 
             var response = await http.PostAsJsonAsync(url, nouvellePaiementEspece);
 
@@ -109,7 +109,7 @@
             }
             else
             {
-                navigationManager.NavigateTo("/success");
+                navigationManager.NavigateTo("/receptionEspece");
             }
         }
         catch (Exception ex)

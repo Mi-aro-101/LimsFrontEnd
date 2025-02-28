@@ -1,0 +1,140 @@
+﻿@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using System.Text.Json;
+
+<MudContainer>
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <CreateComponent OnContratCreated="@HandleContratCreated" />
+        </MudItem>
+        <MudItem xs="12" md="6">
+            @if (contrats == null)
+            {
+                <MudText Typo="Typo.body1" Color="Color.Secondary">No data on the row</MudText>
+            }
+            else
+            {               
+                @if (apiResponse.ViewBag.ContainsKey("position") && apiResponse.ViewBag.ContainsKey("TotalCount") && apiResponse.ViewBag.ContainsKey("nbrPerPage"))
+                {
+                    var currentPage = int.Parse(apiResponse.ViewBag["position"].ToString());
+                    var pageSize = int.Parse(apiResponse.ViewBag["nbrPerPage"].ToString());
+                    var totalPages = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
+
+                    <MudTable Items="contrats" Dense="true">
+                        <HeaderContent>
+                            <MudTh>Nom de l'entreprise</MudTh>
+                            <MudTh>Etat des relations</MudTh>
+                            <MudTh>Référence du contrat</MudTh>
+                            <MudTh>Date de paiement</MudTh>
+                            <MudTh><center>Actions</center></MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="contrat">
+                            <MudTd>@contrat.nomEntreprise</MudTd>
+                            <MudTd>@contrat.etat</MudTd>
+                            <MudTd>@contrat.referenceContrat</MudTd>
+                            <MudTd>@contrat.datePaiement</MudTd>
+                            <MudTd>
+                                <MudButton Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" @onclick="() => HandleUpdate(contrat.idContratPartenaire)"></MudButton>  
+                                <!--<MudButton Size="Size.Small" Color="Color.Error" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" @onclick="() => HandleDelete(currentPage, contrat.idContratPartenaire, contrat.nomEntreprise)"></MudButton>-->
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+
+                    <MudPagination Page="@currentPage" PageSize="@pageSize" TotalItems="@totalPages" OnPageChanged="LoadPostes" />
+                }
+                else
+                {
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">Information sur la pagination indisponible</MudText>
+                }                
+            }
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<ContratDto>? contrats = new List<ContratDto>();
+    private ApiResponse? apiResponse;
+    private int currentPage = 1;
+    private int pageSize = 2;
+    private string url = "http://localhost:5077/api/contrat";
+
+    private async Task HandleContratCreated()
+    {        
+        int pageLoaded = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
+        int elementNumberOnLastPage = contrats.Count;
+        if (elementNumberOnLastPage == pageSize)
+            pageLoaded = pageLoaded + 1;
+        await LoadPostes(pageLoaded);        
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadPostes(currentPage);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error on Initializing : {ex.Message}");
+        }
+    }
+
+    private async Task LoadPostes(int? activePage)
+    {
+        if (activePage.HasValue) currentPage = activePage.Value;
+        try
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url + "?position=" + currentPage + "&pageSize=" + pageSize, options);            
+            if (currentPage <= int.Parse(apiResponse.ViewBag["nbrLinks"].ToString()))
+            {
+                apiResponse.HandleResponse<List<ContratDto>>();
+                contrats = (List<ContratDto>)apiResponse.Data;
+            }
+            else
+            {                  
+                await LoadPostes(int.Parse(apiResponse.ViewBag["nbrLinks"].ToString()));                    
+            }            
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error while calling LoadDpt: {ex.Message}");
+        }
+    }
+
+    private async Task DeletePoste(int position, int id)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync(url + $"/{id}");
+            response.EnsureSuccessStatusCode();
+            await LoadPostes(position);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception : " + ex.Message);
+        }
+    }
+
+    private async Task HandleDelete(int? position, int id, string designation)
+    {
+        int currPage;
+        if (position.HasValue) currPage = position.Value;
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Etes-vous sûr de supprimer {designation}");
+        if (confirmed)
+        {
+            await DeletePoste(currentPage, id);
+        }
+    }
+
+    private async Task HandleUpdate(int id)
+    {
+        NavigationManager.NavigateTo("/success");
+    }
+}

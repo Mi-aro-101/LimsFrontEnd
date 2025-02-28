@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "LimsFrontEnd",
   "resources": {
-    "hash": "sha256-Hwp2+G1SlcJTryqLIOy8J4awmCW0BImZN5PGo328sMU=",
+    "hash": "sha256-ixN0/XwNAdChV19WQ7QAr6/5B+mFjKzLhaRxQfiXeuU=",
     "jsModuleNative": {
       "dotnet.native.js": "sha256-VdKq87/z5NIxZKmuM+fv38XF+RcEb/bg3jVBwQSfwP4="
     },
@@ -214,11 +214,11 @@
       "mscorlib.wasm": "sha256-04e4k5XU8HWGB/dq/2+j84xzzGPflTs0IYWI0OxogVc=",
       "netstandard.wasm": "sha256-gnGZURPnoSmjXuYNCOJi5tt8qn2LRImWgue1Ru3/TDQ=",
       "System.Private.CoreLib.wasm": "sha256-6w3jYr0arcp8jnt4aeqh+AmqrLA6q7jl9rQYAwLzE0M=",
-      "ApiService.wasm": "sha256-rSQ5zZ4ttvmFykZYCrj3QrUZ/85AmkBWpByA9HHZmpg=",
-      "LimsFrontEnd.wasm": "sha256-Sa5+PO+k1qSteBWYDg85nYPn+LxbUNWzzRbm3ChqEC0="
+      "ApiService.wasm": "sha256-F2odHllp5/ZB5WxE/5tTjLTnV03NP46CzdK2kBjAkqo=",
+      "LimsFrontEnd.wasm": "sha256-FSDYlaxBcedQ9CNTDmULZqjNL3kog6GiYJkMPXabsck="
     },
     "pdb": {
-      "LimsFrontEnd.pdb": "sha256-ExRH4F+5dilhUghI143xltVuMzi5XHvO4Lat+9noHWk="
+      "LimsFrontEnd.pdb": "sha256-eziyEwdYdHetcped2NemDJtnGIK2cuyiHOjVZLxJAt8="
     }
   },
   "cacheBootResources": true,
