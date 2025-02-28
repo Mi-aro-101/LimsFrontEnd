@@ -45,7 +45,7 @@
                             @string.Format(new CultureInfo("fr-FR"), "{0:dd MMMM yyyy}", typetravaux.DateCreation)
                         </strong>
                     </p>
-                    <p class="card-text">Departement : <strong> @typetravaux.Departement.Designation </strong></p>
+                    <p class="card-text">Departement : <strong> @typetravaux.Departement?.Designation </strong></p>
                     @if(typetravaux.HaveFormule == 1)
                     {
                         <p class="card-text">Tarif actuel : <strong> @string.Format(CultureInfo.InvariantCulture, "{0:#,##0.00}", typetravaux.Tarif).Replace(",", " ") Ar</strong></p>
@@ -112,14 +112,16 @@
 
     string url = "http://localhost:5077/api/";
 
-    TypeTravauxDto? typetravaux;
-    private bool showDateInput = false;
+    TypeTravauxDto typetravaux = new TypeTravauxDto{
+        Designation = "",
+        Code = "",
+    };
     Formule formule = new Formule();
 
     protected override async Task OnInitializedAsync()
     {
         await LoadTypeTravaux();
-        if(typetravaux.HaveFormule == 0)
+        if(typetravaux?.HaveFormule == 0 && typetravaux.FormuleString != null)
         {
             formule = Formule.FromString(typetravaux.FormuleString);
         }
@@ -129,7 +131,7 @@
     {
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+$"type/travaux/{Id}", options);
-            if(apiResponse != null){
+            if(apiResponse?.Data != null && apiResponse != null){
                 apiResponse.HandleResponse<TypeTravauxDto>();
                 typetravaux = (TypeTravauxDto)apiResponse.Data;
                 Console.WriteLine(JsonSerializer.Serialize(typetravaux.HistoriqueTarifs));

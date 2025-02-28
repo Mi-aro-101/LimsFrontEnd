@@ -40,7 +40,10 @@
 
 @code
 {
-    private DepartementDto departement = new();
+    private DepartementDto departement = new DepartementDto{
+        Code = "",
+        Designation = ""
+    };
     private string url = "http://localhost:5077/api/departement";
     [Parameter]
     public EventCallback OnDepartementCreated { get; set; }

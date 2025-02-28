@@ -47,15 +47,12 @@
 @code
 {
     private EmployeDto? employe;
-    private string url = "http://localhost:5077/api/employe";
-    string? message;
+    string message = "";
     [Parameter]
     public int Id { get; set; }
     ICollection<DepartementDto> departements = new List<DepartementDto>(); 
     ICollection<PosteDto> postes = new List<PosteDto>();
     
-    private HistoriqueEmployeDto? lastPoste;
-
     protected async override Task OnInitializedAsync()
     {
         departements = await LoadDepartement();
@@ -68,11 +65,11 @@
         try
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+$"/{Id}", options);
-            if(apiResponse.Data != null){
+            ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+$"employe/{Id}", options);
+            if(apiResponse?.Data != null){
                 apiResponse.HandleResponse<EmployeDto>();
                 employe = (EmployeDto)apiResponse.Data;
-            Console.WriteLine(JsonSerializer.Serialize(employe));
+                Console.WriteLine(JsonSerializer.Serialize(employe));
             }
         }
         catch (Exception ex)
@@ -84,7 +81,7 @@
     {
         try
         {
-            var response = await Http.PutAsJsonAsync(url+$"/{Id}", employe);
+            var response = await Http.PutAsJsonAsync(url+$"employe/{Id}", employe);
             // Optionally handle the response (e.g., show a success message)
             NavigationManager.NavigateTo("/employe"); // Redirect to product list
         }

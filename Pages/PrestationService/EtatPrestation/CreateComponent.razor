@@ -36,7 +36,9 @@
 
 @code
 {
-    private EtatPrestationDto etatPrestation = new EtatPrestationDto();
+    private EtatPrestationDto etatPrestation = new EtatPrestationDto{
+        Designation = ""
+    };
     private string url = "http://localhost:5077/api/";
     [Parameter]
     public EventCallback RefreshList { get; set; }

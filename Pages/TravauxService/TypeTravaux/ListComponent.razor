@@ -26,9 +26,10 @@
 </div>
 
 <div class="col">
-    @if (typetravaux == null)
+    @if (typetravaux == null || string.IsNullOrEmpty(exception))
     {
-        <p><em>No data on the row</em></p>
+        <p><em>Pas données à afficher</em></p>
+        <p><em>@exception</em></p>
     }
     else
     {
@@ -98,6 +99,7 @@
 
     string url = "http://localhost:5077/api/";
     [Inject] IJSRuntime? JSRuntime { get; set; }
+    string exception = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -163,8 +165,15 @@
             ApiResponse? apiResponse;
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+"type/echantillon/all");
-            apiResponse.HandleResponse<List<TypeEchantillonDto>>();
-            typeEchantillons = (List<TypeEchantillonDto>)apiResponse.Data;
+            if(apiResponse?.Data != null && apiResponse != null)
+            {
+                apiResponse.HandleResponse<List<TypeEchantillonDto>>();
+                typeEchantillons = (List<TypeEchantillonDto>)apiResponse.Data;
+            }
+            else
+            {
+                exception = "Une erreur s'est produite";
+            }
         }
         catch (Exception ex)
         {
@@ -173,7 +182,7 @@
 
     }
 
-    private async Task NavigateTo(int IdTypeTravaux)
+    private void NavigateTo(int IdTypeTravaux)
     {
         NavigationManager.NavigateTo($"/type/travaux/details/{IdTypeTravaux}");
     }
