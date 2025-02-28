@@ -53,7 +53,10 @@
 
 @code
 {
-    private LoginDto logindto = new();
+    private LoginDto logindto = new LoginDto{
+        Identifiant = "",
+        Password = ""
+    };
     private string url = "http://localhost:5077/api/auth/login";
     [Parameter]
     public EventCallback OnLoginCreated { get; set; }

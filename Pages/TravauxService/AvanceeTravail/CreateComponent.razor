@@ -36,7 +36,9 @@
 
 @code
 {
-    private AvanceeTravailDto avanceeTravail = new AvanceeTravailDto();
+    private AvanceeTravailDto avanceeTravail = new AvanceeTravailDto{
+        Designation = ""
+    };
     private string url = "http://localhost:5077/api/";
     [Parameter]
     public EventCallback RefreshList { get; set; }

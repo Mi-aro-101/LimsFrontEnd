@@ -9,8 +9,9 @@ namespace LimsFrontEnd.Components;
 public class CUUtilisateurBaseComponent : ComponentBase
 {
     [Inject] 
-    protected HttpClient? Http { get; set; }
+    protected HttpClient Http { get; set; } = new HttpClient();
     protected string url = "http://localhost:5077/api/";
+    protected string exception = "";
     protected async Task<ICollection<RoleDto>> LoadRole()
     {
         ICollection<RoleDto> roles = new List<RoleDto>();
@@ -19,8 +20,16 @@ public class CUUtilisateurBaseComponent : ComponentBase
             ApiResponse? apiResponse;
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+"role/all");
-            apiResponse.HandleResponse<List<RoleDto>>();
-            roles = (List<RoleDto>)apiResponse.Data;
+            if(apiResponse?.IsSuccess == false || apiResponse == null)
+            {
+                HttpResponseMessage response = await Http.GetAsync(url+"role/all");
+                exception = await response.Content.ReadAsStringAsync();
+            }
+            else if (apiResponse?.Data != null)
+            {
+                apiResponse.HandleResponse<List<RoleDto>>();
+                roles = (List<RoleDto>)apiResponse.Data;
+            }
         }
         catch (Exception ex)
         {

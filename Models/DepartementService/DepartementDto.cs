@@ -7,7 +7,7 @@ public class DepartementDto
     [JsonPropertyName("idDepartement")]
     public int IdDepartement { get; set; }
     [JsonPropertyName("code")]
-    public string? Code { get; set; }
+    public required string Code { get; set; }
     [JsonPropertyName("designation")]
-    public string? Designation { get; set; }
+    public required string Designation { get; set; }
 }

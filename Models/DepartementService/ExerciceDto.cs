@@ -22,7 +22,7 @@ public class ExerciceDto
             _dateFin = value;
         } 
     }
-    private string _designation;
+    private string? _designation;
     public string Designation {
         get => DateDebut.Year.ToString();
         set {

@@ -29,7 +29,9 @@
 
 @code
 {
-    private TypeEchantillonDto typeechantillon = new();
+    private TypeEchantillonDto typeechantillon = new TypeEchantillonDto{
+        Designation = ""
+    };
     private string url = "http://localhost:5077/api/";
     [Parameter]
     public EventCallback OnTypeEchantillonCreated { get; set; }

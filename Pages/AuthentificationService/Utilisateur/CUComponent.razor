@@ -48,7 +48,6 @@
     public UtilisateurDto? Utilisateur {get; set;}
     [Parameter]
     public ICollection<RoleDto>? Roles {get; set; }
-    private ElementReference roleSelectElement;
     private string _value = "Nothing selected";
 
     private IEnumerable<string> Options = new HashSet<string> ();

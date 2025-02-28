@@ -50,7 +50,7 @@
                         @foreach(var details in recettePrevisionnelle.DetailsRecettePrevisionnelles)
                         {
                         <tr>
-                            <td>@details.Departement.Designation</td>
+                            <td>@details.Departement?.Designation</td>
                             <td>@string.Format(CultureInfo.InvariantCulture, "{0:#,##0.00}", @details.Montant).Replace(",", " ")</td>
                         </tr>
                         }
@@ -64,7 +64,7 @@
 
 @code
 {
-    RecettePrevisionnelleDto? recettePrevisionnelle;
+    RecettePrevisionnelleDto recettePrevisionnelle = new RecettePrevisionnelleDto();
     private readonly string url = "http://localhost:5077/api/";
     [Parameter]
     public int Id { get; set; }
