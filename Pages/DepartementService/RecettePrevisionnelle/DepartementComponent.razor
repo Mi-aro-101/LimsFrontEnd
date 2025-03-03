@@ -1,0 +1,52 @@
+@using LimsFrontEnd.Models;
+@using LimsUtils.Utility;
+
+<p>Reste du Montant total : <strong> @ViewUtils.RenderMoney(montantTotal) </strong></p>
+<table class="table table-bordered">
+    <thead>
+        <th>Departement</th>
+        <th>Montant</th>
+    </thead>
+    <tbody>
+        @foreach(DepartementRecetteDto deparetementRecette in comp)
+        {
+            <tr>
+                <td> @deparetementRecette.Designation </td>
+                <td> @ViewUtils.RenderMoney(deparetementRecette.Montant)</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code
+{
+    private List<DepartementRecetteDto> comp = new List<DepartementRecetteDto>();
+    [Parameter]
+    public ICollection<DepartementDto> Departements { get; set; } = new List<DepartementDto>();
+    [Parameter]
+    public RecettePrevisionnelleDepartement RecettePrevisionnelle { get; set; }  = new RecettePrevisionnelleDepartement();
+    private decimal montantTotal = 0;
+
+    protected override void OnParametersSet()
+    {
+        comp = Departements
+            .Where(d => RecettePrevisionnelle.RecettePrevisionnelleDepartements.ContainsKey(d.IdDepartement))
+            .Select(d =>  new DepartementRecetteDto { 
+                Designation = d.Designation, 
+                Montant = RecettePrevisionnelle.RecettePrevisionnelleDepartements[d.IdDepartement],
+            })
+            .ToList();
+        montantTotal = RecettePrevisionnelle.MontantTotal;
+        foreach(DepartementRecetteDto recetteDetails in comp)
+        {
+            montantTotal -= recetteDetails.Montant;
+        }
+    }
+
+
+    private class DepartementRecetteDto
+    {
+        public string? Designation { get; set; }
+        public decimal Montant { get; set; }
+    }
+}
