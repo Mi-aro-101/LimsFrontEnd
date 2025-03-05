@@ -3,15 +3,23 @@
 @inject HttpClient Http
 @using LimsFrontEnd.Models
 @using LimsUtils.Api
+@using LimsUtils.Utility
 @using System.Text.Json
 @using System.Globalization;
+@inject NavigationManager NavigationManager
 
 @* <SortComponent /> *@
 <style>
     .chiffre{
         text-align: right;
     }
+    tr:hover{
+        cursor: pointer;
+    }
 </style>
+
+<center><h2>Liste des prestations</h2></center>
+<hr>
 
 <div class="col">
     @if (!string.IsNullOrEmpty(exception))
@@ -21,25 +29,27 @@
     }
     else
     {
-            <table class="table table-bordered" border="1">
+            <table class="table table-bordered table-hover">
                 <thead>
                     <tr>
                         <th scope="col">Reference</th>
                         <th scope="col">Date</th>
-                        <th scope="col">Montant</th>
-                        <th scope="col">Remise</th>
-                        <th scope="col">Montant net</th>
+                        <th scope="col">Montant (Ar)</th>
+                        <th scope="col">Remise (%)</th>
+                        <th scope="col">Montant net (Ar)</th>
+                        <th scope="col">Statut</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var prestation in prestations)
                     {
-                        <tr>
+                        <tr @onclick="@(() => NavigateTo(@prestation.IdPrestation))" >
                             <td>@prestation.Reference</td>
-                            <td>@string.Format(new CultureInfo("fr-FR"), "{0:dd MMMM yyyy}", prestation.DatePrestation)</td>
-                            <td class="chiffre">@string.Format(CultureInfo.InvariantCulture, "{0:#,##0.00}", prestation.Montant).Replace(",", " ").Replace(".", ",") Ar</td>
-                            <td class="chiffre">@prestation.Remise %</td>
-                            <td class="chiffre">@string.Format(CultureInfo.InvariantCulture, "{0:#,##0.00}", prestation.MontantTotal).Replace(",", " ").Replace(".", ",") Ar</td>
+                            <td>@ViewUtils.RenderDateAsFrenchFormat(prestation.DatePrestation)</td>
+                            <td class="chiffre">@ViewUtils.RenderMoney(prestation.Montant)</td>
+                            <td class="chiffre">@prestation.Remise</td>
+                            <td class="chiffre">@ViewUtils.RenderMoney(prestation.MontantTotal)</td>
+                            <td>@prestation.DesignationEtat</td>
                         </tr>
                     }
                 </tbody>
@@ -79,6 +89,9 @@
             exception = "Une erreur s'est produite";
         }
     }
-}
 
-@* neque abamicitia populi romani defecturos confirmavit (utinam ne umuquam deficere possint!) *@
+    private void NavigateTo(int idPrestation)
+    {
+        NavigationManager.NavigateTo($"/prestation/details/{idPrestation}");
+    }
+}
