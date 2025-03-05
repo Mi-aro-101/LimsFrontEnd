@@ -52,7 +52,7 @@
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+$"/{Id}", options);
             Console.WriteLine(url+$"/{Id}");
-            if(apiResponse.Data != null){
+            if(apiResponse?.Data != null){
                 apiResponse.HandleResponse<RoleDto>();
                 role = (RoleDto)apiResponse.Data;
             }
