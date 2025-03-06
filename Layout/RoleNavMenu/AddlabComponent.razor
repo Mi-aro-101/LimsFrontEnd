@@ -1,0 +1,43 @@
+@namespace LimsFrontEnd.NavigationMenu
+<style>
+    .nav-item{
+        color: #ffffff;
+    }
+</style>
+<MudNavMenu Margin="Margin.Dense" Color="Color.Warning">
+    <div class="nav-item px-3">
+        <MudNavLink Href="/departement" Icon="@Icons.Material.Filled.Warehouse" IconColor="Color.Inherit">
+            Departement
+        </MudNavLink>
+    </div>
+    <div class="nav-item px-3">
+    <MudNavLink Href="/poste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Desk">
+        Poste
+    </MudNavLink>
+    </div>
+    <div class="nav-item px-3">
+    <MudNavLink Href="/role" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Badge">
+        Role
+    </MudNavLink>
+    </div>
+    <div class="nav-item px-3">
+    <MudNavGroup Title="Personnel" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.People" Expanded="false">
+        <MudNavGroup Title="Employe" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Person" Expanded="false">
+            <MudNavLink Href="/employe" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.FormatListBulleted" Match="NavLinkMatch.All">Liste</MudNavLink>
+            <MudNavLink Href="/employe/new" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AddCircle">Nouveau</MudNavLink>
+        </MudNavGroup>
+        <MudNavLink Href="/utilisateur/new" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.PersonAdd">Utilisateur</MudNavLink>
+    </MudNavGroup>
+    </div>
+    <div class="nav-item px-3">
+    <MudNavGroup Title="Client" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.People" Expanded="false">
+        <MudNavLink Href="/client" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.FormatListBulleted" Match="NavLinkMatch.All">Liste</MudNavLink>
+        <MudNavLink Href="/client/nouveau" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AddCircle">Nouveau</MudNavLink>
+    </MudNavGroup>
+    </div>
+    <div class="nav-item px-3">
+        <MudNavGroup Title="Prestation" IconColor="Color.Inherit" Icon="@Icons.Custom.FileFormats.FileDocument" Expanded="false">
+            <MudNavLink Href="/prestation" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.FormatListBulleted">Liste</MudNavLink>
+        </MudNavGroup>
+    </div>
+</MudNavMenu>
