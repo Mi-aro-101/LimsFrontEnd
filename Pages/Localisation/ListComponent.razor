@@ -1,0 +1,95 @@
+﻿@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@using System.Net.Http.Json
+@using System.Text.Json
+@using LimsFrontEnd.Models.Immobilisation
+@using LimsUtils.Api
+@using System.Collections.Generic
+@using System.Linq
+@using System.Threading.Tasks
+
+<div class="row">
+    <!-- Colonne de création -->
+    <div class="col">
+        <Create OnLocalisationCreated="HandleLocalisationCreated" />
+    </div>
+
+    <!-- Colonne de la liste -->
+    <div class="col">
+        @if (localisations == null || localisations.Count == 0)
+        {
+            <p><em>Aucune localisation disponible</em></p>
+        }
+        else
+        {
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Désignation</th>
+                        <th scope="col"><center>Actions</center></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var localisation in localisations.OrderBy(l => l.IdLocalisation))
+                    {
+                        <tr>
+                            <td>@localisation.IdLocalisation</td>
+                            <td>@localisation.Designation</td>
+                            <td>
+                                <center>
+                                    <MudButton Size="Size.Small"
+                                               @onclick="@(() => HandleUpdate(localisation.IdLocalisation))"
+                                               Variant="Variant.Filled"
+                                               StartIcon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Warning">
+                                    </MudButton>
+                                </center>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<LocalisationDto> localisations = new List<LocalisationDto>();
+    private string url = "http://localhost:5077/api/localisations";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLocalisations();
+    }
+
+    private async Task LoadLocalisations()
+    {
+        try
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url, options);
+            if (apiResponse != null && apiResponse.IsSuccess && apiResponse.Data != null)
+            {
+                localisations = JsonSerializer.Deserialize<List<LocalisationDto>>(
+                    apiResponse.Data.ToString(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new List<LocalisationDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des localisations : {ex.Message}");
+        }
+    }
+
+    private async Task HandleLocalisationCreated()
+    {
+        await LoadLocalisations();
+    }
+
+    private void HandleUpdate(int id)
+    {
+        NavigationManager.NavigateTo($"/localisation/edit/{id}");
+    }
+}
