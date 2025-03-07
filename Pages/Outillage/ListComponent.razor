@@ -1,0 +1,162 @@
+﻿@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using System.Text.Json
+@using LimsFrontEnd.Models.Outillage
+@using LimsUtils.Api
+@using System.Linq
+
+<style>
+    .bordered-cell-one {
+        border-right: none;
+        text-align: center;
+    }
+
+    .bordered-cell-two {
+        border-left: none;
+        text-align: center;
+    }
+</style>
+
+<div class="row">
+    <!-- Colonne de création -->
+    <div class="col">
+        <Create OnOutillageCreated="HandleOutillageCreated" />
+    </div>
+
+    <!-- Colonne de la liste -->
+    <div class="col">
+        @if (outillages == null || outillages.Count == 0)
+        {
+            <p><em>Aucun outillage disponible</em></p>
+        }
+        else
+        {
+            if (apiResponse != null && apiResponse.ViewBag != null &&
+            apiResponse.ViewBag.ContainsKey("position") &&
+            apiResponse.ViewBag.ContainsKey("nbrPerPage") &&
+            apiResponse.ViewBag.ContainsKey("nbrLinks"))
+            {
+                var currentPage = int.Parse(apiResponse.ViewBag["position"].ToString());
+                var totalPages = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">Désignation</th>
+                            <th scope="col">Marque</th>
+                            <th scope="col"><center>Actions</center></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var outillage in outillages)
+                        {
+                            <tr>
+                                <td>@outillage.Designation</td>
+                                <td>
+                                    @{
+                                        var marque = allMarques.FirstOrDefault(m => m.IdMarque == outillage.IdMarque);
+                                    }
+                                    @((marque != null) ? marque.Designation : "N/A")
+                                </td>
+                                <td>
+                                    <center>
+                                        <button @onclick="@(() => HandleUpdate(outillage.IdOutillage))" class="btn btn-warning">Modifier</button>
+                                    </center>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" href="#" @onclick:preventDefault="true" @onclick="@(() => LoadOutillages(currentPage - 1))">Précédent</a>
+                        </li>
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" href="#" @onclick:preventDefault="true" @onclick="@(() => LoadOutillages(currentPage + 1))">Suivant</a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <center>
+                    <p>Page @apiResponse.ViewBag["position"] sur @apiResponse.ViewBag["nbrLinks"]</p>
+                </center>
+            }
+            else
+            {
+                <p>Informations de pagination indisponibles.</p>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private List<OutillageDto> outillages = new List<OutillageDto>();
+    private ApiResponse? apiResponse;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private string url = "http://localhost:5077/api/outillages";
+    private List<MarqueDto> allMarques = new List<MarqueDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOutillages(currentPage);
+        await LoadAllMarques();
+    }
+
+    private async Task LoadOutillages(int page)
+    {
+        currentPage = page;
+        try
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{url}?position={currentPage}&pageSize={pageSize}", options);
+            if (apiResponse != null && apiResponse.IsSuccess && apiResponse.Data != null)
+            {
+                outillages = JsonSerializer.Deserialize<List<OutillageDto>>(
+                    apiResponse.Data.ToString(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new List<OutillageDto>();
+                Console.WriteLine($"Chargement de la page {currentPage}. Enregistrements reçus: {outillages.Count}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des outillages : {ex.Message}");
+        }
+    }
+
+    private async Task LoadAllMarques()
+    {
+        try
+        {
+            var apiResponseMarques = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/marque-outillage");
+            if (apiResponseMarques != null && apiResponseMarques.IsSuccess && apiResponseMarques.Data != null)
+            {
+                var jsonData = apiResponseMarques.Data.ToString();
+                allMarques = JsonSerializer.Deserialize<List<MarqueDto>>(jsonData, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<MarqueDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des marques : {ex.Message}");
+        }
+    }
+
+    private async Task HandleOutillageCreated()
+    {
+        await LoadOutillages(currentPage);
+    }
+
+    private void HandleUpdate(int id)
+    {
+        NavigationManager.NavigateTo($"/outillage/edit/{id}");
+    }
+}
