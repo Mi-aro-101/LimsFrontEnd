@@ -1,0 +1,57 @@
+@using LimsFrontEnd.Models
+
+<center><h2>Etape @(currentStep+1) sur @totalStep</h2></center>
+<hr>
+<MudGrid Justify="Justify.Center">
+    <MudItem xs="8" sm="5">
+        <MudCard>
+            <MudCardContent>
+
+                <DynamicComponent Type="@steps[currentStep]" 
+                                Parameters="@(new Dictionary<string, object> { 
+                                        ["Prestation"] = Prestation,
+                                    }
+                                )"/>
+
+            </MudCardContent>
+            <MudCardActions>
+                <MudGrid Justify="Justify.Center">
+                    <MudItem>
+                        <MudButton @onclick="NextStep" Variant="Variant.Filled" Color="Color.Primary">Suivant</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+
+@code
+{
+    [Parameter]
+    public EventCallback<CreatePrestationDto> OnSubmit { get; set; }
+    private CreatePrestationDto Prestation = new CreatePrestationDto();
+    private int currentStep = 0;
+    private int totalStep = 3;
+
+    private readonly Type[] steps = 
+    {
+        typeof(FirstStep),
+        typeof(SecondStep),
+        typeof(ThirdStep)
+    };
+
+    private void NextStep()
+    {
+        if(currentStep < steps.Length - 1)
+        {
+            currentStep++;
+        }
+        else Submit();
+    }
+
+    private void Submit()
+    {
+        OnSubmit.InvokeAsync(Prestation).GetAwaiter().GetResult();
+    }
+}
