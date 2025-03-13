@@ -1,0 +1,116 @@
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+@if(!string.IsNullOrEmpty(exception))
+{
+    <div class="alert alert-danger">
+        @exception
+    </div>
+}
+
+<center><h4>Choix des travaux</h4></center>
+    <hr>
+    <RowTemplate>
+        <MudTd DataLabel="Description">
+            <MudSelect Style="width: 200px;" TValue="string" @bind-Value="ReferenceClient" Label="Echantillon">
+                    @foreach (KeyValuePair<string,EchantillonDto> echantillon in Prestation.Echantillons)
+                    {
+                        <MudSelectItem Value="echantillon.Key">@echantillon.Key</MudSelectItem>
+                    }
+            </MudSelect>
+            <MudSelect T="int" Label="Type Travaux" MultiSelection="true" @bind-SelectedValues="IdTypesTravaux">
+                    @foreach (TypeTravauxDto typeTravaux in TypesTravaux)
+                    {
+                        <MudSelectItem T="int" Text="@typeTravaux.Designation" Value="@typeTravaux.IdTypeTravaux">@typeTravaux.Designation</MudSelectItem>
+                    }
+                </MudSelect>
+            <MudButton Color="Color.Dark" Size="Size.Small" Variant="Variant.Text" @onclick="Ajouter">Ajouter</MudButton>
+        </MudTd>
+        <MudTd>
+            <table class="table">
+                <thead>
+                    <th>Ref</th>
+                    <th>Travaux</th>
+                </thead>
+                <tbody>
+                    @foreach(var key in Prestation.Travaux.Keys)
+                    {
+                        <tr>
+                            <td>@key</td>
+                            <td>
+                                <ul>
+                                    @foreach (int travaux in Prestation.Travaux[key])
+                                    {
+                                        <li>
+                                            @TypesTravaux.Where(tt => tt.IdTypeTravaux == travaux).First().Designation
+                                        </li>
+                                    }
+                                </ul>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </MudTd>
+    </RowTemplate>
+
+
+@code
+{
+    [Parameter]
+    public CreatePrestationDto Prestation { get; set; }
+    public IEnumerable<int> IdTypesTravaux  { get; set; } = new List<int>();
+    private string ReferenceClient = string.Empty;
+    private ICollection<TypeTravauxDto> TypesTravaux = new List<TypeTravauxDto>();
+        string exception = "";
+
+    protected async override Task OnInitializedAsync()
+    {
+        Console.WriteLine(JsonSerializer.Serialize(Prestation));
+        await LoadTypeTravaux();
+        StateHasChanged();
+    }
+
+    private void Ajouter()
+    {
+        Console.WriteLine(JsonSerializer.Serialize(IdTypesTravaux));
+            Prestation.Travaux.Add(ReferenceClient,IdTypesTravaux.ToList());
+            Console.WriteLine("eto");
+            IdTypesTravaux = new List<int>();
+            ReferenceClient= string.Empty;
+            Console.WriteLine(JsonSerializer.Serialize(Prestation));
+            StateHasChanged();
+    }
+
+    private async Task LoadTypeTravaux()
+    {
+        ApiResponse? apiResponse;
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        apiResponse = await Http.GetFromJsonAsync<ApiResponse>("type/travaux/all");
+        if(apiResponse?.IsSuccess == true)
+        {
+            apiResponse.HandleResponse<List<TypeTravauxDto>>();
+            if(apiResponse.Data is List<TypeTravauxDto>)
+            {
+                TypesTravaux = (List<TypeTravauxDto>)apiResponse.Data;
+            }
+            else
+            {
+                exception = "Pas de datas reçus";
+            }
+        }
+        else{
+            if(string.IsNullOrEmpty(apiResponse?.Message))
+            {
+                exception = "Une erreur est survenue";
+            }
+            else
+            {
+                exception = (string)apiResponse.Message;
+            }
+        }
+    }
+}

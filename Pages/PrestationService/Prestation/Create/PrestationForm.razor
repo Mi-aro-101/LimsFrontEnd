@@ -1,0 +1,30 @@
+@page "/prestation-form"
+
+@using LimsFrontEnd.Models
+@using System.Text.Json
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PrestationStepForm OnSubmit="@HandleSubmit" />
+
+@code
+{
+    private CreatePrestationDto? prestation;
+
+    private async void HandleSubmit(CreatePrestationDto? createPrestationDto)
+    {
+        prestation = createPrestationDto;
+        try
+        {
+            var response = await Http.PostAsJsonAsync("prestation", prestation);
+            response.EnsureSuccessStatusCode(); // Throw if not successful
+            Navigation.NavigateTo("/prestation");
+            // Optionally handle the response (e.g., show a success message)
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine("Exception : " +ex.Message);
+        }
+        Console.WriteLine(JsonSerializer.Serialize(prestation));
+    }
+}
