@@ -56,7 +56,7 @@ else
                         </thead>
                         <tbody>
                             <tr>
-                                <td><button @onclick="@(() => DownloadPdf(@prestation.IdPrestation))" type="button" class="btn btn-outline-info">Etat de décompte</button></td>
+                                <td><EtatDecompte Id="@prestation.IdPrestation"/></td>
                             </tr>
                             <tr>
                                 <td><button type="button" class="btn btn-outline-dark">Fiche de travail</button></td>
