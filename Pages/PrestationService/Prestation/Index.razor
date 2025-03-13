@@ -60,7 +60,6 @@
 @code
 {
     VPrestationEtatDecompteDto[] prestations = new VPrestationEtatDecompteDto[0];
-    private string url = "http://localhost:5077/api/";
     string exception = "";
 
     protected override async Task OnInitializedAsync()
@@ -72,7 +71,7 @@
     {
         ApiResponse? apiResponse;
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+"prestation");
+        apiResponse = await Http.GetFromJsonAsync<ApiResponse>("prestation");
         if(apiResponse?.IsSuccess == true || apiResponse != null)
         {
             apiResponse.HandleResponse<VPrestationEtatDecompteDto[]>();

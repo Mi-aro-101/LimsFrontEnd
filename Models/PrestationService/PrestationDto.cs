@@ -24,4 +24,6 @@ public class PrestationDto
     public int StatutPaiement { get; set; }
     [JsonPropertyName("prestationDetails")]
     public ICollection<VPrestationDetailsDto> PrestationDetails { get; set; } = new List<VPrestationDetailsDto>();
+    [JsonPropertyName("remise")]
+    public double Remise { get; set; } = 0;
 }
