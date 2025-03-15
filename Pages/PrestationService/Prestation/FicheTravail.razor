@@ -1,7 +1,7 @@
 @inject IJSRuntime JSRuntime
 @inject HttpClient Http
 
-<MudButton Size="Size.Small" Color="Color.Dark" Variant="Variant.Filled" OnClick="DownloadPdf">Etat de décompte</MudButton>
+<MudButton Size="Size.Small" Color="Color.Info" Variant="Variant.Filled" OnClick="DownloadPdf">Fiche de travail</MudButton>
 
 
 <script>
@@ -18,7 +18,7 @@
 
     private async Task DownloadPdf()
     {
-        var response = await Http.PostAsJsonAsync($"prestation/etat/decompte/{Id}", Id);
+        var response = await Http.PostAsJsonAsync($"prestation/fiche/travail/{Id}", Id);
 
         if (response.IsSuccessStatusCode)
         {
