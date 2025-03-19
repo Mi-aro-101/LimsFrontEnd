@@ -103,6 +103,7 @@ else
                             <th>Reference du client</th>
                             <th>Travail demandé</th>
                             <th>Tarif du travail</th>
+                            <th>Qr Code</th>
                         </thead>
                         <tbody>
                             @foreach(var details in prestation.PrestationDetails)
@@ -112,6 +113,7 @@ else
                                 <td>@details.ReferenceClient</td>
                                 <td>@details.Designation</td>
                                 <td>@details.Tarif</td>
+                                <td><QRCodeEchnatillon Id="@details.IdEchantillon"/></td>
                             </tr>
                             }
                         </tbody>
