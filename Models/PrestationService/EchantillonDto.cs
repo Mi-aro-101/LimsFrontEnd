@@ -23,7 +23,10 @@ public class EchantillonDto
     [Required]
     public int IdTypeEchantillon { get; set; }
 
-
     [NotMapped]
     public string? TypeEchantillonDesignation { get; set; }
+    [JsonPropertyName("typeEchantillon")]
+    public TypeEchantillonDto? TypeEchantillon { get; set; }
+    [JsonPropertyName("detailsEchantillons")]
+    public ICollection<VDetailsEchantillonDto> DetailsEchantillons { get; set; } = new List<VDetailsEchantillonDto>();
 }
