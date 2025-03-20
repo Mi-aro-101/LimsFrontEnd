@@ -106,7 +106,7 @@
     private async Task LoadEmploye()
     {
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+$"employe/{Id}", options);
+        ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"employe/{Id}", options);
         if(apiResponse != null){
             apiResponse.HandleResponse<EmployeDto>();
             employe = (EmployeDto)apiResponse.Data;
