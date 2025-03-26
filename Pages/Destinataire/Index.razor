@@ -1,4 +1,4 @@
-﻿@page "/partenaire"
+﻿@page "/destinataire"
 
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
@@ -10,19 +10,20 @@
 @using LimsUtils.Api
 @using System.Text.Json;
 
+
 <MudContainer Class="pa-4">
     <MudGrid Spacing="3">
         <!-- Formulaire d'ajout -->
         <MudItem xs="12" md="5">
             <MudPaper Class="pa-4" Elevation="3">
-                <CreateComponent OnContratCreated="@HandleContratCreated" />
+                <CreateComponent OnDestinataireCreated="@HandleDestinataireCreated" />
             </MudPaper>
         </MudItem>
 
-        <!-- Liste des contrats -->
+         <!-- Liste des contrats -->
         <MudItem xs="12" md="7">
             <MudPaper Class="pa-6" Elevation="3">
-                @if (contrats == null)
+                @if (destinataires == null)
                 {
                     <MudText Typo="Typo.body1" Color="Color.Secondary">No data on the row</MudText>
                 }
@@ -38,24 +39,18 @@
                         var totalPages = int.Parse(apiResponse.ViewBag["TotalCount"].ToString());
                         var pageLinks = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
 
-                        <MudTable Items="contrats" Dense="true">
+                        <MudTable Items="destinataires" Dense="true">
                             <HeaderContent>
-                                <MudTh>Nom de l'entreprise</MudTh>
-                                <MudTh>Etat des relations</MudTh>
-                                <MudTh>Référence du contrat</MudTh>
-                                <MudTh>Date de paiement</MudTh>
+                                <MudTh>Destinataire</MudTh>                                
                                 <MudTh><center>Actions</center></MudTh>
                             </HeaderContent>
-                            <RowTemplate Context="contrat">
-                                <MudTd>@contrat.nomEntreprise</MudTd>
-                                <MudTd>@(contrat.etat == 200 ? "sous contrat" : (contrat.etat == 400 ? "rupture de contrat" : "")) </MudTd>
-                                <MudTd>@contrat.referenceContrat</MudTd>
-                                <MudTd>@contrat.datePaiement</MudTd>
+                            <RowTemplate Context="destinataire">
+                                <MudTd>@destinataire.designation</MudTd>                                
                                 <MudTd>
                                     <MudStack Direction="Row" Spacing="1" JustifyContent="Center">
                                         <MudButton Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
                                                     StartIcon="@Icons.Material.Filled.Edit"
-                                                    @onclick="() => HandleUpdate(contrat.idContratPartenaire)">
+                                                    @onclick="() => HandleUpdate(destinataire.idDestinataire)">
                                         </MudButton>
                                     </MudStack>
                                 </MudTd>
@@ -79,16 +74,16 @@
 </MudContainer>
 
 @code {
-    private List<ContratDto> contrats = new List<ContratDto>();
+    private List<DestinataireDto> destinataires = new List<DestinataireDto>();
     private ApiResponse? apiResponse;
     private int currentPage = 1;
-    private int pageSize = 5; 
-    private string url = "http://localhost:5077/api/contrat";
+    private int pageSize = 5;
+    private string url = "http://localhost:5077/api/destinataire";
 
-    private async Task HandleContratCreated()
+    private async Task HandleDestinataireCreated()
     {
         int pageLoaded = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
-        int elementNumberOnLastPage = contrats.Count;
+        int elementNumberOnLastPage = destinataires.Count;
         if (elementNumberOnLastPage == pageSize)
             pageLoaded = pageLoaded + 1;
         await LoadPostes(pageLoaded);
@@ -107,7 +102,7 @@
     }
 
     private async Task LoadPostes(int? activePage)
-    {        
+    {
         if (activePage.HasValue) currentPage = activePage.Value;
         try
         {
@@ -123,13 +118,13 @@
             if (apiResponse.Data == null)
             {
                 Console.WriteLine("⚠️ apiResponse.Data est NULL !");
-                apiResponse.Data = new List<ContratDto>(); // Évite le null en créant une liste vide
+                apiResponse.Data = new List<DestinataireDto>(); // Évite le null en créant une liste vide
             }
 
             if (currentPage <= int.Parse(apiResponse.ViewBag["nbrLinks"].ToString()))
             {
-                apiResponse.HandleResponse<List<ContratDto>>();
-                contrats = apiResponse.Data as List<ContratDto> ?? new List<ContratDto>();
+                apiResponse.HandleResponse<List<DestinataireDto>>();
+                destinataires = apiResponse.Data as List<DestinataireDto> ?? new List<DestinataireDto>();
             }
             else
             {
@@ -143,9 +138,8 @@
         }
     }
 
-    private async Task HandleUpdate(int id)
+    private async Task HandleUpdate(int Id_destinataire)
     {
-        NavigationManager.NavigateTo($"/partenaire/{id}");
+        NavigationManager.NavigateTo($"/destinataire/{Id_destinataire}");
     }
 }
-

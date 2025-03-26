@@ -29,6 +29,12 @@ namespace LimsFrontEnd.Models
         public int ModePaiement { get; set; }
         [JsonPropertyName("etatPaiement")]
         public int EtatPaiement { get; set; }
+        [JsonPropertyName("nomPayant")]
+        public string? nomPayant { get; set; }
+        [JsonPropertyName("prenomPayant")]
+        public string? prenomPayant { get; set; }
+        [JsonPropertyName("contactdupayant")]
+        public int contactdupayant { get; set; }
 
         //attribut commun
         [JsonPropertyName("id_etat_decompte")]

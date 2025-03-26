@@ -10,49 +10,76 @@
     <MudText Typo="Typo.h3" GutterBottom="true"> Formulaire de paiement par mobile</MudText>
     <MudForm Model="@mobile" @ref="reference">
         <MudGrid>
+             <!-- Checkbox pour afficher les informations client -->
             <MudItem xs="12">
-                <MudTextField T="string" label="Titre" @bind-Value="mobile.titre" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
-            </MudItem>
-            <MudItem xs="12">
-                <MudTextField T="string" Label="Clients" @bind-Value="mobile.clients" Required="true" Variant="Variant.Text" Margin="Margin.Dense" HelperText="Particulier ou Entreprise" HelperTextOnFocus="true" />
-            </MudItem>
-            <MudItem xs="12">
-                <MudTextField T="string" Label="Identité" @bind-Value="mobile.identite" Required="true" Variant="Variant.Text" Margin="Margin.Dense" HelperText="CIN ou NIF/STAT ou Passeport" HelperTextOnFocus="true" />
+                <MudButton OnClick="ToggleAfficherClient">Client</MudButton>
+            </MudItem>     
+            
+            @if (AfficherClient)
+            {
+                <MudItem xs="12">
+                    <MudTextField T="string" label="Titre" @bind-Value="mobile.titre" Required="true" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true"/>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Clients" @bind-Value="mobile.clients" Required="true" Variant="Variant.Text" Margin="Margin.Dense" HelperText="Particulier ou Entreprise" HelperTextOnFocus="true" Disabled="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Identité" @bind-Value="mobile.identite" Required="true" Variant="Variant.Text" Margin="Margin.Dense" HelperText="CIN ou NIF/STAT ou Passeport" HelperTextOnFocus="true" Disabled="true" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField T="string" Label="Adresse" @bind-Value="mobile.adresse" Required="true" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField T="string" Label="Contact" @bind-Value="mobile.contact" Required="true" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true"/>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Email" @bind-Value="mobile.email" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Etat de décompte" @bind-Value="mobile.etatDecompte" Required="true" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
+                </MudItem>
+            }
+
+            @if (!AfficherClient)
+            {
+                <!-- Information du Payant -->
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Nom du Payant" @bind-Value="mobile.nomPayant" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Prénom du Payant" @bind-Value="mobile.prenomPayant" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="int" Label="Contact du Payant" Required="true" @bind-Value="mobile.contactdupayant" Variant="Variant.Text" Margin="Margin.Dense" />
+                </MudItem>
+            }
+
+            <MudItem xs="6">
+                <MudDatePicker Label="Date" Date="@SelectedDate" DateChange="OnDateChange" Margin="Margin.Dense"/>
             </MudItem>
             <MudItem xs="6">
-                <MudTextField T="string" Label="Adresse" @bind-Value="mobile.adresse" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
-            </MudItem>
-            <MudItem xs="6">
-                <MudTextField T="string" Label="Contact" @bind-Value="mobile.contact" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
-            </MudItem>
-            <MudItem xs="12">
-                <MudTextField T="string" Label="Email" @bind-Value="mobile.email" Variant="Variant.Text" Margin="Margin.Dense" />
-            </MudItem>
-            <MudItem xs="12">
-                <MudTextField T="string" Label="Etat de décompte" @bind-Value="mobile.etatDecompte" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
-            </MudItem>
-            <MudItem xs="6">
-                <MudDatePicker Label="Date" Date="@SelectedDate" DateChange="OnDateChange" Margin="Margin.Dense" />
-            </MudItem>
-            <MudItem xs="6">
-                <MudTextField T="double" Label="Montant" Required="true" @bind-Value="mobile.montant" Variant="Variant.Text" Margin="Margin.Dense" />
+                <MudTextField T="double" Label="Montant" Required="true" @bind-Value="mobile.montant" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="12">
                 <MudHidden T="int" @bind-Value="mobile.id_etat_decompte" />
             </MudItem>
             <MudItem xs="12" class="d-flex justify-center">
-                <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8" OnClick="SubmitPaiementMobile">Continue to Payment</MudButton>
+                <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8" OnClick="SubmitPaiementMobile">Payer</MudButton>
             </MudItem>
         </MudGrid>
     </MudForm>
 </MudItem>
 
 @code {
+    private bool AfficherClient = false;
+
     [Parameter] public int id_etat_decompte { get; set; }
     private DateTime SelectedDate { get; set; } = DateTime.Now;
+
     MudForm? reference;
     private PaiementDto mobile = new PaiementDto();
     private List<PaiementDto>? mobiles;
+
     private ApiResponse? apiResponse;
     string url = "http://localhost:5077/api/paiementparmobile";
 
@@ -116,5 +143,11 @@
         {
             Console.WriteLine("Exception: " + ex.Message);
         }
+    }
+
+    private void ToggleAfficherClient()
+    {
+        AfficherClient = !AfficherClient;
+        StateHasChanged();
     }
 }

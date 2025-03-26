@@ -9,19 +9,13 @@
 
 <MudCard Class="pa-3" MaxWidth="30rem">
     <MudCardHeader>
-        <MudText Typo="Typo.h6" Class="text-center">Ajouter un partenaire</MudText>
+        <MudText Typo="Typo.h6" Class="text-center">Ajouter un destinataire</MudText>
     </MudCardHeader>
     <MudCardContent>
-        <MudForm Model="@contrat" @ref="form">
+        <MudForm Model="@destinataire" @ref="form">
             <MudStack Spacing="2">
-                <MudTextField T="string" Label="Nom" @bind-Value="contrat.nomEntreprise"
-                              Placeholder="Entreprise ou particulier" FullWidth="true" Required="true" Immediate="true" Dense="true" />
-
-                <MudTextField T="string" Label="Référence" @bind-Value="contrat.referenceContrat"
-                              Placeholder="Référence du contrat" FullWidth="true" Required="true" Immediate="true" Dense="true" />
-
-                <MudDatePicker Label="Date de paiement" @bind-Date="contrat.datePaiement"
-                               Margin="Margin.Dense" Required="true" Class="w-full" />
+                <MudTextField T="string" Label="Nom" @bind-Value="destinataire.designation"
+                Placeholder="Departement de l'entreprise" FullWidth="true" Required="true" Immediate="true" Dense="true" />                
             </MudStack>
 
             <MudDivider Class="my-3" />
@@ -37,41 +31,38 @@
 
 @code {
     private MudForm form;
-    private ContratDto contrat = new();
-    private string url = "http://localhost:5077/api/contrat";
+    private DestinataireDto destinataire = new();
+    private string url = "http://localhost:5077/api/destinataire";
 
     [Parameter]
-    public EventCallback OnContratCreated { get; set; }
+    public EventCallback OnDestinataireCreated { get; set; }
 
     private async Task SubmitForm()
     {
         try
         {
-            if (contrat == null)
+            if (destinataire == null)
             {
                 Console.WriteLine("contrat est null");
                 return;
             }
 
-            var contrats = new ContratDto
+            var destinataires = new DestinataireDto
             {
-                nomEntreprise = contrat.nomEntreprise,
-                etat = 200,
-                referenceContrat = contrat.referenceContrat,
-                datePaiement = contrat.datePaiement
-            };                   
+               destignation = destinataire.destignation    
+            };
 
-            var response = await Http.PostAsJsonAsync(url + "/ajout", contrats);            
+            var response = await Http.PostAsJsonAsync(url + "/ajout", destinataires);
 
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
                 Console.WriteLine("Erreur de l'API: " + errorContent);
-            }  
+            }
             else
             {
                 // Réinitialiser le formulaire après l'ajout
-                contrat = new ContratDto();
+                destinataire = new DestinataireDto();
                 await form.ResetAsync();
             }
         }
