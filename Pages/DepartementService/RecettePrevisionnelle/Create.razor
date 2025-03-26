@@ -1,0 +1,182 @@
+@page "/recette/previsionnelle/nouveau"
+
+@inject HttpClient Http
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using System.Text.Json;
+@inject NavigationManager NavigationManager
+
+<center><h2>Recette prévisionnelle</h2></center>
+
+<hr>
+<br>
+<div class="row">
+    <div class=" col">
+        <div class="card border-dark mb-3" style="max-width: 50rem;">
+            <div class="card-header">Nouvelle Recette prévisionnelle</div>
+            <div class="card-body text-dark">
+            @if(!(string.IsNullOrEmpty(exception)))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @exception
+                </div>
+            }
+            @if(message != null)
+            {
+                <div>
+                    <p>@message</p>
+                </div>
+            }
+                <EditForm Model="@recettePrevisionnelle" OnValidSubmit="@HandleOnSubmit">
+
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Date</label>
+                            <div class="col-sm-8">
+                            <InputDate class="form-control" @bind-Value="recettePrevisionnelle.DateRecettePrevisionnelle"/>
+                            </div>
+                        </div>
+                        <br>
+
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Debut exercice</label>
+                            <div class="col-sm-8">
+                            <InputDate class="form-control" @bind-Value="recettePrevisionnelle.Exercice.DateDebut"/>
+                            </div>
+                        </div>
+                        <br>
+
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Fin exercice</label>
+                            <div class="col-sm-8">
+                            <InputDate class="form-control" @bind-Value="recettePrevisionnelle.Exercice.DateFin"/>
+                            </div>
+                        </div>
+                        <br>
+
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Montant</label>
+                            <div class="col-sm-8">
+                            <InputNumber class="form-control" @bind-Value="recettePrevisionnelle.MontantTotal"/>
+                            </div>
+                        </div>
+                        <br>
+                        <hr>
+                            <h4>Details de la recette</h4>
+                            <div class="form-group row">
+                                <label for="inputPassword" class="col-sm-2 col-form-label">Departement</label>
+                                <div class="col-sm-8">
+                                <InputSelect class="form-control" @bind-Value="keyTemp">
+                                    @foreach(DepartementDto departement in departements)
+                                    {
+                                        <option value="@departement.IdDepartement" >@departement.Designation</option>
+                                    }
+                                </InputSelect>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="form-group row">
+                                <label for="inputPassword" class="col-sm-2 col-form-label">Montant</label>
+                                <div class="col-sm-8">
+                                <InputNumber class="form-control" @bind-Value="valueTemp"/>
+                                </div>
+                            </div>
+                            <br>
+                            <center>
+                                <button type="button" class="btn btn-success" @onclick="@(() => AjouterDepartement())">Ajouter</button>
+                            </center>
+                        <hr>
+
+                        <center>
+                            <button type="submit" class="btn btn-primary">Creer</button>
+                        </center>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col">
+        <DepartementComponent RecettePrevisionnelle="@recettePrevisionnelle" Departements="@departements"/>
+    </div>
+</div>
+
+@code
+{
+    RecettePrevisionnelleDepartement recettePrevisionnelle = new RecettePrevisionnelleDepartement();
+    private string url = "http://localhost:5077/api/";
+    private ICollection<DepartementDto> departements = new List<DepartementDto>();
+    string? message;
+    string? exception;
+    int? keyTemp;
+    decimal? valueTemp;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDepartements();
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        try
+        {
+            if(recettePrevisionnelle.MontantTotal != recettePrevisionnelle.SommeDetailsRecette())
+            {
+                exception = "Le total de montant par département ne correspond pas à la montant total de la recette";
+            }
+            Console.WriteLine(JsonSerializer.Serialize(recettePrevisionnelle));
+            var response = await Http.PostAsJsonAsync(url+"recette/previsionnelle", recettePrevisionnelle);
+            using var responseStream = await response.Content.ReadAsStreamAsync();
+            ApiResponse? apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
+            if (apiResponse?.Data != null)
+            {
+                apiResponse.HandleResponse<RecettePrevisionnelleDto>();
+                RecettePrevisionnelleDto recettePrevisionnelleDto = (RecettePrevisionnelleDto)apiResponse.Data;
+                NavigationManager.NavigateTo($"/recette/previsionnelle/details/{recettePrevisionnelleDto.IdRecettePrevisionnelle}");
+            }
+            message = "Recette insérée";
+            StateHasChanged();
+        }
+        catch(Exception ex)
+        {
+            exception =  ex.Message;
+        }
+    }
+
+    private void AjouterDepartement()
+    {
+        if(keyTemp == null || valueTemp == null)
+        {
+            exception = "Cette valeur ne peut pas être attribuée";
+            StateHasChanged();
+        }
+        else
+        {
+            if(recettePrevisionnelle.MontantTotal < recettePrevisionnelle.SommeDetailsRecette())
+            {
+                var lastKey = recettePrevisionnelle.RecettePrevisionnelleDepartements.Last().Key;
+                recettePrevisionnelle.RecettePrevisionnelleDepartements.Remove(lastKey);
+                exception = "Le total de montant par département ne correspond pas à la montant total de la recette";
+            }
+            recettePrevisionnelle.RecettePrevisionnelleDepartements[keyTemp.Value] = valueTemp.Value;
+        }
+    }
+
+    private async Task LoadDepartements()
+    {
+        ApiResponse? apiResponse;
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+"departement/all");
+        if(apiResponse?.IsSuccess == false || apiResponse == null)
+        {
+            HttpResponseMessage response = await Http.GetAsync(url+"departement/all");
+            exception = await response.Content.ReadAsStringAsync();
+        }
+        else if(apiResponse.Data != null)
+        {
+            apiResponse.HandleResponse<List<DepartementDto>>();
+            departements = (List<DepartementDto>)apiResponse.Data;
+        }
+    }
+}

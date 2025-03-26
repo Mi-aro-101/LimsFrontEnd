@@ -1,0 +1,103 @@
+@page "/recette/previsionnelle/details/{Id:int}"
+
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using System.Text.Json
+@using System.Globalization;
+
+@inject HttpClient Http
+
+<style>
+    .warning {
+        color: rgb(179, 176, 42); /* Or any other warning color */
+        font-size: smaller; /* Make the text smaller */
+        margin-top: 5px; /* Add some spacing above the warning */
+    }
+</style>
+
+
+<div class="row">
+    <div class="card" style="width: 60rem;">
+        <div class="card-body">
+            @if(!(string.IsNullOrEmpty(exception)))
+            {
+                <div class="error">
+                    @exception
+                </div>
+            }
+            @if(recettePrevisionnelle == null)
+            {
+                <center><div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p>Veuillez patienter un moment</p><br/></center>
+            }
+            else
+            {
+                <h3 class="card-title">Exercice du : @recettePrevisionnelle.Exercice.Designation</h3>
+                <hr>
+                <p class="card-text">Montant total : <strong> @string.Format(CultureInfo.InvariantCulture, "{0:#,##0.00}", @recettePrevisionnelle.MontantTotal).Replace(",", " ").Replace(".", ",") </strong></p>
+
+                <hr>
+                <h4>Details</h4>
+
+                <table class="table">
+                    <thead>
+                        <th>Departement</th>
+                        <th>Montant</th>
+                    </thead>
+                    <tbody>
+                        @foreach(var details in recettePrevisionnelle.DetailsRecettePrevisionnelles)
+                        {
+                        <tr>
+                            <td>@details.Departement?.Designation</td>
+                            <td>@string.Format(CultureInfo.InvariantCulture, "{0:#,##0.00}", @details.Montant).Replace(",", " ")</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+
+@code
+{
+    RecettePrevisionnelleDto recettePrevisionnelle = new RecettePrevisionnelleDto();
+    private readonly string url = "http://localhost:5077/api/";
+    [Parameter]
+    public int Id { get; set; }
+    private string? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await GetRecettePrevisionnelle();
+        }catch(Exception e)
+        {
+            exception = e.Message;
+        }
+    }
+
+    private async Task GetRecettePrevisionnelle()
+    {
+        try
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+$"recette/previsionnelle/{Id}", options);
+            Console.WriteLine(url+$"recette/previsionnelle/{Id}");
+            if(apiResponse.Data != null)
+            {
+                apiResponse.HandleResponse<RecettePrevisionnelleDto>();
+                recettePrevisionnelle = (RecettePrevisionnelleDto)apiResponse.Data;
+                Console.WriteLine(JsonSerializer.Serialize(recettePrevisionnelle));
+            }
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+    }
+}

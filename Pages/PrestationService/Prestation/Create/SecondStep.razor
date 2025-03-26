@@ -1,0 +1,123 @@
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+@if(!string.IsNullOrEmpty(exception))
+{
+    <div class="alert alert-danger">
+        @exception
+    </div>
+}
+
+<center><h4>Echantillon</h4></center>
+    <hr>
+    <RowTemplate>
+        <MudTd DataLabel="Description">
+            <MudSelect Style="width: 200px;" TValue="int" TItem="EchantillonDto" @bind-Value="echantillon.IdTypeEchantillon" Label="Echantillon">
+                    @foreach (var typeechantillon in typeEchantillons)
+                    {
+                        <MudSelectItem Value="typeechantillon.IdTypeEchantillon">@typeechantillon.Designation</MudSelectItem>
+                    }
+            </MudSelect>
+            <MudTextField @bind-Value="echantillon.Provenance"                              
+                              For="@(() => echantillon.Provenance)"
+                              Immediate="true"
+                              Label="Provenance" />
+            <MudTextField @bind-Value="echantillon.Reference"                              
+                              For="@(() => echantillon.Reference)"
+                              Immediate="true"
+                              Label="Référence" />
+             <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Date prelevement</label>
+                            <div class="col-sm-8">
+                            <InputDate class="form-control" @bind-Value="echantillon.DatePrelevement" />
+                            </div>
+                        </div>
+            @* <MudDatePicker For="@(() => echantillon.DatePrelevement)" /> *@
+            <MudButton Color="Color.Dark" Size="Size.Small" Variant="Variant.Text" @onclick="Ajouter">Ajouter</MudButton>
+        </MudTd>
+        <MudTd>
+            <table class="table">
+                <thead>
+                    <th>Ref</th>
+                    <th>Type</th>
+                    <th>Provenance</th>
+                </thead>
+                <tbody>
+                    @foreach(var key in Prestation.Echantillons.Keys)
+                    {
+                        <tr>
+                            <td>@Prestation.Echantillons[key].Reference</td>
+                            <td>@Prestation.Echantillons[key].TypeEchantillonDesignation</td>
+                            <td>@Prestation.Echantillons[key].Provenance</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </MudTd>
+    </RowTemplate>
+
+
+@code
+{
+    [Parameter]
+    public CreatePrestationDto Prestation { get; set; }
+    private EchantillonDto echantillon = new EchantillonDto();
+    private ICollection<TypeEchantillonDto> typeEchantillons = new List<TypeEchantillonDto>();
+        string exception = "";
+
+    protected async override Task OnInitializedAsync()
+    {
+        Console.WriteLine(JsonSerializer.Serialize(Prestation));
+        await LoadTypeEchantillon();
+        echantillon.IdTypeEchantillon = typeEchantillons.First().IdTypeEchantillon;
+        StateHasChanged();
+    }
+
+    private void Ajouter()
+    {
+        if(echantillon.IdTypeEchantillon == 0)
+        {
+            exception = "Le type de l'échantillon est requis";
+        }
+        else
+        {
+            echantillon.TypeEchantillonDesignation = typeEchantillons.Where(e => e.IdTypeEchantillon == echantillon.IdTypeEchantillon).First().Designation;
+            Prestation.Echantillons.Add(echantillon.Reference, echantillon);
+            echantillon = new EchantillonDto();
+            echantillon.IdTypeEchantillon = typeEchantillons.First().IdTypeEchantillon;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadTypeEchantillon()
+    {
+        ApiResponse? apiResponse;
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        apiResponse = await Http.GetFromJsonAsync<ApiResponse>("type/echantillon/all");
+        if(apiResponse?.IsSuccess == true)
+        {
+            apiResponse.HandleResponse<List<TypeEchantillonDto>>();
+            if(apiResponse.Data is List<TypeEchantillonDto>)
+            {
+                typeEchantillons = (List<TypeEchantillonDto>)apiResponse.Data;
+            }
+            else
+            {
+                exception = "Pas de datas reçus";
+            }
+        }
+        else{
+            if(string.IsNullOrEmpty(apiResponse?.Message))
+            {
+                exception = "Une erreur est survenue";
+            }
+            else
+            {
+                exception = (string)apiResponse.Message;
+            }
+        }
+    }
+}

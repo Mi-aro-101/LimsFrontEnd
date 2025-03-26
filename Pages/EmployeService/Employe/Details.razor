@@ -1,0 +1,133 @@
+@page "/employe/details/{Id:int}"
+
+@inherits CUComponent
+
+@inject HttpClient Http
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using System.Text.Json;
+@inject NavigationManager NavigationManager
+@using System.Globalization
+@using System
+
+<style>
+    .warning {
+        color: rgb(179, 176, 42); /* Or any other warning color */
+        font-size: smaller; /* Make the text smaller */
+        margin-top: 5px; /* Add some spacing above the warning */
+    }
+</style>
+
+
+<div class="row">
+    <div class="card" style="width: 40rem;">
+        <div class="card-body">
+            @if(employe == null)
+            {
+                <center><div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p>Veuillez patienter un moment</p><br/></center>
+            }
+            else
+            {
+                <h3 class="card-title">@employe.Nom @employe.Prenom</h3>
+                <h5 class="card-subtitle mb-2 text-body-secondary">@employe.Poste.Designation @(employe.Departement == null ? "" : employe.Departement.Designation)</h5>
+                <hr>
+                <p class="card-text">Matricule : <strong> @employe.Matricule </strong></p>
+                <p class="card-text">Genre : <strong> @employe.GetGenre() </strong></p>
+                <p class="card-text">Contact : <strong> @employe.Contact </strong></p>
+                <p class="card-text">Adresse : <strong> @employe.Adresse </strong></p>
+                <p class="card-text">Poste actuel : <strong> @employe.Poste.Designation </strong></p>
+                <p class="card-text">Date d'embauche : 
+                    <strong>  
+                        @string.Format(new CultureInfo("fr-FR"), "{0:dd MMMM yyyy}", employe.HistoriqueEmployes.ElementAt(0).DateDebut)
+                    </strong>
+                </p>
+                <table class="table">
+                    <thead>
+                        <th>Poste</th>
+                        <th>Date debut</th>
+                        <th>Date fin</th>
+                    </thead>
+                    <tbody>
+                        @foreach(var historique in employe.HistoriqueEmployes)
+                        {
+                        <tr>
+                            <td>@(postes.Where(p => p.IdPoste == historique.IdPoste).First().Designation)</td>
+                            <td>@string.Format(new CultureInfo("fr-FR"), "{0:dd MMMM yyyy}", historique.DateDebut)</td>
+                            <td>
+                                @if(string.Format(new CultureInfo("fr-FR"), "{0:dd MMMM yyyy}", historique.DateFin) == "")
+                                {
+                                    <p>Présent</p>
+                                }
+                                else
+                                {
+                                    <p>@string.Format(new CultureInfo("fr-FR"), "{0:dd MMMM yyyy}", historique.DateFin)</p>;
+                                }
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+                <div class="form-group row forDate" style="@(showDateInput ? "" : "display: none;")">
+                    <label for="inputPassword" class="col-sm-2 col-form-label">Date de renvoi</label>
+                    <div class="col-sm-8">
+                        <InputDate class="form-control" @bind-Value="employe.DateFinPoste" />
+                    </div>
+                    <center><div class="warning">Remplir ce champ pour confirmer la suppression</div></center>
+                </div>
+                <br>
+                <center><MudButton Size="Size.Small" @onclick="@(() => HandleDeletion())" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error"></MudButton></center>
+            }
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public int Id { get; set; }
+
+    ICollection<PosteDto> postes = new List<PosteDto>();
+
+    EmployeDto? employe;
+    private bool showDateInput = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmploye();
+        postes = await LoadPoste();
+    }
+
+    private async Task LoadEmploye()
+    {
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"employe/{Id}", options);
+        if(apiResponse != null){
+            apiResponse.HandleResponse<EmployeDto>();
+            employe = (EmployeDto)apiResponse.Data;
+            Console.WriteLine(JsonSerializer.Serialize(employe.HistoriqueEmployes));
+        }
+    }
+
+    private async Task HandleDeletion()
+    {
+        if(showDateInput == false)
+        {
+            showDateInput = true;
+        }
+        else
+        {
+             // Setting date nouveau poste to ancien because it is non nullabla
+            // It will be changed the microservice itself
+            employe.DateNouveauPoste = employe.DateFinPoste;
+            Console.WriteLine(JsonSerializer.Serialize(employe));
+            await Http.PutAsJsonAsync(url+$"employe/delete/{Id}", employe);
+            NavigationManager.NavigateTo("/employe");
+        }
+    }
+}

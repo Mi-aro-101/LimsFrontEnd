@@ -1,0 +1,96 @@
+@page "/prestation"
+
+@inject HttpClient Http
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using LimsUtils.Utility
+@using System.Text.Json
+@using System.Globalization;
+@inject NavigationManager NavigationManager
+
+@* <SortComponent /> *@
+<style>
+    .chiffre{
+        text-align: right;
+    }
+    tr:hover{
+        cursor: pointer;
+    }
+</style>
+
+<center><h2>Liste des prestations</h2></center>
+<hr>
+
+<div class="col">
+    @if (!string.IsNullOrEmpty(exception))
+    {
+        <p><em>@exception</em></p>
+        <p>Here boy</p>
+    }
+    else
+    {
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Reference</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Montant (Ar)</th>
+                        <th scope="col">Remise (%)</th>
+                        <th scope="col">Montant net (Ar)</th>
+                        <th scope="col">Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var prestation in prestations)
+                    {
+                        <tr @onclick="@(() => NavigateTo(@prestation.IdPrestation))" >
+                            <td>@prestation.Reference</td>
+                            <td>@ViewUtils.RenderDateAsFrenchFormat(prestation.DatePrestation)</td>
+                            <td class="chiffre">@ViewUtils.RenderMoney(prestation.Montant)</td>
+                            <td class="chiffre">@prestation.Remise</td>
+                            <td class="chiffre">@ViewUtils.RenderMoney(prestation.MontantTotal)</td>
+                            <td>@prestation.DesignationEtat</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+    }
+</div>
+
+@code
+{
+    VPrestationEtatDecompteDto[] prestations = new VPrestationEtatDecompteDto[0];
+    string exception = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPrestations();
+    }
+
+    private async Task LoadPrestations()
+    {
+        ApiResponse? apiResponse;
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        apiResponse = await Http.GetFromJsonAsync<ApiResponse>("prestation");
+        if(apiResponse?.IsSuccess == true || apiResponse != null)
+        {
+            apiResponse.HandleResponse<VPrestationEtatDecompteDto[]>();
+            if(apiResponse.Data == null)
+            {
+                exception = "Il n'y a pas de données dans la base";
+            }
+            else
+            {
+                prestations = (VPrestationEtatDecompteDto[])apiResponse.Data;
+            }
+        }
+        else{
+            exception = "Une erreur s'est produite";
+        }
+    }
+
+    private void NavigateTo(int idPrestation)
+    {
+        NavigationManager.NavigateTo($"/prestation/details/{idPrestation}");
+    }
+}

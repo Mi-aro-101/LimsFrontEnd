@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Pages\Reactif\CUBaseComponent.razor.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Pages\Reactif\CUBaseComponent.razor.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="ApiService">
         <HintPath>.\lib\ApiService.dll</HintPath>
     </Reference>

@@ -1,0 +1,96 @@
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@using System.Net.Http.Json
+@using System.Text.Json
+@using LimsFrontEnd.Models.Immobilisation
+@using LimsUtils.Api
+@using System.Collections.Generic
+@using System.Linq
+@using System.Threading.Tasks
+
+<div class="row">
+    <!-- Colonne de création -->
+    <div class="col">
+        <Create OnMarqueCreated="HandleMarqueCreated" />
+    </div>
+
+    <!-- Colonne de la liste -->
+    <div class="col">
+        @if (marques == null || marques.Count == 0)
+        {
+            <p><em>Aucune marque disponible</em></p>
+        }
+        else
+        {
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Désignation</th>
+                        <th scope="col"><center>Actions</center></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var marque in marques.OrderBy(m => m.IdMarque))
+                    {
+                        <tr>
+                            <td>@marque.IdMarque</td>
+                            <td>@marque.Designation</td>
+                            <td>
+                                <center>
+                                    <MudButton Size="Size.Small"
+                                               @onclick="@(() => HandleUpdate(marque.IdMarque))"
+                                               Variant="Variant.Filled"
+                                               StartIcon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Warning">
+                                    </MudButton>
+                                </center>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    private List<MarqueDto> marques = new List<MarqueDto>();
+    private string url = "http://localhost:5077/api/marque";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMarques();
+    }
+
+    private async Task LoadMarques()
+    {
+        try
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url, options);
+            if (apiResponse != null && apiResponse.IsSuccess && apiResponse.Data != null)
+            {
+                marques = JsonSerializer.Deserialize<List<MarqueDto>>(
+                    apiResponse.Data.ToString(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new List<MarqueDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des marques : {ex.Message}");
+        }
+    }
+
+    private async Task HandleMarqueCreated()
+    {
+        await LoadMarques();
+    }
+
+    private void HandleUpdate(int id)
+    {
+        NavigationManager.NavigateTo($"/marque/edit/{id}");
+    }
+}

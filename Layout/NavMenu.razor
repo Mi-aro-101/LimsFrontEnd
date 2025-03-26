@@ -1,4 +1,6 @@
-﻿<nav class="top-row ps-3 top-vertical navbar navbar-light">
+﻿@using LimsFrontEnd.NavigationMenu
+
+<nav class="top-row ps-3 top-vertical navbar">
     <div class="container-fluid">
         <div class="homelogo">  
             <a class="navbar-brand" href="#">
@@ -12,23 +14,12 @@
     </div>
 </nav>
 
-
-        <MudThemeProvider Theme="MyCustomTheme" />
+<MudThemeProvider Theme="MyCustomTheme" />
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
-        @* // TODO Dynamic depending on the user *@
-        <div class="nav-item px-3">
-            <MudNavLink Href="/dashboard" Icon="@Icons.Material.Filled.Dashboard" IconColor="Color.Inherit">
-                Dashboard
-            </MudNavLink>
-        </div>
-        <div class="nav-item px-3">
-            <MudNavLink Match="NavLinkMatch.Prefix" Href="/components/navmenu" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Storage">Servers</MudNavLink>
-        </div>
-        <div class="nav-item px-3">
-            <MudNavLink Href="/thelab" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Science">The Lab</MudNavLink>
-        </div>
-
+        <DlabComponent />
+        <AddlabComponent />
+        <GapComponent />
     </nav>
 </div>
 
@@ -44,6 +35,6 @@
 @code{
     MudTheme MyCustomTheme = new MudTheme()
     {
-        PaletteLight = new PaletteLight(){}
+        PaletteDark = new PaletteDark(){}
     };
 }

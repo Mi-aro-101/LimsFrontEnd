@@ -1,0 +1,68 @@
+@page "/utilisateur/new"
+
+@inherits CUComponent
+
+@inject NavigationManager NavigationManager
+@using System.Text.Json
+@using LimsFrontEnd.Models
+@using MudBlazor
+@using LimsFrontEnd.Components
+
+<center><h2>Inscription</h2></center>
+
+<hr>
+<br>
+    @if(string.IsNullOrEmpty(exception))
+    {
+        <p>@exception</p>
+    }
+    else
+    {
+        <div class="row">
+            <div class="card border-dark mb-3" style="max-width: 60rem;">
+                <div class="card-header">Nouveau(elle) Utilisateur</div>
+                <div class="card-body text-dark">
+                    <EditForm Model="@utilisateur" OnValidSubmit="@HandleOnSubmit">
+
+                            <CUComponent Utilisateur="@utilisateur"  Roles="@roles"/>
+
+                            <center>
+                                <button type="submit" class="btn btn-primary">Creer</button>
+                            </center>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    }
+
+
+@code
+{
+    UtilisateurDto utilisateur = new UtilisateurDto();
+    ICollection<DepartementDto> departements = new List<DepartementDto>(); 
+    ICollection<RoleDto> roles = new List<RoleDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+       
+        roles = await LoadRole();
+        @* utilisateur.R = roles.ElementAtOrDefault(0).IdRole; *@
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        try
+        {
+            Console.WriteLine(JsonSerializer.Serialize(utilisateur));
+            var response = await Http.PostAsJsonAsync(url+"auth/register", utilisateur);
+            Console.WriteLine(JsonSerializer.Serialize(utilisateur));
+
+            // Should reload to the last page of the pagination to show the added one
+            NavigationManager.NavigateTo("/utilisateur/new");
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine("Exception : " +ex);
+        }
+    }
+}

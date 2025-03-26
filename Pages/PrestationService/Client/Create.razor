@@ -1,0 +1,85 @@
+@page "/client/nouveau"
+
+@using LimsFrontEnd.Models;
+@inject HttpClient Http;
+@using System.Text.Json;
+@inject NavigationManager NavigationManager
+
+<center><h2>Nouveau client</h2></center>
+
+<hr>
+<br>
+    <div class="row">
+        <div class="card border-dark mb-3" style="max-width: 60rem;">
+            <div class="card-header">Nouveau client</div>
+            <div class="card-body text-dark">
+                <EditForm Model="@client" OnValidSubmit="@HandleOnSubmit">
+
+                        <CUComponent Client="@client"/>
+
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">CIN</label>
+                            <div class="col-sm-8">
+                            <InputText class="form-control" @bind-Value="client.Cin" />
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Passeport</label>
+                            <div class="col-sm-8">
+                            <InputText class="form-control" @bind-Value="client.Passeport" />
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Interne</label>
+                            <div class="col-sm-8">
+                                <InputSelect class="form-control" @bind-Value="client.IsInterne">
+                                    <option value=0>Oui</option>
+                                    <option value=1>Non</option>
+                                </InputSelect>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="form-group row">
+                            <label for="inputPassword" class="col-sm-2 col-form-label">Ref contrat</label>
+                            <div class="col-sm-8">
+                            <InputText class="form-control" @bind-Value="client.RefContrat" />
+                            </div>
+                        </div>
+                        <br>
+                    
+                        <center>
+                            <button type="submit" class="btn btn-primary">Inserer</button>
+                        </center>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+
+
+@code
+{
+    ClientDto client = new ClientDto{
+        Nom = "",
+        Adresse = "",
+        Contact = "",
+        Email = "@gmail.com",
+    };
+    string url = "http://localhost:5077/api/";
+    string exception = "";
+
+    private async Task HandleOnSubmit()
+    {
+        Console.WriteLine(JsonSerializer.Serialize(client));
+        var response = await Http.PostAsJsonAsync(url+"client", client);
+        if(response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            exception = await response.Content.ReadAsStringAsync();
+        }
+        Console.WriteLine(JsonSerializer.Serialize(client));
+
+        // Should reload to the last page of the pagination to show the added one
+        NavigationManager.NavigateTo("/client");
+    }
+}    

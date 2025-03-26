@@ -1,0 +1,60 @@
+@using LimsFrontEnd.Models;
+    @if(Client == null)
+    {
+        <center><div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p>Veuillez patienter un moment</p><br/></center>
+    }
+    else
+    {
+        <div class="form-group row">
+            <label for="staticEmail" class="col-sm-2 col-form-label">Nom</label>
+            <div class="col-sm-8">
+            <InputText class="form-control" @bind-Value="Client.Nom" />
+            </div>
+        </div>
+        <br>
+        <div class="form-group row">
+            <label for="staticEmail" class="col-sm-2 col-form-label">Adresse</label>
+            <div class="col-sm-8">
+            <InputText class="form-control" @bind-Value="Client.Adresse" />
+            </div>
+        </div>
+        <br>
+        <div class="form-group row">
+            <label for="staticEmail" class="col-sm-2 col-form-label">Mail</label>
+            <div class="col-sm-8">
+            <InputText class="form-control" @bind-Value="Client.Email" />
+            </div>
+        </div>
+        <br>
+        <div class="form-group row">
+            <label for="staticEmail" class="col-sm-2 col-form-label">Fax</label>
+            <div class="col-sm-8">
+            <InputText class="form-control" @bind-Value="Client.Fax" />
+            </div>
+        </div>
+        <br>
+        <div class="form-group row">
+            <label for="staticEmail" class="col-sm-2 col-form-label">NifStat</label>
+            <div class="col-sm-8">
+            <InputText class="form-control" @bind-Value="Client.NifStat" />
+            </div>
+        </div>
+        <br>
+        <div class="form-group row">
+            <label for="staticEmail" class="col-sm-2 col-form-label">Contact</label>
+            <div class="col-sm-8">
+            <InputText class="form-control" @bind-Value="Client.Contact" />
+            </div>
+        </div>
+        <br>
+    }
+
+@code
+{
+    [Parameter]
+    public ClientDto? Client { get; set; }
+}    
+
