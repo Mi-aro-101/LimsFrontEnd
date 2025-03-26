@@ -8,46 +8,44 @@
 
 
 <MudItem Class="pa-4">
+    <MudText Typo="Typo.h2" Class="mb-4">Formulaire de demande de note de débit</MudText>
     <MudForm Model="@demandeNote" @ref="reference">
         <MudGrid>
             <MudItem xs="12">
-                <MudTextField T="string" Label="Clients" @bind-Value="demandeNote.clients" Required="true" Variant="Variant.Text" Margin="Margin.Dense" HelperText="Particulier ou Entreprise" HelperTextOnFocus="true" />
+                <MudTextField T="string" Label="Clients" @bind-Value="demandeNote.clients" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="12">
-                <MudTextField T="string" Label="Identité" @bind-Value="demandeNote.identite" Required="true" Variant="Variant.Text" Margin="Margin.Dense" HelperText="CIN ou NIF/STAT ou Passeport" HelperTextOnFocus="true" />
+                <MudTextField T="string" Label="Identité" @bind-Value="demandeNote.identite" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="6">
-                <MudTextField T="string" Label="Adresse" @bind-Value="demandeNote.adresse" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+                <MudTextField T="string" Label="Adresse" @bind-Value="demandeNote.adresse" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="6">
-                <MudTextField T="string" Label="Contact" @bind-Value="demandeNote.contact" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+                <MudTextField T="string" Label="Contact" @bind-Value="demandeNote.contact" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="12">
-                <MudTextField T="string" Label="Email" @bind-Value="demandeNote.email" Variant="Variant.Text" Margin="Margin.Dense" />
+                <MudTextField T="string" Label="Email" @bind-Value="demandeNote.email" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="12">
-                <MudTextField T="string" Label="Etat de décompte" @bind-Value="demandeNote.etatDecompte" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+                <MudTextField T="string" Label="Etat de décompte" @bind-Value="demandeNote.etatDecompte" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="6">
-                <MudTextField T="string" Label="Nom de l'objet" @bind-Value="demandeNote.objet" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+                <MudTextField T="string" Label="Nom de l'objet" @bind-Value="demandeNote.objet" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="6">
-                <MudTextField T="int" Label="Nombre d'échantillons" @bind-Value="demandeNote.nombreEchantillon" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+                <MudTextField T="int" Label="Nombre d'échantillons" @bind-Value="demandeNote.nombreEchantillon" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="12">
-                <MudDatePicker  @bind-Date="demandeNote.datePaiement" Margin="Margin.Dense" />
+                <MudDatePicker @bind-Date="demandeNote.datePaiement" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="12">
-                <MudTextField T="double" Label="Montant en chiffre" @bind-Value="demandeNote.montant" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
+                <MudTextField T="double" Label="Montant en chiffre" @bind-Value="demandeNote.montant" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="12">
-                <MudTextField T="string" Label="Montant en lettre" @bind-Value="demandeNote.montant_literal" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
-            </MudItem>
-            <MudItem xs="12">
-                <MudHidden T="int" @bind-Value="demandeNote.idEtatDecompte" />
+                <MudTextField T="string" Label="Montant en lettre" @bind-Value="demandeNote.montant_literal" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="12" class="d-flex justify-center">
-                <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8" OnClick="SubmitNoteDebit">add demande</MudButton>
+                <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8" OnClick="SubmitNoteDebit">Ajouter demande</MudButton>
             </MudItem>
         </MudGrid>
     </MudForm>
@@ -62,56 +60,6 @@
     private List<DemandeDto>? demandeNotes;
     private ApiResponse? apiResponse;
     string url = "http://localhost:5077/api/notedebit";
-
-    /*protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await http.GetFromJsonAsync<ApiResponse>(url+"/{id_etat_decompte}", option);
-            apiResponse.HandleResponse<List<DemandeDto>>();
-            demandeNotes = (List<DemandeDto>)apiResponse.Data;
-            if (demandeNotes != null && demandeNotes.Any())
-            {
-                demandeNote = demandeNotes.First();
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Exception levé ici: " + ex.Message);
-        }
-    }
-
-    private async Task SubmitNoteDebit()
-    {
-        try
-        {
-            var nouvelleDemande = new DemandeDto
-                {
-                    reference = 0,  // Toujours 0 pour le moment
-                    //dateDemande = DateTime.Now, // Date actuelle
-                    dateDemande = demandeNote.datePaiement, // Date actuelle
-                    objet = demandeNote.objet, // Récupéré du formulaire
-                    montant = demandeNote.montant, // Récupéré du formulaire
-                    montant_literal = demandeNote.montant_literal, // Récupéré du formulaire
-                    idEtatDecompte = demandeNote.idEtatDecompte // Récupéré du formulaire
-                };
-            var response = await http.PostAsJsonAsync(url, nouvelleDemande);
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("Erreur de l'API: " + errorContent);
-            }
-            else
-            {
-                navigationManager.NavigateTo("/success");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Exception: " + ex.Message);
-        }
-    }*/
 
     protected override async Task OnInitializedAsync()
     {

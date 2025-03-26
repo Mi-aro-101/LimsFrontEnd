@@ -8,54 +8,33 @@
 <MudPaper Class="pa-4">
     <MudText Typo="Typo.h2" Class="mb-4">Liste des demandes</MudText>
 
-    <MudTextField @bind-Value="searchText" Label="Recherche" Placeholder="Etat de décompte" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
+    <MudTextField @bind-Value="searchText" Label="Recherche" Placeholder="Référence de l'état de décompte ou objet" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
 
-    <MudTable Items="FilteredData" Dense="true" Hover="true">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Demande note de débit</MudText>
-        </ToolBarContent>
+    <MudTable Items="FilteredData" Dense="true" Hover="true" FixedHeader="true" Height="300px">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Demande note de débit</MudText>
+            </ToolBarContent>
 
-        <HeaderContent>
-            <MudTh> N° </MudTh>
-            <MudTh> Réference </MudTh>
-            <MudTh> Date de la demande </MudTh>
-            <MudTh> Objet </MudTh>
-            <MudTh> Montant (Ar) </MudTh>
-            <MudTh> Réference de l'état de décompte </MudTh>
-            <MudTh> Date de l'état de décompte </MudTh>
-        </HeaderContent>
+            <HeaderContent>
+                <MudTh> N° </MudTh>
+                <MudTh> Réference </MudTh>
+                <MudTh> Date de la demande </MudTh>
+                <MudTh> Objet </MudTh>
+                <MudTh> Montant (Ar) </MudTh>
+                <MudTh> Réference de l'état de décompte </MudTh>
+                <MudTh> Date de l'état de décompte </MudTh>
+            </HeaderContent>
 
-        <RowTemplate>
-            <MudTd>                
-                @context.idEtatDecompte
-            </MudTd>
-            <MudTd>
-                @context.reference
-            </MudTd>
-            <MudTd>
-                @(context.dateDemande?.ToString("dd/MM/yyyy") ?? "N/A")
-            </MudTd>
-            <MudTd>
-                @context.objet
-            </MudTd>
-            <MudTd>
-                @context.montant
-            </MudTd>
-            <MudTd>
-                @context.referenceEtatDecompte
-            </MudTd>
-            <MudTd>
-                @(context.dateEtatDecompte?.ToString("dd/MM/yyyy") ?? "N/A")
-            </MudTd>
-        </RowTemplate>
-
-        <FooterContent>
-            <MudTd ColSpan="3" />
-            <MudTd>
-                <MudText Typo="Typo.subtitle1" Class="fw-bold">Total: @FilteredData.Sum(x => x.montant).ToString("F2") Ar</MudText>
-            </MudTd>
-        </FooterContent>
-    </MudTable>
+            <RowTemplate>
+                <MudTd> @context.idEtatDecompte </MudTd>
+                <MudTd> @context.reference </MudTd>
+                <MudTd> @(context.dateDemande?.ToString("dd/MM/yyyy", new System.Globalization.CultureInfo("fr-FR")) ?? "N/A") </MudTd>
+                <MudTd> @context.objet </MudTd>
+                <MudTd> @context.montant </MudTd>
+                <MudTd> @context.referenceEtatDecompte </MudTd>
+                <MudTd> @(context.dateEtatDecompte?.ToString("dd/MM/yyyy", new System.Globalization.CultureInfo("fr-FR")) ?? "N/A") </MudTd>
+            </RowTemplate>
+        </MudTable>
 
     <MudPaper Class="pa-3 mt-4" Elevation="4">
         <MudText Typo="Typo.h6">Somme Actuel : <b>@FilteredData.Sum(x => x.montant).ToString("F2") Ar</b></MudText>
@@ -90,59 +69,9 @@
         {
             return demandeNotes
         .Where(x => string.IsNullOrWhiteSpace(searchText) ||
-                x.objet.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+                x.objet.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                x.referenceEtatDecompte.Contains(searchText, StringComparison.OrdinalIgnoreCase))
         .ToList();
         }
-    }
-
-    /*private List<Encaissement> data = new()
-       {
-       new Encaissement { EncaissementDate = DateTime.Today, EtatDecompte = "En cours", Client = "Client A", Montant = 100.00, Observation = 1 },
-       new Encaissement { EncaissementDate = DateTime.Today, EtatDecompte = "Terminé", Client = "Client B", Montant = 200.50, Observation = 1 },
-       new Encaissement { EncaissementDate = DateTime.Today, EtatDecompte = "En cours", Client = "Client C", Montant = 150.75, Observation = 1 },
-       new Encaissement { EncaissementDate = DateTime.Today, EtatDecompte = "En cours", Client = "Client D", Montant = 100.00, Observation = 1 },
-       new Encaissement { EncaissementDate = DateTime.Today, EtatDecompte = "Terminé", Client = "Client E", Montant = 200.50, Observation = 1 },
-       new Encaissement { EncaissementDate = DateTime.Today, EtatDecompte = "En cours", Client = "Client F", Montant = 150.75, Observation = 1 }
-    };
-
-    private List<Encaissement> data = new();
-
-    private Encaissement? editingRow;
-
-    private List<Encaissement> FilteredData => data
-        .Where(x => string.IsNullOrWhiteSpace(searchText) ||
-                    x.Client.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-                    x.EtatDecompte.Contains(searchText, StringComparison.OrdinalIgnoreCase))
-    .ToList();
-
-    private void EditRow(Encaissement encaissement)
-        {
-        editingRow = encaissement;
-    }
-
-    private void SaveRow()
-        {
-        editingRow = null; // Enregistrer les modifications
-    }
-
-    private void CancelEdit()
-        {
-        editingRow = null; // Annuler l'édition
-    }
-
-    protected override async Task OnInitializedAsync()
-        {
-        try
-            {
-            data = await encaissement.ListeEncaissementFinJournee();
-            if(data == null)
-                {
-                Console.WriteLine("Aucune donnée trouvée.");
-        }
-        }
-        catch (Exception ex)
-            {
-            Console.WriteLine($"Erreur lors de la récupération des informations de l'etat journalier : {ex.Message}");
-    }
-    }*/
+    }    
 }

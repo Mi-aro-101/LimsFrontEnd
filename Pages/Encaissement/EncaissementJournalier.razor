@@ -1,0 +1,68 @@
+﻿@page "/etatjournalier"
+
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient http
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">Tableau des Encaissements</MudText>
+
+    <MudTextField @bind-Value="searchText" Label="Recherche" Placeholder="réference de l'etat de décompte ou client" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
+
+    <MudTable Items="FilteredData" Dense="true" Hover="true">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Encaissements Journalier</MudText>
+        </ToolBarContent>
+
+        <HeaderContent>
+            <MudTh> Date d'encaissement </MudTh>
+            <MudTh> État de décompte </MudTh>
+            <MudTh> Clients </MudTh>
+            <MudTh> Montant (Ar) </MudTh>
+            <MudTh> Observation </MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <!--<MudTd> @(context.dateEncaissement?.ToString("dd/MM/yyyy", new System.Globalization.CultureInfo("fr-FR")) ?? "N/A") </MudTd>-->
+            <MudTd> @(context.dateEncaissement?.ToString("dd/MM/yyyy") ?? "N/A") </MudTd>
+            <MudTd> @context.EtatDecompte </MudTd>
+            <MudTd> @context.clients </MudTd>
+            <MudTd> @context.montant </MudTd>
+            <MudTd> @(context.observation == 2 ? "interne" : (context.observation == 1 ? "externe": "")) </MudTd>            
+        </RowTemplate>  
+    </MudTable>
+
+    <MudPaper Class="pa-3 mt-4" Elevation="4">
+        <MudText Typo="Typo.h6">Arrêté à la somme de : <b>@FilteredData.Sum(x => x.montant).ToString("F2") Ar</b></MudText>
+    </MudPaper>
+</MudPaper>
+
+@code {    
+    private string searchText = "";
+
+    private List<EncaissementJournalierDto> data = new List<EncaissementJournalierDto>();
+    private ApiResponse? apiResponse;
+    string url = "http://localhost:5077/api/encaissement";  
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"{url}", option);
+            apiResponse.HandleResponse<List<EncaissementJournalierDto>>();
+            data = apiResponse.Data as List<EncaissementJournalierDto> ?? new List<EncaissementJournalierDto>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+
+    private List<EncaissementJournalierDto> FilteredData => data
+        .Where(x => string.IsNullOrWhiteSpace(searchText) ||
+                    x.clients.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                    x.EtatDecompte.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+}

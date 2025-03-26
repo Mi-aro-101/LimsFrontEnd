@@ -11,7 +11,7 @@
 
     <MudTextField @bind-Value="searchText" Label="Recherche" Placeholder="Etat de décompte" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
 
-    <MudTable Items="FilteredData" Dense="true" Hover="true">
+    <MudTable Items="FilteredData" Dense="true" RowsPerPage="10" Hover="true" FixedHeader="true" Height="300px">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Note de débit</MudText>
         </ToolBarContent>
@@ -24,18 +24,20 @@
         </HeaderContent>
 
         <RowTemplate>
-            <MudTd>
-                @context.idEtatDecompte
+            <MudTd> @context.idEtatDecompte </MudTd>
+            <MudTd> @context.referenceEtatDecompte </MudTd>
+            <MudTd> 
+                @if (context.dateEtatDecompte is DateTime date)
+                {
+                    Console.WriteLine(date.ToString("dd/MM/yyyy", new System.Globalization.CultureInfo("fr-FR")));
+                }
+                else
+                {
+                    Console.WriteLine("La valeur n'est pas un DateTime ou est null");
+                }
+                @(context.dateEtatDecompte?.ToString("dd/MM/yyyy", new System.Globalization.CultureInfo("fr-FR")) ?? "N/A") 
             </MudTd>
-            <MudTd>
-                @context.referenceEtatDecompte
-            </MudTd>
-            <MudTd>
-                @(context.dateEtatDecompte?.ToString("dd/MM/yyyy") ?? "N/A")
-            </MudTd>
-            <MudTd>
-                @context.montant
-            </MudTd>
+            <MudTd> @context.montant </MudTd>
             <MudTd>
                 @if (demandeNote == context)
                 {
@@ -48,13 +50,6 @@
                 }
             </MudTd>
         </RowTemplate>
-
-        <FooterContent>
-            <MudTd ColSpan="3" />
-            <MudTd>
-                <MudText Typo="Typo.subtitle1" Class="fw-bold">Total: @FilteredData.Sum(x => x.montant).ToString("F2") Ar</MudText>
-            </MudTd>
-        </FooterContent>
     </MudTable>
 
     <MudPaper Class="pa-3 mt-4" Elevation="4">
