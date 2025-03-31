@@ -6,6 +6,7 @@
 @using LimsUtils.Utility
 @using System.Text.Json
 @using System.Globalization;
+@using Component.Prestation;
 @inject NavigationManager NavigationManager
 
 @* <SortComponent /> *@
@@ -19,6 +20,10 @@
 </style>
 
 <center><h2>Liste des prestations</h2></center>
+<hr>
+
+<SortComponent Reload="@LoadPrestations"/>
+
 <hr>
 
 <div class="col">
@@ -67,11 +72,12 @@
         await LoadPrestations();
     }
 
-    private async Task LoadPrestations()
+    private async Task LoadPrestations(SortPrestationDto? sorter = null)
     {
-        ApiResponse? apiResponse;
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        apiResponse = await Http.GetFromJsonAsync<ApiResponse>("prestation");
+        var response = await Http.PostAsJsonAsync("prestation/tri", sorter);
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        ApiResponse? apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
+        
         if(apiResponse?.IsSuccess == true || apiResponse != null)
         {
             apiResponse.HandleResponse<VPrestationEtatDecompteDto[]>();
@@ -87,6 +93,7 @@
         else{
             exception = "Une erreur s'est produite";
         }
+        StateHasChanged();
     }
 
     private void NavigateTo(int idPrestation)
