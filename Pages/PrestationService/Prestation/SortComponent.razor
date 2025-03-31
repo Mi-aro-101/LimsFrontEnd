@@ -1,0 +1,74 @@
+@inject HttpClient Http
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using LimsUtils.Utility
+@using System.Text.Json
+@using System.Globalization;
+
+@namespace Component.Prestation
+
+@if(!(string.IsNullOrEmpty(exception)))
+{
+    <div class="alert alert-danger">
+        @exception
+    </div>
+}
+
+<center>
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudPaper Class="pa-4">
+                <MudForm>
+                    <MudTextField T="string" Label="Reference fiche de travail" @bind-Value="sorter.ReferenceFicheTravail" />
+                    <MudTextField T="int" Label="Année" @bind-Value="sorter.AnneeExercice" />
+                    <MudSelect @bind-Value="sorter.IdEtatPrestation" Label="Margin">
+                        <MudSelectItem Value="0">___</MudSelectItem>
+                        @foreach (var etatPrestation in etatPrestations)
+                        {
+                            <MudSelectItem Value="etatPrestation.IdEtatPrestation">@etatPrestation.Designation</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <div class="d-flex align-center justify-space-between">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>OnSubmit())" Class="ml-auto">Tri</MudButton>
+                    </div>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</center>
+
+
+@code
+{
+    private SortPrestationDto sorter = new SortPrestationDto();
+    ICollection<EtatPrestationDto> etatPrestations = new List<EtatPrestationDto>();
+    string exception = string.Empty;
+    [Parameter]
+    public EventCallback<SortPrestationDto> Reload { get; set; } 
+
+    protected async override Task OnInitializedAsync()
+    {
+        await FetchEtatPrestation();
+    }
+
+    private async Task FetchEtatPrestation()
+    {
+        ApiResponse? apiResponse;
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        apiResponse = await Http.GetFromJsonAsync<ApiResponse>("etat/prestation");
+        if(apiResponse?.IsSuccess == true)
+        {
+            apiResponse.HandleResponse<List<EtatPrestationDto>>();
+            etatPrestations = (List<EtatPrestationDto>)apiResponse.Data;
+        }
+        else{
+            exception = (string?)apiResponse.Message;
+        }
+    }
+
+    private async Task OnSubmit()
+    {
+        Console.WriteLine("Submission en cours");
+        await Reload.InvokeAsync(sorter);
+    }
+}
