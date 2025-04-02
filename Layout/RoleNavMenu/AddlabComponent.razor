@@ -6,9 +6,12 @@
 </style>
 <MudNavMenu Margin="Margin.Dense" Color="Color.Warning">
     <div class="nav-item px-3">
-        <MudNavLink Href="/departement" Icon="@Icons.Material.Filled.Warehouse" IconColor="Color.Inherit">
-            Departement
-        </MudNavLink>
+        <MudNavGroup Title="Dashboard" Icon="@Icons.Material.Filled.SpaceDashboard" IconColor="Color.Inherit"  Expanded="false">
+            <MudNavGroup Title="Chiffre d'affaire" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AttachMoney" Expanded="false">
+                <MudNavLink Href="/chiffre/affaire/annuel" IconColor="Color.Inherit" Match="NavLinkMatch.All">Annuel</MudNavLink>
+                <MudNavLink Href="/chiffre/affaire/mensuel" IconColor="Color.Inherit" Match="NavLinkMatch.All">Mensuel</MudNavLink>
+            </MudNavGroup>
+        </MudNavGroup>
     </div>
     <div class="nav-item px-3">
     <MudNavLink Href="/poste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Desk">
