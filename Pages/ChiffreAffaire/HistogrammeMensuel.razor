@@ -1,0 +1,103 @@
+@page "/chiffre/affaire"
+
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using LimsUtils.Utility
+@using System.Text.Json
+
+@implements IAsyncDisposable
+
+<h2>Chiffre d'affaire mensuel</h2>
+<hr>
+
+@if(!(string.IsNullOrEmpty(exception)))
+{
+    <div class="alert alert-danger">
+        @exception
+    </div>
+}
+
+<center>
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudPaper Class="pa-4">
+                <MudForm>
+                    <MudTextField T="int?" Label="Année" @bind-Value="sorter!.Annee" />
+                    <br>
+                    <div class="d-flex align-center justify-space-between">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>FetchCA())" Class="ml-auto">Valider</MudButton>
+                    </div>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</center>
+
+<br>
+
+<div id="myDiv"></div>
+
+@code
+{
+    ChiffreAffaireDto[] chiffreAffaires = new ChiffreAffaireDto[12];
+    ChiffreAffaireDto sorter = new ChiffreAffaireDto{
+        Annee = DateUtils.GetCurrentYear()
+    };
+    string exception = string.Empty;
+    decimal[] ys = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    private IJSObjectReference? jsModule;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await InitData();
+        await FetchCA();
+    }
+
+    private async Task FetchCA()
+    {
+        var response = await Http.PostAsJsonAsync("chiffre/affaire/mensuel", sorter);
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        ApiResponse? apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
+        
+        if(apiResponse?.IsSuccess == true || apiResponse != null)
+        {
+            apiResponse.HandleResponse<ChiffreAffaireDto[]>();
+            chiffreAffaires = (ChiffreAffaireDto[])apiResponse.Data;
+        }
+        else{
+            exception = "Une erreur s'est produite";
+        }
+        Console.WriteLine(JsonSerializer.Serialize(chiffreAffaires));
+        await MatchData(chiffreAffaires);
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./js/chiffre-affaire.js");
+        await jsModule.InvokeVoidAsync("chiffreAffaireMensuel", ys, sorter!.Annee);
+    }
+
+    private async Task InitData()
+    {
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./js/chiffre-affaire.js");
+        await jsModule.InvokeVoidAsync("chiffreAffaireMensuel", ys, sorter!.Annee);
+    }
+
+    private async Task MatchData(ChiffreAffaireDto[] chiffreAffaires)
+    {
+        decimal[] initValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        foreach(ChiffreAffaireDto chiffreAffaire in chiffreAffaires)
+        {
+            initValues[chiffreAffaire!.Mois!.Value - 1] = chiffreAffaire!.Montant!.Value;
+        }
+        ys = initValues;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (jsModule != null)
+        {
+            await jsModule.DisposeAsync();
+        }
+    }
+}
