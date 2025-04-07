@@ -28,9 +28,9 @@ export function chiffreAffaire(xs, ys, titre)
             y: 0.95
         },
         xaxis: { 
-            type: 'category',  // This is the key change
+            type: 'category',
             categoryorder: 'array', // Preserve your original order
-            categoryarray: xs      // Explicitly set all categories
+            categoryarray: x      // Explicitly set all categories
         },
         yaxis: { title: "Profit", rangemode: 'tozero' },
         showlegend: true, // To display the legend
