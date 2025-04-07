@@ -21,15 +21,16 @@
                 <MudForm>
                     <MudTextField T="string" Label="Reference fiche de travail" @bind-Value="sorter.ReferenceFicheTravail" />
                     <MudTextField T="int" Label="Année" @bind-Value="sorter.AnneeExercice" />
-                    <MudSelect @bind-Value="sorter.IdEtatPrestation" Label="Margin">
+                    <MudSelect @bind-Value="sorter.IdEtatPrestation" Label="Statut">
                         <MudSelectItem Value="0">___</MudSelectItem>
                         @foreach (var etatPrestation in etatPrestations)
                         {
                             <MudSelectItem Value="etatPrestation.IdEtatPrestation">@etatPrestation.Designation</MudSelectItem>
                         }
                     </MudSelect>
+                    <br>
                     <div class="d-flex align-center justify-space-between">
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>OnSubmit())" Class="ml-auto">Tri</MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>OnSubmit())" Class="ml-auto">Filtrer</MudButton>
                     </div>
                 </MudForm>
             </MudPaper>
