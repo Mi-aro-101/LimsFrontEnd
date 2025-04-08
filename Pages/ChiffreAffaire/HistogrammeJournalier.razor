@@ -10,7 +10,7 @@
 
 @implements IAsyncDisposable
 
-<h2>Chiffre d'affaire mensuel</h2>
+<h2>Chiffre d'affaire Journalier</h2>
 <hr>
 
 @if(!(string.IsNullOrEmpty(exception)))
@@ -81,7 +81,10 @@
             exception = "Une erreur s'est produite";
         }
         Console.WriteLine(JsonSerializer.Serialize(chiffreAffaires));
-        chartTitle = "Chiffre d'affaire mensuel "+sorter!.Annee;
+        
+        string mois = new DateTime(2000, sorter!.Mois!.Value, 1).ToString("MMMM", new CultureInfo("fr-FR"));
+        chartTitle = $"Chiffre d'affaire journalier {mois} {sorter!.Annee!.Value}";
+
         await MatchData(chiffreAffaires);
         jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
                 "import", "./js/chiffre-affaire.js");
@@ -90,7 +93,8 @@
 
     private async Task MatchData(ChiffreAffaireDto[] chiffreAffaires)
     {
-        decimal[] initValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        // Get number of days based on the year and mont
+        decimal[] initValues = Enumerable.Repeat(0.0m, xs.Length).ToArray();
         foreach(ChiffreAffaireDto chiffreAffaire in chiffreAffaires)
         {
             initValues[chiffreAffaire!.Mois!.Value - 1] = chiffreAffaire!.Montant!.Value;
