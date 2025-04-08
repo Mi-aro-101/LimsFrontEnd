@@ -45,3 +45,31 @@ export function chiffreAffaire(xs, ys, titre)
 
     Plotly.newPlot('myDiv', data, layout)
 }
+
+export function chiffreAffaireDepartement(datas, titre)
+{
+    console.log("Data : " +datas)
+
+    var data = datas;
+
+    var layout = {
+        title: {
+            text: "📊 "+titre ,  // Main title text
+            font: {
+                size: 28,          // Increase size for a bigger title
+                family: "Arial, sans-serif",
+                color: "#333"       // Title text color
+            },
+            xref: "paper",
+            x: 0.5,               // Centering the title
+            y: 0.95
+        },
+        xaxis: { 
+            type: 'category',
+            categoryorder: 'array', // Preserve your original order
+        },
+        yaxis: { title: "Profit", rangemode: 'tozero' },
+    };
+
+    Plotly.newPlot('myDiv', data, layout)
+}
