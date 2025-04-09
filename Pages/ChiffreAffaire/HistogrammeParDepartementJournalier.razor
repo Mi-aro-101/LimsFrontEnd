@@ -1,4 +1,4 @@
-@page "/chiffre/affaire/departement/mensuel"
+@page "/chiffre/affaire/departement/journalier"
 
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
@@ -6,10 +6,11 @@
 @using LimsUtils.Api
 @using LimsUtils.Utility
 @using System.Text.Json
+@using System.Globalization
 
 @implements IAsyncDisposable
 
-<h2>Chiffre d'affaire mensuel par département</h2>
+<h2>Chiffre d'affaire journalier par département</h2>
 <hr>
 
 @if(!(string.IsNullOrEmpty(exception)))
@@ -24,13 +25,14 @@
         <MudItem xs="12" sm="7">
             <MudPaper Class="pa-4">
                 <MudForm>
-                    <MudTextField T="int?" Label="Année" @bind-Value="sorter!.Annee" />
+                    <MudTextField T="int?" Label="Annee" @bind-Value="sorter!.Annee" />
+                    <MudTextField T="int?" Label="Mois" @bind-Value="sorter!.Mois" />
                     <br>
                     <MudCardActions>
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>FetchCA())" Class="ml-auto">Valider</MudButton>
                     </MudCardActions>
                     <MudCardActions>
-                        <MudLink Href="/chiffre/affaire/mensuel">Hisogramme mensuel</MudLink>
+                        <MudLink Href="/chiffre/affaire/journalier">Hisogramme annuel</MudLink>
                     </MudCardActions>
                 </MudForm>
             </MudPaper>
@@ -46,23 +48,31 @@
 {
     private ChiffreAffaireDepartementDto[] chiffreAffaires = new ChiffreAffaireDepartementDto[12];
     private ChiffreAffaireDto sorter = new ChiffreAffaireDto{
-        Annee = DateUtils.GetCurrentYear()
+        Annee = DateUtils.GetCurrentYear(),
+        Mois = DateTime.Now.Month
     };
     private string exception = string.Empty;
-    string[] xs = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septempbre", "Octobre", "Novembre", "Décembre"];
+    string[] xs = new string[1];
     private IJSObjectReference? jsModule;
     private string chartTitle = string.Empty;
 
 
     protected override async Task OnInitializedAsync()
     {
-        chartTitle = "Chiffre d'affaire mensuel "+sorter!.Annee!.Value;
+        string mois = new DateTime(2000, sorter!.Mois!.Value, 1).ToString("MMMM", new CultureInfo("fr-FR"));
+        chartTitle = $"Chiffre d'affaire journalier {mois} {sorter!.Annee!.Value}";
         await FetchCA();
     }
 
     private async Task FetchCA()
     {
-        var response = await Http.PostAsJsonAsync("chiffre/affaire/departement/mensuel", sorter);
+        // Get number of days based on the year and month
+        int daysInMonth = DateTime.DaysInMonth(sorter!.Annee!.Value, sorter!.Mois!.Value);
+        xs = Enumerable.Range(1, daysInMonth)
+            .Select(y => y.ToString())
+            .ToArray();
+
+        var response = await Http.PostAsJsonAsync("chiffre/affaire/departement/journalier", sorter);
         using var responseStream = await response.Content.ReadAsStreamAsync();
         ApiResponse? apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
         
@@ -74,7 +84,10 @@
         else{
             exception = "Une erreur s'est produite";
         }
-        chartTitle = "Chiffre d'affaire mensuel par département "+sorter!.Annee;
+        
+        string mois = new DateTime(2000, sorter!.Mois!.Value, 1).ToString("MMMM", new CultureInfo("fr-FR"));
+        chartTitle = $"Chiffre d'affaire journalier {mois} {sorter!.Annee!.Value}";
+
         var datas = await MatchData(chiffreAffaires);
         Console.WriteLine(JsonSerializer.Serialize(datas));
 
@@ -86,17 +99,18 @@
     private async Task<ICollection<CADataDepartementRow>> MatchData(ChiffreAffaireDepartementDto[] chiffreAffaires)
     {
         ICollection<CADataDepartementRow> datas = new List<CADataDepartementRow>();
-        decimal[] yValues = Enumerable.Repeat(0.0m, 12).ToArray();
+        decimal[] yValues = Enumerable.Repeat(0.0m, xs.Length).ToArray();
         foreach(var chiffreAffaire in chiffreAffaires)
         {
             CADataDepartementRow dataRow = new CADataDepartementRow();
             dataRow.x = xs;
             foreach(var chiffreAffaireParDpt in chiffreAffaire.ChiffreAffaires)
             {
-                yValues[chiffreAffaireParDpt!.Mois!.Value] = chiffreAffaireParDpt!.Montant!.Value;
+                yValues[chiffreAffaireParDpt!.Jour!.Value - 1] = chiffreAffaireParDpt.Montant!.Value;
             }
             dataRow.y = yValues;
-            yValues = Enumerable.Repeat(0.0m, 12).ToArray();
+            // Reset Y for the next departement
+            yValues = Enumerable.Repeat(0.0m, xs.Length).ToArray();
             dataRow.name = chiffreAffaire.Designation;
             datas.Add(dataRow);
         }

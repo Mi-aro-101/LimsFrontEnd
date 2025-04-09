@@ -28,9 +28,12 @@
                     <MudTextField T="int?" Label="Année" @bind-Value="sorter!.Annee" />
                     <MudTextField T="int?" Label="Mois" @bind-Value="sorter!.Mois" />
                     <br>
-                    <div class="d-flex align-center justify-space-between">
+                    <MudCardActions>
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>FetchCA())" Class="ml-auto">Valider</MudButton>
-                    </div>
+                    </MudCardActions>
+                    <MudCardActions>
+                        <MudLink Href="/chiffre/affaire/departement/journalier">Hisogramme annuel par département</MudLink>
+                    </MudCardActions>
                 </MudForm>
             </MudPaper>
         </MudItem>
@@ -64,7 +67,7 @@
 
     private async Task FetchCA()
     {
-        // Get number of days based on the year and mont
+        // Get number of days based on the year and month
         int daysInMonth = DateTime.DaysInMonth(sorter!.Annee!.Value, sorter!.Mois!.Value);
         xs = Enumerable.Range(1, daysInMonth).ToArray();
 
@@ -95,9 +98,10 @@
     {
         // Get number of days based on the year and mont
         decimal[] initValues = Enumerable.Repeat(0.0m, xs.Length).ToArray();
+        Console.WriteLine(initValues.Length);
         foreach(ChiffreAffaireDto chiffreAffaire in chiffreAffaires)
         {
-            initValues[chiffreAffaire!.Mois!.Value - 1] = chiffreAffaire!.Montant!.Value;
+            initValues[chiffreAffaire!.Jour!.Value - 1] = chiffreAffaire!.Montant!.Value;
         }
         ys = initValues;
     }
