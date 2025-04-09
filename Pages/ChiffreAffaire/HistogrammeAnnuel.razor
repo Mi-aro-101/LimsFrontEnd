@@ -27,9 +27,12 @@
                     <MudTextField T="int?" Label="Debut" @bind-Value="sorter!.Mois" />
                     <MudTextField T="int?" Label="Fin" @bind-Value="sorter!.Annee" />
                     <br>
-                    <div class="d-flex align-center justify-space-between">
+                    <MudCardActions>
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>FetchCA())" Class="ml-auto">Valider</MudButton>
-                    </div>
+                    </MudCardActions>
+                    <MudCardActions>
+                        <MudLink Href="/chiffre/affaire/departement/annuel">Histogramme annuel par département</MudLink>
+                    </MudCardActions>
                 </MudForm>
             </MudPaper>
         </MudItem>
