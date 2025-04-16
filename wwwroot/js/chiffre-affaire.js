@@ -73,3 +73,30 @@ export function chiffreAffaireDepartement(datas, titre)
 
     Plotly.newPlot('myDiv', data, layout)
 }
+
+export function chiffreAffaireClient(xs, ys, titre)
+{
+    var data = [{
+        values: ys,
+        labels: xs,
+        type: 'pie'
+      }];
+      
+      var layout = {
+        height: 400,
+        width: 500,
+        title: {
+            text: "📊 "+titre ,  // Main title text
+            font: {
+                size: 28,          // Increase size for a bigger title
+                family: "Arial, sans-serif",
+                color: "#333"       // Title text color
+            },
+            xref: "paper",
+            x: 0.5,               // Centering the title
+            y: 0.95
+        },
+      };
+      
+      Plotly.newPlot('yourDiv', data, layout);
+}

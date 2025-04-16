@@ -93,7 +93,7 @@
             dataRow.x = xs;
             foreach(var chiffreAffaireParDpt in chiffreAffaire.ChiffreAffaires)
             {
-                yValues[chiffreAffaireParDpt!.Mois!.Value] = chiffreAffaireParDpt!.Montant!.Value;
+                yValues[chiffreAffaireParDpt!.Mois!.Value-1] = chiffreAffaireParDpt!.Montant!.Value;
             }
             dataRow.y = yValues;
             yValues = Enumerable.Repeat(0.0m, 12).ToArray();
