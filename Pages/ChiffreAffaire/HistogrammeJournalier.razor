@@ -26,13 +26,19 @@
             <MudPaper Class="pa-4">
                 <MudForm>
                     <MudTextField T="int?" Label="Année" @bind-Value="sorter!.Annee" />
-                    <MudTextField T="int?" Label="Mois" @bind-Value="sorter!.Mois" />
+                    <MudSelect T="int" Label="Mois" @bind-Value="month">
+                        @for (int i = 1; i <= 12; i++)
+                        {
+                            var volana = moisSet[i - 1]; // <-- Define inside the loop
+                            <MudSelectItem Value="@i">@volana</MudSelectItem>
+                        }
+                    </MudSelect>
                     <br>
                     <MudCardActions>
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>FetchCA())" Class="ml-auto">Valider</MudButton>
                     </MudCardActions>
                     <MudCardActions>
-                        <MudLink Href="/chiffre/affaire/departement/journalier">Hisogramme annuel par département</MudLink>
+                        <MudLink Href="/chiffre/affaire/departement/journalier">Hisogramme journalier par département</MudLink>
                     </MudCardActions>
                 </MudForm>
             </MudPaper>
@@ -42,10 +48,35 @@
 
 <br>
 
-<div id="myDiv"></div>
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                Diagramme en baton
+            </div>
+            <div class="card-body">
+                <div id="myDiv"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                Client Interne/externe camembert
+            </div>
+            <div class="card-body">
+                <DiagrammeClientMensuelComponent Sorter="@sorter" />
+            </div>
+        </div>
+    </div>
+</div>
 
 @code
 {
+    private IJSObjectReference? jsModule;
+
+
+    int month = 1;
     private ChiffreAffaireDto[] chiffreAffaires = new ChiffreAffaireDto[12];
     private ChiffreAffaireDto sorter = new ChiffreAffaireDto{
         Annee = DateUtils.GetCurrentYear(),
@@ -54,14 +85,15 @@
     private string exception = string.Empty;
     int[] xs = new int[1];
     decimal[] ys = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    private IJSObjectReference? jsModule;
     private string chartTitle = string.Empty;
-
+    private string[] moisSet = new string[12];
 
     protected override async Task OnInitializedAsync()
     {
         string mois = new DateTime(2000, sorter!.Mois!.Value, 1).ToString("MMMM", new CultureInfo("fr-FR"));
         chartTitle = $"Chiffre d'affaire journalier {mois} {sorter!.Annee!.Value}";
+        month = DateTime.Now.Month;
+        moisSet = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
         await FetchCA();
     }
 
@@ -70,6 +102,7 @@
         // Get number of days based on the year and month
         int daysInMonth = DateTime.DaysInMonth(sorter!.Annee!.Value, sorter!.Mois!.Value);
         xs = Enumerable.Range(1, daysInMonth).ToArray();
+        sorter!.Mois = month;
 
         var response = await Http.PostAsJsonAsync("chiffre/affaire/journalier", sorter);
         using var responseStream = await response.Content.ReadAsStreamAsync();

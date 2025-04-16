@@ -40,7 +40,28 @@
 
 <br>
 
-<div id="myDiv"></div>
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                Diagramme en baton
+            </div>
+            <div class="card-body">
+                <div id="myDiv"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                Client Interne/externe camembert
+            </div>
+            <div class="card-body">
+                <DiagrammeClientAnnuelComponent Sorter="@sorter"/>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code
 {
