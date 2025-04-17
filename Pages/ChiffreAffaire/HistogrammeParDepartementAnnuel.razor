@@ -1,0 +1,129 @@
+@page "/chiffre/affaire/departement/annuel"
+
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using LimsUtils.Utility
+@using System.Text.Json
+
+@implements IAsyncDisposable
+
+<h2>Chiffre d'affaire annuel par département</h2>
+<hr>
+
+@if(!(string.IsNullOrEmpty(exception)))
+{
+    <div class="alert alert-danger">
+        <p>@exception</p>
+    </div>
+}
+
+<center>
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudPaper Class="pa-4">
+                <MudForm>
+                    <MudTextField T="int?" Label="Debut" @bind-Value="sorter!.Mois" />
+                    <MudTextField T="int?" Label="Fin" @bind-Value="sorter!.Annee" />
+                    <br>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>FetchCA())" Class="ml-auto">Valider</MudButton>
+                    </MudCardActions>
+                    <MudCardActions>
+                        <MudLink Href="/chiffre/affaire/annuel">Hisogramme annuel</MudLink>
+                    </MudCardActions>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</center>
+
+<br>
+
+<div id="myDiv"></div>
+
+@code
+{
+    private ChiffreAffaireDepartementDto[] chiffreAffaires = new ChiffreAffaireDepartementDto[12];
+    private ChiffreAffaireDto sorter = new ChiffreAffaireDto{
+        Mois = DateUtils.GetCurrentYear() - 5,
+        Annee = DateUtils.GetCurrentYear()
+    };
+    private string exception = string.Empty;
+    string[] xs = new string[1];
+    private IJSObjectReference? jsModule;
+    private string chartTitle = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        chartTitle = "Chiffre d'affaire annuel "+sorter!.Mois!.Value+" - "+sorter!.Annee!.Value;
+        await FetchCA();
+    }
+
+    private async Task FetchCA()
+    {
+        var response = await Http.PostAsJsonAsync("chiffre/affaire/departement/annuel", sorter);
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        ApiResponse? apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
+        
+        if(apiResponse?.IsSuccess == true || apiResponse != null)
+        {
+            apiResponse.HandleResponse<ChiffreAffaireDepartementDto[]>();
+            chiffreAffaires = (ChiffreAffaireDepartementDto[])apiResponse.Data;
+        }
+        else{
+            exception = "Une erreur s'est produite";
+        }
+        chartTitle = "Chiffre d'affaire annuel "+sorter!.Mois!.Value+" - "+sorter!.Annee!.Value;
+        var datas = await MatchData(chiffreAffaires);
+        Console.WriteLine(JsonSerializer.Serialize(datas));
+
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./js/chiffre-affaire.js");
+        await jsModule.InvokeVoidAsync("chiffreAffaireDepartement", datas, chartTitle);
+    }
+
+    private async Task<ICollection<CADataDepartementRow>> MatchData(ChiffreAffaireDepartementDto[] chiffreAffaires)
+    {
+        ICollection<CADataDepartementRow> datas = new List<CADataDepartementRow>();
+        int ecart = (sorter!.Annee!.Value - sorter!.Mois!.Value) + 1;
+        decimal[] yValues = Enumerable.Repeat(0.0m, ecart).ToArray();
+        xs = Enumerable.Range(sorter!.Mois!.Value, ecart)
+                      .Select(y => y.ToString())
+                      .ToArray();
+        foreach(var chiffreAffaire in chiffreAffaires)
+        {
+            CADataDepartementRow dataRow = new CADataDepartementRow();
+            dataRow.x = xs;
+            foreach(var chiffreAffaireParDpt in chiffreAffaire.ChiffreAffaires)
+            {
+                int indice = chiffreAffaireParDpt.Annee!.Value - sorter.Mois!.Value;
+                yValues[indice] = chiffreAffaireParDpt.Montant!.Value;
+            }
+            dataRow.y = yValues;
+            // Reset Y for the next departement
+            yValues = Enumerable.Repeat(0.0m, 12).ToArray();
+            dataRow.name = chiffreAffaire.Designation;
+            datas.Add(dataRow);
+        }
+        return datas;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (jsModule != null)
+        {
+            await jsModule.DisposeAsync();
+        }
+    }
+
+    class CADataDepartementRow
+    {
+        public string type { get; set; } = "bar";
+        public string[] x { get; set; }
+        public decimal[] y { get; set; }
+        public string? name { get; set; }
+    }
+}

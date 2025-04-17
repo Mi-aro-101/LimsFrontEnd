@@ -21,7 +21,7 @@
 
  @if(!(string.IsNullOrEmpty(exception)))
     {
-        <div class="error">
+        <div class="alert alert-danger">
             @exception
         </div>
     }
@@ -60,7 +60,6 @@
 @code
 {
     private ICollection<EtatPrestationDto>? etatPrestations;
-    private readonly string url = "http://localhost:5077/api/";
     private string? exception;
 
     protected override async Task OnInitializedAsync()
@@ -72,7 +71,7 @@
     {
         ApiResponse? apiResponse;
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+"etat/prestation");
+        apiResponse = await Http.GetFromJsonAsync<ApiResponse>("etat/prestation");
         if(apiResponse?.IsSuccess == true)
         {
             apiResponse.HandleResponse<List<EtatPrestationDto>>();

@@ -1,0 +1,123 @@
+@page "/chiffre/affaire/annuel"
+
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using LimsUtils.Utility
+@using System.Text.Json
+
+@implements IAsyncDisposable
+
+<h2>Chiffre d'affaire Annuel</h2>
+<hr>
+
+@if(!(string.IsNullOrEmpty(exception)))
+{
+    <div class="alert alert-danger">
+        @exception
+    </div>
+}
+
+<center>
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudPaper Class="pa-4">
+                <MudForm>
+                    <MudTextField T="int?" Label="Debut" @bind-Value="sorter!.Mois" />
+                    <MudTextField T="int?" Label="Fin" @bind-Value="sorter!.Annee" />
+                    <br>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>FetchCA())" Class="ml-auto">Valider</MudButton>
+                    </MudCardActions>
+                    <MudCardActions>
+                        <MudLink Href="/chiffre/affaire/departement/annuel">Histogramme annuel par département</MudLink>
+                    </MudCardActions>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</center>
+
+<br>
+    <div class="card">
+        <div class="card-header">
+            Diagramme en baton
+        </div>
+        <div class="card-body">
+            <div id="myDiv"></div>
+        </div>
+    </div>
+
+@code
+{
+    ChiffreAffaireDto sorter = new ChiffreAffaireDto{
+        Mois = DateUtils.GetCurrentYear() - 5,
+        Annee = DateUtils.GetCurrentYear()
+    };
+
+    ChiffreAffaireDto[] chiffreAffaires = new ChiffreAffaireDto[1];
+    string exception = string.Empty;
+    string[] xs = new string[6];
+    decimal[] ys = new decimal[6];
+    private IJSObjectReference? jsModule;
+
+    private string chartTitle = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        chartTitle = "Chiffre d'affaire annuel "+sorter!.Mois+" - "+sorter!.Annee;
+        await FetchCA();
+    }
+
+    private async Task FetchCA()
+    {
+        if(sorter.Mois!.Value > sorter.Annee!.Value)
+        {
+            exception = "Les valeurs des dates ne sont pas correctes, revérifiez";
+            StateHasChanged();
+            return;
+        }
+        var response = await Http.PostAsJsonAsync("chiffre/affaire/annuel", sorter);
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        ApiResponse? apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
+        
+        if(apiResponse?.IsSuccess == true || apiResponse != null)
+        {
+            apiResponse.HandleResponse<ChiffreAffaireDto[]>();
+            chiffreAffaires = (ChiffreAffaireDto[])apiResponse.Data;
+        }
+        else{
+            exception = "Une erreur s'est produite";
+        }
+        chartTitle = "Chiffre d'affaire annuel "+sorter!.Mois+" - "+sorter!.Annee;
+        await MatchData(chiffreAffaires);
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./js/chiffre-affaire.js");
+        await jsModule.InvokeVoidAsync("chiffreAffaire", xs, ys, chartTitle);
+        exception= string.Empty;
+        StateHasChanged();
+    }
+
+    private async Task MatchData(ChiffreAffaireDto[] chiffreAffaires)
+    {
+        int ecart = (sorter!.Annee!.Value - sorter!.Mois!.Value) + 1;
+        int[] initxValues = Enumerable.Range(sorter!.Mois!.Value, ecart).ToArray();
+        decimal[] inityValues = Enumerable.Repeat(0.0m, ecart).ToArray();
+        foreach(ChiffreAffaireDto chiffreAffaire in chiffreAffaires)
+        {
+            int indice = chiffreAffaire.Annee!.Value - sorter.Mois!.Value;
+            inityValues[indice] = chiffreAffaire.Montant!.Value;
+        }
+        xs = initxValues.Select(n => n.ToString()).ToArray();
+        ys = inityValues;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (jsModule != null)
+        {
+            await jsModule.DisposeAsync();
+        }
+    }
+}

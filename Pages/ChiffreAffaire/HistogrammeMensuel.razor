@@ -1,0 +1,124 @@
+@page "/chiffre/affaire/mensuel"
+
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using LimsUtils.Utility
+@using System.Text.Json
+
+@implements IAsyncDisposable
+
+<h2>Chiffre d'affaire mensuel</h2>
+<hr>
+
+@if(!(string.IsNullOrEmpty(exception)))
+{
+    <div class="alert alert-danger">
+        <p>@exception</p>
+    </div>
+}
+
+<center>
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudPaper Class="pa-4">
+                <MudForm>
+                    <MudTextField T="int?" Label="Année" @bind-Value="sorter!.Annee" />
+                    <br>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>FetchCA())" Class="ml-auto">Valider</MudButton>
+                    </MudCardActions>
+                    <MudCardActions>
+                        <MudLink Href="/chiffre/affaire/departement/mensuel">Histogramme mensuel par département</MudLink>
+                    </MudCardActions>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</center>
+
+<br>
+
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                Diagramme en baton
+            </div>
+            <div class="card-body">
+                <div id="myDiv"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                Client Interne/externe camembert
+            </div>
+            <div class="card-body">
+                <DiagrammeClientAnnuelComponent Sorter="@sorter"/>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    private ChiffreAffaireDto[] chiffreAffaires = new ChiffreAffaireDto[12];
+    private ChiffreAffaireDto sorter = new ChiffreAffaireDto{
+        Annee = DateUtils.GetCurrentYear()
+    };
+    private string exception = string.Empty;
+    string[] xs = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septempbre", "Octobre", "Novembre", "Décembre"];
+    decimal[] ys = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    private IJSObjectReference? jsModule;
+    private string chartTitle = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        chartTitle = "Chiffre d'affaire mensuel "+sorter!.Annee!.Value;
+        await FetchCA();
+    }
+
+    private async Task FetchCA()
+    {
+        var response = await Http.PostAsJsonAsync("chiffre/affaire/mensuel", sorter);
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        ApiResponse? apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
+        
+        if(apiResponse?.IsSuccess == true || apiResponse != null)
+        {
+            apiResponse.HandleResponse<ChiffreAffaireDto[]>();
+            chiffreAffaires = (ChiffreAffaireDto[])apiResponse.Data;
+        }
+        else{
+            exception = "Une erreur s'est produite";
+        }
+        Console.WriteLine(JsonSerializer.Serialize(chiffreAffaires));
+        chartTitle = "Chiffre d'affaire mensuel "+sorter!.Annee;
+        await MatchData(chiffreAffaires);
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./js/chiffre-affaire.js");
+        await jsModule.InvokeVoidAsync("chiffreAffaire", xs, ys, chartTitle);
+    }
+
+    private async Task MatchData(ChiffreAffaireDto[] chiffreAffaires)
+    {
+        decimal[] initValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        foreach(ChiffreAffaireDto chiffreAffaire in chiffreAffaires)
+        {
+            initValues[chiffreAffaire!.Mois!.Value - 1] = chiffreAffaire!.Montant!.Value;
+        }
+        ys = initValues;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (jsModule != null)
+        {
+            await jsModule.DisposeAsync();
+        }
+    }
+}
