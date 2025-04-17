@@ -1,4 +1,4 @@
-﻿@page "/formulaireMobile/{id_etat_decompte:int}"
+﻿@page "/formulaireMobile/{operateur}/{id_etat_decompte_string}"
 
 @using System.Text.Json
 @using LimsFrontEnd.Models
@@ -6,11 +6,11 @@
 @inject HttpClient http
 @inject NavigationManager navigationManager
 
-<MudItem Class="pa-4">
+<!--<MudItem Class="pa-4">
     <MudText Typo="Typo.h3" GutterBottom="true"> Formulaire de paiement par mobile</MudText>
     <MudForm Model="@mobile" @ref="reference">
         <MudGrid>
-             <!-- Checkbox pour afficher les informations client -->
+              Checkbox pour afficher les informations client 
             <MudItem xs="12">
                 <MudButton OnClick="ToggleAfficherClient">Client</MudButton>
             </MudItem>     
@@ -42,7 +42,7 @@
 
             @if (!AfficherClient)
             {
-                <!-- Information du Payant -->
+                Information du Payant 
                 <MudItem xs="12">
                     <MudTextField T="string" Label="Nom du Payant" @bind-Value="mobile.nomPayant" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
                 </MudItem>
@@ -68,12 +68,95 @@
             </MudItem>
         </MudGrid>
     </MudForm>
-</MudItem>
+</MudItem>-->
+
+<MudPaper Elevation="3" Class="p-6 rounded-xl bg-grey-lighten-5">
+    <MudText Typo="Typo.h4" GutterBottom="true" Color="Color.Primary">
+        Formulaire de paiement par mobile
+    </MudText>
+
+    <MudForm Model="@mobile" @ref="reference">
+        <MudStack Spacing="3">
+
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ToggleAfficherClient">
+                Client : @(AfficherClient ? "Oui" : "Non")
+            </MudButton>
+
+            @if (AfficherClient)
+            {
+                <MudPaper Class="p-4 rounded-lg" Elevation="1">
+                    <MudText Typo="Typo.subtitle1" Color="Color.Info">Informations Client</MudText>
+                    <MudGrid Class="mt-2" Gutter="GutterSize.Small">
+                        <MudItem xs="12">
+                            <MudTextField T="string" Label="Titre" @bind-Value="mobile.titre" Variant="Variant.Outlined" Disabled />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField T="string" Label="Clients" @bind-Value="mobile.clients" HelperText="Particulier ou Entreprise" Variant="Variant.Outlined" Disabled />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField T="string" Label="Identité" @bind-Value="mobile.identite" HelperText="CIN, NIF ou Passeport" Variant="Variant.Outlined" Disabled />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField T="string" Label="Adresse" @bind-Value="mobile.adresse" Variant="Variant.Outlined" Disabled />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField T="string" Label="Contact" @bind-Value="mobile.contact" Variant="Variant.Outlined" Disabled />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField T="string" Label="Email" @bind-Value="mobile.email" Variant="Variant.Outlined" Disabled />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField T="string" Label="État de décompte" @bind-Value="mobile.etatDecompte" Variant="Variant.Outlined" Disabled />
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper Class="p-4 rounded-lg" Elevation="1">
+                    <MudText Typo="Typo.subtitle1" Color="Color.Info">Informations du Payant</MudText>
+                    <MudGrid Class="mt-2" Gutter="GutterSize.Small">
+                        <MudItem xs="12">
+                            <MudTextField T="string" Label="Nom" @bind-Value="mobile.nomPayant" Variant="Variant.Outlined" Required />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField T="string" Label="Prénom" @bind-Value="mobile.prenomPayant" Variant="Variant.Outlined" Required />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField T="int" Label="Contact" @bind-Value="mobile.contactdupayant" Variant="Variant.Outlined" Required />
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            }
+
+            <MudDivider Class="my-4" />
+
+            <MudGrid Gutter="GutterSize.Small">
+                <MudItem xs="6">
+                    <MudDatePicker Label="Date de paiement" Date="@SelectedDate" DateChanged="OnDateChanged" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField T="double" Label="Montant" @bind-Value="mobile.montant" Variant="Variant.Outlined" Disabled />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudHidden T="int" @bind-Value="mobile.id_etat_decompte" />
+                </MudItem>
+            </MudGrid>
+
+            <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Large" OnClick="SubmitPaiementMobile" Class="mt-4 mx-auto">
+                <MudIcon Icon="@Icons.Material.Filled.Check" Class="me-2" />
+                Payer
+            </MudButton>
+        </MudStack>
+    </MudForm>
+</MudPaper>
 
 @code {
     private bool AfficherClient = false;
 
-    [Parameter] public int id_etat_decompte { get; set; }
+    [Parameter] public string id_etat_decompte_string { get; set; }
+    public int id_etat_decompte { get; set; }
+    [Parameter] public string operateur { get; set; }
     private DateTime SelectedDate { get; set; } = DateTime.Now;
 
     MudForm? reference;
@@ -83,20 +166,28 @@
     private ApiResponse? apiResponse;
     string url = "http://localhost:5077/api/paiementparmobile";
 
+    private void OnDateChanged(DateTime? newDate)
+    {
+        if (newDate.HasValue)
+        {
+            SelectedDate = newDate.Value;
+        }
+    }
+    
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"{url}/{id_etat_decompte}", option);
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"{url}/{id_etat_decompte_string}", option);
             apiResponse.HandleResponse<List<PaiementDto>>();
             mobiles = apiResponse.Data as List<PaiementDto> ?? new List<PaiementDto>();
 
             // Initialisez demandeNote
             mobile = mobiles?.FirstOrDefault() ?? new PaiementDto
-                {
-                    id_etat_decompte = id_etat_decompte
-                };
+            {
+                id_etat_decompte = id_etat_decompte
+            };
         }
         catch (Exception ex)
         {
@@ -104,10 +195,6 @@
         }
     }
 
-    private void OnDateChanged(DateTime newDate)
-    {
-        SelectedDate = newDate;
-    }
 
     private async Task SubmitPaiementMobile()
     {
@@ -136,7 +223,7 @@
             }
             else
             {
-                navigationManager.NavigateTo("/receptionMobile");
+                navigationManager.NavigateTo("/receptionMobile/"+ operateur);
             }
         }
         catch (Exception ex)

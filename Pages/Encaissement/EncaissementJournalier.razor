@@ -5,45 +5,67 @@
 @using System.Text.Json
 @inject HttpClient http
 
-<MudPaper Class="pa-4">
-    <MudText Typo="Typo.h5" Class="mb-4">Tableau des Encaissements</MudText>
+<MudPaper Class="p-6 mx-auto mt-6" MaxWidth="xl" Elevation="4" Style="border-radius: 16px;">
+    <MudStack Spacing="3">
+        <MudText Typo="Typo.h5" Color="Color.Primary">Tableau des Encaissements</MudText>
 
-    <MudTextField @bind-Value="searchText" Label="Recherche" Placeholder="réference de l'etat de décompte ou client" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
+        <MudTextField @bind-Value="searchText"
+                      Label="Recherche"
+                      Placeholder="Référence de l'état de décompte ou client"
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Class="w-full" />
 
-    <MudTable Items="FilteredData" Dense="true" Hover="true">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Encaissements Journalier</MudText>
-        </ToolBarContent>
+        <MudTable Items="FilteredData"
+                  Dense="true"
+                  Hover="true"
+                  Elevation="1"
+                  Class="mt-2 rounded-lg">
 
-        <HeaderContent>
-            <MudTh> Date d'encaissement </MudTh>
-            <MudTh> État de décompte </MudTh>
-            <MudTh> Clients </MudTh>
-            <MudTh> Montant (Ar) </MudTh>
-            <MudTh> Observation </MudTh>
-        </HeaderContent>
+            <ToolBarContent>
+                <MudText Typo="Typo.h6" Class="pl-2">Encaissement Journalier</MudText>
+            </ToolBarContent>
 
-        <RowTemplate>
-            <!--<MudTd> @(context.dateEncaissement?.ToString("dd/MM/yyyy", new System.Globalization.CultureInfo("fr-FR")) ?? "N/A") </MudTd>-->
-            <MudTd> @(context.dateEncaissement?.ToString("dd/MM/yyyy") ?? "N/A") </MudTd>
-            <MudTd> @context.EtatDecompte </MudTd>
-            <MudTd> @context.clients </MudTd>
-            <MudTd> @context.montant </MudTd>
-            <MudTd> @(context.observation == 2 ? "interne" : (context.observation == 1 ? "externe": "")) </MudTd>            
-        </RowTemplate>  
-    </MudTable>
+            <HeaderContent>
+                <MudTh><MudText Typo="Typo.subtitle2">Date d'encaissement</MudText></MudTh>
+                <MudTh><MudText Typo="Typo.subtitle2">État de décompte</MudText></MudTh>
+                <MudTh><MudText Typo="Typo.subtitle2">Clients</MudText></MudTh>
+                <MudTh><MudText Typo="Typo.subtitle2">Montant (Ar)</MudText></MudTh>
+                <MudTh><MudText Typo="Typo.subtitle2">Observation</MudText></MudTh>
+            </HeaderContent>
 
-    <MudPaper Class="pa-3 mt-4" Elevation="4">
-        <MudText Typo="Typo.h6">Arrêté à la somme de : <b>@FilteredData.Sum(x => x.montant).ToString("F2") Ar</b></MudText>
-    </MudPaper>
+            <RowTemplate>
+                <MudTd>@(context.dateEncaissement?.ToString("dd/MM/yyyy") ?? "N/A")</MudTd>
+                <MudTd>@context.EtatDecompte</MudTd>
+                <MudTd>@context.clients</MudTd>
+                <MudTd>@context.montant.ToString("N0")</MudTd>
+                <MudTd>
+                    @(context.observation == 2 ? "Interne" : context.observation == 1 ? "Externe" : "")                       
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        <MudDivider Class="my-4" />
+
+        <MudPaper Class="p-4" Elevation="2" Style="border-radius: 12px;">
+            <MudText Typo="Typo.h6">
+                Arrêté à la somme de :
+                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="font-weight-bold d-inline">
+                    @FilteredData.Sum(x => x.montant).ToString("F2") Ar
+                </MudText>
+            </MudText>
+        </MudPaper>
+    </MudStack>
 </MudPaper>
+
 
 @code {    
     private string searchText = "";
 
     private List<EncaissementJournalierDto> data = new List<EncaissementJournalierDto>();
     private ApiResponse? apiResponse;
-    string url = "http://localhost:5077/api/encaissement";  
+    string url = "http://localhost:5077/api/encaissement";
 
     protected override async Task OnInitializedAsync()
     {

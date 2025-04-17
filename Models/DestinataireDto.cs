@@ -7,7 +7,7 @@ namespace LimsFrontEnd.Models
         [JsonPropertyName("idDestinataire")]
         public int idDestinataire { get; set; }
 
-        [JsonPropertyName("destignation")]
+        [JsonPropertyName("designation")]
         public string? designation { get; set; }
     }
 }

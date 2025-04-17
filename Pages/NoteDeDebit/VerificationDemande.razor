@@ -24,7 +24,7 @@
         </HeaderContent>
 
         <RowTemplate>
-            <MudTd> @context.idEtatDecompte </MudTd>
+            <MudTd> @context.reference </MudTd>
             <MudTd> @context.referenceEtatDecompte </MudTd>
             <MudTd> 
                 @if (context.dateEtatDecompte is DateTime date)
@@ -35,7 +35,7 @@
                 {
                     Console.WriteLine("La valeur n'est pas un DateTime ou est null");
                 }
-                @(context.dateEtatDecompte?.ToString("dd/MM/yyyy", new System.Globalization.CultureInfo("fr-FR")) ?? "N/A") 
+                @(context.dateEtatDecompte?.ToString("dd/MM/yyyy") ?? "N/A") 
             </MudTd>
             <MudTd> @context.montant </MudTd>
             <MudTd>

@@ -24,7 +24,7 @@
         </HeaderContent>
 
         <RowTemplate>
-            <MudTd> @context.idEtatDecompte </MudTd>
+            <MudTd> @context.reference </MudTd>
             <MudTd> @context.referenceEtatDecompte </MudTd>
             <MudTd> @(context.dateEtatDecompte?.ToString("dd/MM/yyyy", new System.Globalization.CultureInfo("fr-FR")) ?? "N/A") </MudTd>
             <MudTd> @context.montant </MudTd>

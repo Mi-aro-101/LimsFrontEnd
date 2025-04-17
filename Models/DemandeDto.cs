@@ -42,6 +42,9 @@ namespace LimsFrontEnd.Models
         [JsonPropertyName("montant_literal")]
         public string? montant_literal { get; set; }
 
+        [JsonPropertyName("travaux")]
+        public string? travaux { get; set; }
+
         // Attributs Etat_decompte utile pour liste
         [JsonPropertyName("referenceEtatDecompte")]
         public string? referenceEtatDecompte { get; set; }

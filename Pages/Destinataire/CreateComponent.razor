@@ -7,26 +7,19 @@
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 
-<MudCard Class="pa-3" MaxWidth="30rem">
-    <MudCardHeader>
-        <MudText Typo="Typo.h6" Class="text-center">Ajouter un destinataire</MudText>
-    </MudCardHeader>
-    <MudCardContent>
-        <MudForm Model="@destinataire" @ref="form">
-            <MudStack Spacing="2">
-                <MudTextField T="string" Label="Nom" @bind-Value="destinataire.designation"
-                Placeholder="Departement de l'entreprise" FullWidth="true" Required="true" Immediate="true" Dense="true" />                
-            </MudStack>
+<MudCard Elevation="3" Class="p-4 rounded-xl">
+    <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-3">➕ Ajouter un destinataire</MudText>
 
-            <MudDivider Class="my-3" />
+    <MudForm Model="@destinataire" @ref="form">
+        <MudStack Spacing="3">
+            <MudTextField T="string" Label="Nom de l'entreprise" @bind-Value="destinataire.designation"
+                          Placeholder="Nom du destinataire" FullWidth="true" Required="true" />
 
-            <MudCardActions Class="justify-center">
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitForm" Size="Size.Small">
-                    Ajouter
-                </MudButton>
-            </MudCardActions>
-        </MudForm>
-    </MudCardContent>
+            <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="SubmitForm" FullWidth="true">
+                ✅ Ajouter
+            </MudButton>
+        </MudStack>
+    </MudForm>
 </MudCard>
 
 @code {
@@ -49,7 +42,7 @@
 
             var destinataires = new DestinataireDto
             {
-               destignation = destinataire.destignation    
+               designation = destinataire.designation    
             };
 
             var response = await Http.PostAsJsonAsync(url + "/ajout", destinataires);
@@ -64,6 +57,9 @@
                 // Réinitialiser le formulaire après l'ajout
                 destinataire = new DestinataireDto();
                 await form.ResetAsync();
+
+                // 🔔 Invoquer le callback pour signaler la création
+                await OnDestinataireCreated.InvokeAsync();
             }
         }
         catch (Exception ex)

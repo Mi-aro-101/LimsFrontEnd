@@ -1,11 +1,13 @@
 ﻿@page "/depart"
 
 @using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using System.Text.Json
 @inject HttpClient http
 @inject NavigationManager navigationManager
 
 <MudPaper Class="pa-4 mx-auto" Style="max-width: 500px;">
-    <MudForm @ref="departForm" Model="departModel" @onsubmit="SubmitDepart">
+    <MudForm @ref="departForm" Model="departModel">
         <MudText Typo="Typo.h6">Nouveau Départ</MudText>
 
         <MudTextField Label="Objet" @bind-Value="departModel.objet" Required="true" />
@@ -13,16 +15,17 @@
         <MudDatePicker Label="Date de départ" @bind-Date="departModel.DateDepart" Required="true" />
 
         <MudSelect T="int" Label="Destinataire" @bind-Value="departModel.idDestinataire" Required="true">
+            <MudSelectItem T="int">Sélectionner un destinataire</MudSelectItem>
             @if (destinataires != null)
             {
                 @foreach (var d in destinataires)
                 {
-                    <MudSelectItem Value="@(d.idDestinataire)">@d.designation</MudSelectItem>
+                    <MudSelectItem Value="d.idDestinataire">@d.designation</MudSelectItem>
                 }
             }
         </MudSelect>
 
-        <MudButton Type="Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4">Ajouter</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="SubmitDepart">Ajouter le dépaert</MudButton>
     </MudForm>
 </MudPaper>
 
@@ -30,13 +33,17 @@
     private MudForm? departForm;
     private DepartDto departModel = new();
     private List<DestinataireDto>? destinataires;
+    private ApiResponse? apiresponse;
 
     private string url = "http://localhost:5077/api/depart";
 
     protected override async Task OnInitializedAsync()
     {
         // Récupérer les destinataires depuis l'API
-        destinataires = await http.GetFromJsonAsync<List<DestinataireDto>>($"{url}/destinataireListe");
+        var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        apiresponse = await http.GetFromJsonAsync<ApiResponse>($"{url}/destinataireListe",option);
+        apiresponse.HandleResponse<List<DestinataireDto>>();
+        destinataires = apiresponse.Data as List<DestinataireDto> ?? new List<DestinataireDto>();
     }
 
     private async Task SubmitDepart()
@@ -45,12 +52,13 @@
 
         if (departForm.IsValid)
         {
-            var response = await http.PostAsJsonAsync(url, departModel);
+            var response = await http.PostAsJsonAsync($"{url}/addDepart", departModel);
 
             if (response.IsSuccessStatusCode)
             {
                 // Redirection ou message de succès
-                navigationManager.NavigateTo("/depart", forceLoad: true);
+                //navigationManager.NavigateTo("/depart", forceLoad: true);
+                navigationManager.NavigateTo("/depart/liste");
             }
             else
             {

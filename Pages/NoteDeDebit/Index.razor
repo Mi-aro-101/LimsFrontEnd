@@ -5,6 +5,7 @@
 @using LimsUtils.Api
 @inject HttpClient http
 @inject NavigationManager navigationManager
+@inject IJSRuntime JS
 
 
 <MudItem Class="pa-4">
@@ -36,6 +37,9 @@
                 <MudTextField T="int" Label="Nombre d'échantillons" @bind-Value="demandeNote.nombreEchantillon" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="12">
+                <MudTextField T="string" Label="Travaux éffectuer" @bind-Value="demandeNote.travaux" Margin="Margin.Dense" Disabled="true" />
+            </MudItem>
+            <MudItem xs="12">
                 <MudDatePicker @bind-Date="demandeNote.datePaiement" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="12">
@@ -50,8 +54,6 @@
         </MudGrid>
     </MudForm>
 </MudItem>
-
-
 
 @code {
     [Parameter] public int id_etat_decompte { get; set; }
@@ -95,10 +97,18 @@
             var nouvelleDemande = new DemandeDto
             {
                 reference = 0,
+                clients = demandeNote.clients,
+                identite = demandeNote.identite,
+                adresse = demandeNote.adresse,
+                contact = demandeNote.contact,
+                email = demandeNote.email,
+                etatDecompte = demandeNote.etatDecompte,
+                nombreEchantillon = demandeNote.nombreEchantillon,                
                 dateDemande = demandeNote.datePaiement,
                 objet = demandeNote.objet,
                 montant = demandeNote.montant,
                 montant_literal = demandeNote.montant_literal,
+                travaux = demandeNote.travaux,
                 idEtatDecompte = demandeNote.idEtatDecompte
             };
 
@@ -111,7 +121,43 @@
             }
             else
             {
-                navigationManager.NavigateTo("/success");
+                //navigationManager.NavigateTo("/demandenotedebit/liste");
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
+
+                // 🔥 Extraction dynamique du PdfURL depuis Data
+                var dataDict = apiResponse.Data as JsonElement?;
+                if (dataDict != null && dataDict.Value.TryGetProperty("PdfBase64", out var pdfBase64Element))
+                {
+                    if (pdfBase64Element.ValueKind == JsonValueKind.Array)
+                    {
+                        int index = 0;
+                        foreach (var base64Element in pdfBase64Element.EnumerateArray())
+                        {
+                            string base64 = base64Element.GetString();
+                            if (!string.IsNullOrEmpty(base64))
+                            {
+                                // Nom du document pour identification JS (optionnel si tu veux)
+                                string label = index == 0 ? "demande" : "note_de_debit";
+                                await JS.InvokeVoidAsync("downloadPdfFromBase64", base64, label);
+                                index++;
+                            }
+                        }
+                    }
+                    else if (pdfBase64Element.ValueKind == JsonValueKind.String)
+                    {
+                        string base64 = pdfBase64Element.GetString();
+                        if (!string.IsNullOrEmpty(base64))
+                        {
+                            await JS.InvokeVoidAsync("downloadPdfFromBase64", base64, "demande");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("❌ PdfBase64 n'est pas un tableau !");
+                    }
+                }
+                
+                navigationManager.NavigateTo("/demandenotedebit/liste");
             }
         }
         catch (Exception ex)

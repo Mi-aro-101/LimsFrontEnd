@@ -9,47 +9,40 @@
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 
-<MudCard Class="mb-3" Style="max-width: 39rem;">
-    <MudCardHeader>
-        <MudText Typo="Typo.h5">Mettre à jour le partenaire</MudText>
-    </MudCardHeader>
-    
-    <MudCardContent>
-        @if (!string.IsNullOrEmpty(exception))
-        {
-            <MudAlert Severity="Severity.Error" Dense="true">@exception</MudAlert>
-        }
+<MudContainer Class="py-6 px-4">
+    <MudCard Class="rounded-xl shadow-md mx-auto" MaxWidth="500px">
+        <MudCardHeader>
+            <MudText Typo="Typo.h5" Align="Align.Center">Modifier le partenaire</MudText>
+        </MudCardHeader>
 
-        <MudForm Model="@contrat">
-            <MudGrid>
-                <MudItem xs="12">
+        <MudCardContent>
+            @if (!string.IsNullOrEmpty(exception))
+            {
+                <MudAlert Severity="Severity.Error" Dense="true">@exception</MudAlert>
+            }
+
+            <MudForm Model="@contrat">
+                <MudStack Spacing="3">
                     <MudTextField Label="Nom de l'entreprise" @bind-Value="contrat.nomEntreprise" Required="true" />
-                </MudItem>
+                    <MudTextField Label="Référence du contrat" @bind-Value="contrat.referenceContrat" Required="true" />
+                    <MudDatePicker Label="Date de paiement" @bind-Date="contrat.datePaiement" Required="true" />
 
-                <MudItem xs="12">
-                    <MudTextField Label="Référence contrat" @bind-Value="contrat.referenceContrat" Required="true" />
-                </MudItem>
-
-                <MudItem xs="12">
-                    <MudDatePicker Label="Date du contrat" @bind-Date="contrat.datePaiement" Required="true" />
-                </MudItem>
-
-                <MudItem xs="12">
-                    <MudSelect T="int" Label="Type de contrat" @bind-Value="contrat.etat" Required="true">
-                        <MudSelectItem Value="200">sous contrat</MudSelectItem>
-                        <MudSelectItem Value="400">rupture de contrat</MudSelectItem>                       
+                    <MudSelect T="int" Label="État du contrat" @bind-Value="contrat.etat" Required="true">
+                        <MudSelectItem Value="200">Sous contrat</MudSelectItem>
+                        <MudSelectItem Value="400">Rupture</MudSelectItem>
                     </MudSelect>
-                </MudItem>
+                </MudStack>
 
-                <MudItem xs="12" Class="d-flex justify-center">
-                    <MudButton Type="Submit" Variant="Variant.Filled" OnClick="(() => HandleOnSubmit(contrat.idContratPartenaire))" Color="Color.Primary">
+                <MudCardActions Class="justify-center mt-4">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="(() => HandleOnSubmit(contrat.idContratPartenaire))">
                         Modifier
                     </MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudForm>
-    </MudCardContent>
-</MudCard>
+                </MudCardActions>
+            </MudForm>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
 
 @code {
     private ContratDto contrat = new();

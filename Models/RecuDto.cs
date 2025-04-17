@@ -25,7 +25,19 @@ namespace LimsFrontEnd.Models
         public string? referenceEtatDecompte { get; set; }
         [JsonPropertyName("id_paiement")]
         public int id_paiement { get; set; }
+
+        //attribut de recuperation dashboard 
+        [JsonPropertyName("date")]
+        public DateTime Date { get; set; }
+        [JsonPropertyName("nombrePaiement")]
+        public int NombrePaiement { get; set; }
+        [JsonPropertyName("montantTotal")]
+        public double MontantTotal { get; set; }
+
+        //attribut de confirmation
         [JsonPropertyName("email")]
         public string? email { get; set; }
+        [JsonPropertyName("telephone")]
+        public string? telephone { get; set; }
     }
 }

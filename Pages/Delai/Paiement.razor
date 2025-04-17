@@ -1,9 +1,14 @@
 ﻿@page "/choixpaiement/{id_etat_decompte:int}"
 
-<MudItem>
+@using LimsFrontEnd.Models
+@using System.Text.Json
+@using LimsUtils.Api
+@inject HttpClient http
+
+<!--<MudItem>
     <MudText Typo="Typo.h2" GutterBottom="true"><center>Choix de paiement</center></MudText>
     <MudGrid Gutter="true">
-        <!-- Paiement en espèce -->
+         Paiement en espèce 
         <MudItem xs="4" sm="4" md="4" lg="4" xl="4"  Style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
             <MudText Typo="Typo.subtitle1" Align="Align.Center">Espèce</MudText>
             <MudLink class="nav-link" href="@($"formulaireEspece/{id_etat_decompte}")" Style="text-decoration: none;">
@@ -11,7 +16,7 @@
             </MudLink>
         </MudItem>
 
-        <!-- Paiement mobile -->
+        Paiement mobile 
         <MudItem xs="4" sm="4" md="4" lg="4" xl="4"  Style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
             <MudText Typo="Typo.subtitle1" Align="Align.Center">Mobile</MudText>
             <MudLink class="nav-link" href="@($"choixoperateur/{id_etat_decompte}")" Style="text-decoration: none;">
@@ -19,7 +24,7 @@
             </MudLink>
         </MudItem>
 
-        <!-- Paiement par virement -->
+         Paiement par virement
         <MudItem xs="4" sm="4" md="4" lg="4" xl="4"  Style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
             <MudText Typo="Typo.subtitle1" Align="Align.Center">Virement</MudText>
             <MudLink class="nav-link" href="virementBancaire" Style="text-decoration: none;">
@@ -27,30 +32,99 @@
             </MudLink>
         </MudItem>
     </MudGrid>
-    <!---<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ShowDialog">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ShowDialog">
         Ouvrir le Formulaire
-    </MudButton>-->
+    </MudButton>
 
-    <!--<MudDialogProvider FullWidth="true" MaxWidth="MaxWidth.ExtraLarge" CloseButton="true" BackdropClick="false" NoHeader="true" Position="DialogPosition.Center" CloseOnEscapeKey="true" />-->
-</MudItem>
+    <MudDialogProvider FullWidth="true" MaxWidth="MaxWidth.ExtraLarge" CloseButton="true" BackdropClick="false" NoHeader="true" Position="DialogPosition.Center" CloseOnEscapeKey="true" />
+</MudItem>-->
+
+<MudPaper Class="p-6 mx-auto mt-10 max-w-5xl rounded-2xl shadow-lg">
+    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6 text-primary font-bold">
+        Choisissez un mode de paiement
+    </MudText>
+
+    <MudGrid Gutter="true" Justify="Justify.Center">
+        <!-- Paiement en espèce -->
+        <MudItem xs="12" sm="4" Class="flex flex-col items-center">
+            <MudLink href="@($"formulaireEspece/{id_etat_decompte}")" Style="text-decoration: none;">
+                <MudCard Class="hover:shadow-xl transition duration-300 ease-in-out cursor-pointer p-4">
+                    <MudCardContent Class="flex flex-col items-center">
+                        <MudImage Src="img/espece.png" Alt="Paiement en espèce" Class="mb-4" Style="width: 120px; height: 120px;" />
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center">Espèce</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudLink>
+        </MudItem>
+
+        <!-- Paiement mobile -->
+        <MudItem xs="12" sm="4" Class="flex flex-col items-center">
+            <MudLink href="@($"choixoperateur/{id_etat_decompte}")" Style="text-decoration: none;">
+                <MudCard Class="hover:shadow-xl transition duration-300 ease-in-out cursor-pointer p-4">
+                    <MudCardContent Class="flex flex-col items-center">
+                        <MudImage Src="img/mobile.png" Alt="Paiement mobile" Class="mb-4" Style="width: 120px; height: 120px;" />
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center">Mobile</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudLink>
+        </MudItem>
+
+        <!-- Paiement par virement -->
+        <MudItem xs="12" sm="4" Class="flex flex-col items-center">
+            <MudLink href="@($"virementBancaire/{id_etat_decompte}")" Style="text-decoration: none;">
+                <MudCard Class="hover:shadow-xl transition duration-300 ease-in-out cursor-pointer p-4">
+                    <MudCardContent Class="flex flex-col items-center">
+                        <MudImage Src="img/virement.png" Alt="Paiement par virement" Class="mb-4" Style="width: 120px; height: 120px;" />
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center">Virement</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudLink>
+        </MudItem>        
+    </MudGrid>
+
+    <SousContratDialog IsVisible="@showSousContrat" Contrat="@contratDto" OnClose="@(() => showSousContrat = false)" />
+    <DelaiDialog IsVisible="@showDelai" ApiResponse="@apiResponse" OnClose="@(() => showDelai = false)" />
+
+</MudPaper>
 
 @code {
-    /*[Inject] private IDialogService DialogService { get; set; } = null!;
+    string url = "http://localhost:5077/api/delai";
+    public bool showSousContrat = false;
+    public bool showDelai = false;
+    public SousContratDto? contratDto = null;
 
-    private void ShowDialog()
+    [Parameter] public int id_etat_decompte { get; set; }
+    private ApiResponse? apiResponse;
+
+    protected override async Task OnInitializedAsync()
     {
-        var options = new DialogOptions
-            {
-                MaxWidth = MaxWidth.ExtraLarge,
-                FullWidth = true,
-                CloseOnEscapeKey = true,
-                BackdropClick = true,
-                CloseButton = true
-            };
-        var diag = DialogService.Show<DelaiDto>("Donnée un délai de paiement", options);
-        var result = diag.Result;
-    }*/
-    [Parameter]
-    public int id_etat_decompte { get; set; }
+        await LoadVerification(id_etat_decompte);
+    }
 
+    public async Task LoadVerification(int id_etat_decompte)
+    {
+        try
+        {
+            string urli = url + "/VerificationDelai/" + id_etat_decompte;
+            Console.WriteLine($"URL: {urli}");  
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>(urli, option);
+            
+            if(apiResponse.Message == "Délai accordé pour le test de période de 6 mois" || apiResponse.Message == "Délai accordé pour le test de période de 1 an")
+            {
+                Console.WriteLine($"viewbag: {apiResponse.ViewBag["id_etat_decompte"]}");
+                showDelai = true;                
+            }
+            else if (apiResponse.Message == "Client sous contrat")
+            {
+                apiResponse.HandleResponse<SousContratDto>();
+                contratDto = (SousContratDto?)apiResponse.Data;
+                showSousContrat = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement: {ex.Message}");
+        }
+    }
 }

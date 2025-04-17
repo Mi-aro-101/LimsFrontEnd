@@ -10,22 +10,23 @@
 @using LimsUtils.Api
 @using System.Text.Json;
 
-
-<MudContainer Class="pa-4">
-    <MudGrid Spacing="3">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6">
+    <MudGrid Spacing="4">
         <!-- Formulaire d'ajout -->
-        <MudItem xs="12" md="5">
-            <MudPaper Class="pa-4" Elevation="3">
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="4" Class="p-6 rounded-2xl">
                 <CreateComponent OnDestinataireCreated="@HandleDestinataireCreated" />
             </MudPaper>
         </MudItem>
 
-         <!-- Liste des contrats -->
-        <MudItem xs="12" md="7">
-            <MudPaper Class="pa-6" Elevation="3">
-                @if (destinataires == null)
+        <!-- Liste -->
+        <MudItem xs="12" md="8">
+            <MudPaper Elevation="4" Class="p-6 rounded-2xl">
+                <MudText Typo="Typo.h6" Class="mb-4">📃 Liste des destinataires</MudText>
+
+                @if (destinataires == null || destinataires.Count == 0)
                 {
-                    <MudText Typo="Typo.body1" Color="Color.Secondary">No data on the row</MudText>
+                    <MudText Color="Color.Secondary">Aucun destinataire trouvé.</MudText>
                 }
                 else
                 {
@@ -39,39 +40,35 @@
                         var totalPages = int.Parse(apiResponse.ViewBag["TotalCount"].ToString());
                         var pageLinks = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
 
-                        <MudTable Items="destinataires" Dense="true">
+                        <MudTable Items="destinataires" Dense="true" Hover="true" Elevation="0">
                             <HeaderContent>
-                                <MudTh>Destinataire</MudTh>                                
-                                <MudTh><center>Actions</center></MudTh>
+                                <MudTh>Nom</MudTh>
+                                <MudTh class="text-center">Actions</MudTh>
                             </HeaderContent>
                             <RowTemplate Context="destinataire">
-                                <MudTd>@destinataire.designation</MudTd>                                
+                                <MudTd>@destinataire.designation</MudTd>
                                 <MudTd>
-                                    <MudStack Direction="Row" Spacing="1" JustifyContent="Center">
-                                        <MudButton Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined"
-                                                    StartIcon="@Icons.Material.Filled.Edit"
-                                                    @onclick="() => HandleUpdate(destinataire.idDestinataire)">
-                                        </MudButton>
+                                    <MudStack Direction="Row" JustifyContent="Center">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                    Color="Color.Warning"
+                                                    OnClick="() => HandleUpdate(destinataire.idDestinataire)" />
                                     </MudStack>
                                 </MudTd>
                             </RowTemplate>
                         </MudTable>
 
+                        <MudDivider Class="my-4" />
+
                         <!-- Pagination -->
-                        <MudStack Direction="Row" JustifyContent="Center" Class="mt-3">
-                            <MudPagination Page="@currentPage" PageSize="@pageSize" TotalItems="@totalPages" 
-                                Variant="Variant.Filled" Count="@pageLinks" SelectedChanged="@(page => LoadPostes(page))" />
-                        </MudStack>
+                        <MudPagination Page="@currentPage" PageSize="@pageSize" TotalItems="@totalPages"
+                                    Count="@pageLinks" SelectedChanged="@(page => LoadPostes(page))" />
                     }
-                    else
-                    {
-                        <MudText Typo="Typo.body1" Color="Color.Secondary">Information sur la pagination indisponible</MudText>
-                    }                
                 }
             </MudPaper>
         </MudItem>
     </MudGrid>
 </MudContainer>
+
 
 @code {
     private List<DestinataireDto> destinataires = new List<DestinataireDto>();

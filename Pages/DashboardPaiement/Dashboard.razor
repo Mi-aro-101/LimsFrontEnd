@@ -1,0 +1,302 @@
+@page "/dashboardpaiement"
+@using LimsFrontEnd.Models
+@using System.Text.Json
+@using LimsUtils.Api
+@inject HttpClient http
+
+<MudText Typo="Typo.h3" GutterBottom="true">Paiement</MudText>
+<MudSelect T="SemaineDto" Label="Filtrer par semaine" @bind-Value="selectedSemaine">
+    <MudSelectItem Value="@(default(SemaineDto))">Toutes les semaines</MudSelectItem>
+     @foreach (var s in semainesDisponibles)
+    {
+        <MudSelectItem Value="@s">
+            @($"{s.debutSemaine:dd MMM} - {s.finSemaine:dd MMM}")
+        </MudSelectItem>
+    }
+</MudSelect>
+<MudButton OnClick="FiltrerParSemaine">Filtrer</MudButton>
+<MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
+    <MudGrid>  
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 100px;">
+                <h4>Espèce</h4>
+                <MudElement HtmlTag="h3"
+                Class="ms-1"
+                Style="color:blue; height: 20%;">
+                    @totalMontantFiltered Ariary (@totalNombreFiltered paiements)
+                </MudElement>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 100px;">
+                <h4>Mobile Money</h4>
+                <MudElement HtmlTag="h3"
+                Class="ms-1"
+                Style="color:red; height: 20%;">
+                   @totalMontantFilteredMobile Ariary (@totalNombreFilteredMobile paiements)
+                </MudElement>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 100px;">
+                <h4>Virement bancaire</h4>
+                <MudElement HtmlTag="h3"
+                Class="ms-1"
+                Style="color:green; height: 20%;">
+                    @totalMontantFilteredVirement Ariary (@totalNombreFilteredVirement paiements)
+                </MudElement>
+            </MudPaper>
+        </MudItem>
+        <MudGrid Class="mt-4" GutterSize="3">
+            <!-- Graphique Linéaire -->
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Style="height: 100%; box-shadow: var(--mud-elevation-4);">
+                    <MudText Typo="Typo.h6" Class="mb-4">Évolution des paiements</MudText>
+                    <MudChart ChartType="ChartType.Bar"
+                            ChartSeries="@Series"
+                            XAxisLabels="@XAxisLabels"
+                            @bind-SelectedIndex="index"
+                            Width="100%"
+                            Height="300px"
+                            ChartOptions="options" />
+                </MudPaper>
+            </MudItem>
+
+            <!-- Donut Chart -->
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Style="height: 100%; box-shadow: var(--mud-elevation-4); text-align:center;">
+                    <MudText Typo="Typo.h6" Class="mb-4">Répartition des paiements</MudText>
+                    <MudChart ChartType="ChartType.Donut"
+                            Width="300px"
+                            Height="300px"
+                            InputData="@DonutSeries"
+                            InputLabels="@DonutLabels">
+                        <CustomGraphics>
+                            <text x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" fill="black" font-family="Helvetica" font-size="4">
+                                Total
+                            </text>
+                            <text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="black" font-family="Helvetica" font-size="6">
+                                @DonutSeries.Sum().ToString("N0")
+                            </text>
+                            <text x="50%" y="40%" dominant-baseline="middle" text-anchor="middle"
+                                fill="black" font-family="Helvetica" font-size="4">
+                                @GetHoveredLabel()
+                            </text>
+                            <text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle"
+                                fill="black" font-family="Helvetica" font-size="6">
+                                @GetHoveredValue()
+                            </text>
+                        </CustomGraphics>
+                    </MudChart>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudGrid>
+</MudContainer>
+@code {
+
+    string url = "http://localhost:5077/api/";
+
+    private ChartOptions options = new ChartOptions();
+    
+    private int index = -1; //default value cannot be 0 -> first selectedindex is 0.
+
+    int hoveredIndex = -1;
+
+    string GetHoveredLabel() =>
+        hoveredIndex >= 0 && hoveredIndex < DonutLabels.Length ? DonutLabels[hoveredIndex] : "Total";
+
+    string GetHoveredValue() =>
+        hoveredIndex >= 0 && hoveredIndex < DonutSeries.Length ?
+            $"{DonutSeries[hoveredIndex]:N0} ({((DonutSeries[hoveredIndex] / DonutSeries.Sum()) * 100):0.0}%)"
+            : DonutSeries.Sum().ToString("N0");
+    
+    private List<SemaineDto> semainesDisponibles = new();
+    private List<RecuDto> paiementsComplets = new();
+    private List<RecuDto> paiementsMobile = new();
+    private List<RecuDto> paiementsVirement = new();
+    private List<RecuDto> paiementsFiltres = new();
+    private List<RecuDto> paiementsFiltresMobile = new();
+    private List<RecuDto> paiementsFiltresVirement = new();
+
+    private SemaineDto? selectedSemaine = null;
+
+    private ApiResponse? response;
+    private ApiResponse? response2;
+    private ApiResponse? response3;
+    
+    private double totalMontantFiltered;
+    private double totalMontantFilteredMobile;
+    private double totalMontantFilteredVirement;
+
+    private int totalNombreFiltered;
+    private int totalNombreFilteredMobile;
+    private int totalNombreFilteredVirement;
+
+    public string[] XAxisLabels { get; set; } = Array.Empty<string>();
+    public List<ChartSeries> Series { get; set; } = new List<ChartSeries>();
+
+    //public List<ChartSeries> DonutSeries { get; set; } = new List<ChartSeries>();
+    public double[] DonutSeries { get; set; } = Array.Empty<double>();
+    public string[] DonutLabels { get; set; } = Array.Empty<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        string urli1 = url + "receptionpaiementespece";
+        string urli2 = url + "receptionpaiementmobile";
+        string urli3 = url + "receptionpaiementvirement";
+        var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        response = await http.GetFromJsonAsync<ApiResponse>(urli1, option);
+        response2 = await http.GetFromJsonAsync<ApiResponse>(urli2, option);
+        response3 = await http.GetFromJsonAsync<ApiResponse>(urli3, option);
+        Console.WriteLine($"Response Data: {response.Data}");
+        Console.WriteLine($"Response Data: {response2.Data}");
+        if (response.IsSuccess)
+        {
+            var data = JsonSerializer.Deserialize<DashboardPaiementDto>(response.Data.ToString());
+            var data2 = JsonSerializer.Deserialize<DashboardPaiementDto>(response2.Data.ToString());
+            var data3 = JsonSerializer.Deserialize<DashboardPaiementDto>(response3.Data.ToString());
+
+            semainesDisponibles = data?.Semaines ?? new();
+            paiementsComplets = data?.Paiements ?? new();
+            paiementsMobile = data2?.Paiements ?? new();
+            paiementsVirement = data3?.Paiements ?? new();
+
+            Console.WriteLine("---- Paiements Complets ----");
+            foreach (var p in paiementsComplets)
+            {
+                Console.WriteLine($"Date: {p.Date}, MontantTotal: {p.MontantTotal}, NombrePaiement: {p.NombrePaiement}");
+            }
+
+            FiltrerParSemaine();
+        }
+
+        options.InterpolationOption = InterpolationOption.Straight;
+    }
+
+    private void FiltrerParSemaine()
+    {
+        Console.WriteLine("tu es ici mais il y a un problème avec le filtre et le chart");
+        if (selectedSemaine != null)
+        {
+            Console.WriteLine($"Filtrage entre {selectedSemaine.debutSemaine} et {selectedSemaine.finSemaine}");
+        }
+
+        if (selectedSemaine == null)
+        {
+            // par défaut, on affiche les 4 dernières semaines
+            var dateLimite = DateTime.Today.AddDays(-28);
+
+            paiementsFiltres = paiementsComplets
+                .Where(p => p.Date >= dateLimite)
+                .ToList();
+
+            paiementsFiltresMobile = paiementsMobile
+                .Where(p => p.Date >= dateLimite)
+                .ToList();
+
+            paiementsFiltresVirement = paiementsVirement
+                .Where(p => p.Date >= dateLimite)
+                .ToList();
+
+            totalNombreFiltered = paiementsFiltres.Sum(x => x.NombrePaiement);
+            totalNombreFilteredMobile = paiementsFiltresMobile.Sum(x => x.NombrePaiement);
+            totalNombreFilteredVirement = paiementsFiltresVirement.Sum(x => x.NombrePaiement);
+            totalMontantFiltered = paiementsFiltres.Sum(x => x.MontantTotal);
+            totalMontantFilteredMobile = paiementsFiltresMobile.Sum(x => x.MontantTotal);
+            totalMontantFilteredVirement = paiementsFiltresVirement.Sum(x => x.MontantTotal);
+        }
+        else
+        {
+            paiementsFiltres = paiementsComplets
+                .Where(p => p.Date >= selectedSemaine.debutSemaine && p.Date <= selectedSemaine.finSemaine)
+                .ToList();
+
+            paiementsFiltresMobile = paiementsMobile
+                .Where(p => p.Date >= selectedSemaine.debutSemaine && p.Date <= selectedSemaine.finSemaine)
+                .ToList();
+
+            paiementsFiltresVirement = paiementsVirement
+                .Where(p => p.Date >= selectedSemaine.debutSemaine && p.Date <= selectedSemaine.finSemaine)
+                .ToList();
+
+            foreach (var paiement in paiementsFiltres)
+            {
+                Console.WriteLine($"Date: {paiement.Date}, Montant: {paiement.MontantTotal}, Nombre: {paiement.NombrePaiement}");
+            }
+            totalMontantFiltered = paiementsFiltres.Sum(x => x.MontantTotal);
+            totalMontantFilteredMobile = paiementsFiltresMobile.Sum(x => x.MontantTotal);
+            totalMontantFilteredVirement = paiementsFiltresVirement.Sum(x => x.MontantTotal);
+            totalNombreFiltered = paiementsFiltres.Sum(x => x.NombrePaiement);
+            totalNombreFilteredMobile = paiementsFiltresMobile.Sum(x => x.NombrePaiement);
+            totalNombreFilteredVirement = paiementsFiltresVirement.Sum(x => x.NombrePaiement);
+        }
+
+        UpdateChart();
+    }
+
+    private void UpdateChart()
+    {
+        Console.WriteLine("ça marche ici mais pas dans le chart");
+        Series = new List<ChartSeries>
+        {
+            new ChartSeries
+            {
+                Name = "Espèce",
+                Data = paiementsFiltres.Select(p => p.MontantTotal).ToArray(),
+            },
+
+            new ChartSeries
+            {
+                Name = "Mobile",
+                Data = paiementsFiltresMobile.Select(p => p.MontantTotal).ToArray(),
+            },
+
+            new ChartSeries
+            {
+                Name = "Virement",
+                Data = paiementsFiltresVirement.Select(p => p.MontantTotal).ToArray(),
+            }
+        };
+
+        XAxisLabels = paiementsFiltresMobile.Select(p => p.Date.ToString("dd/MM")).ToArray();
+
+        Console.WriteLine($"Espèce: {totalNombreFiltered}, Mobile: {totalNombreFilteredMobile}, Virement: {totalNombreFilteredVirement}");
+        /*DonutSeries = new List<ChartSeries>
+        {
+            new ChartSeries
+            {
+                Name = "Paiements",
+                Data = new double[]
+                {
+                    totalNombreFiltered,
+                    totalNombreFilteredMobile,
+                    totalNombreFilteredVirement
+                }
+            }
+        };*/
+        DonutSeries = new double[]
+        {
+            totalNombreFiltered,
+            totalNombreFilteredMobile,
+            totalNombreFilteredVirement
+        };
+        DonutLabels = new[] { "Espèce", "Mobile Money", "Virement bancaire" };
+        
+        InvokeAsync(StateHasChanged);
+        //StateHasChanged();
+    }
+}
+
+<style>
+    .mud-chart-Line text {
+        font-size: 14px !important;
+    }
+
+    .mud-chart-Line .x-axis text,
+    .mud-chart-Line .y-axis text {
+        font-size: 14px !important;
+        fill: #333; /* Améliore la visibilité */
+    }
+</style>

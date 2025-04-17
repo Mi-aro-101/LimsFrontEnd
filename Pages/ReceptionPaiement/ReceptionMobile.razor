@@ -1,4 +1,4 @@
-﻿@page "/receptionMobile"
+﻿@page "/receptionMobile/{operateur}"
 
 @using LimsFrontEnd.Models
 @using LimsUtils.Api
@@ -12,7 +12,10 @@
     <MudForm Model="@recue" @ref="form">
         <MudGrid>
             <MudItem xs="12">
-                <MudTextField T="string" Label="Etat de décompte" @bind-Value="recue.referenceEtatDecompte" Variant="Variant.Text" Margin="Margin.Dense" />
+                <MudTextField T="string" Label="Etat de décompte" @bind-Value="recue.referenceEtatDecompte" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Opérateur mobile" @bind-Value="@operateur" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true"/>
             </MudItem>
             <MudItem xs="12">
                 <MudTextField T="int" Label="Réference mobile" @bind-Value="recue.referenceMobile" Variant="Variant.Text" Margin="Margin.Dense" />
@@ -30,6 +33,8 @@
 @code {
     MudForm? form;
     RecuDto recue = new RecuDto();
+    [Parameter]
+    public string operateur { get; set; } = string.Empty;
 
     private ApiResponse? apiResponse;
     string url = "http://localhost:5077/api/receptionpaiementmobile";
@@ -39,7 +44,7 @@
         try
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await http.GetFromJsonAsync<ApiResponse>(url, option);
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>(url+"/Confirmer", option);
             apiResponse.HandleResponse<RecuDto>();
             recue = apiResponse.Data as RecuDto ?? new RecuDto();
         }
@@ -74,7 +79,7 @@
             }
             else
             {
-                navigationManager.NavigateTo("/success");
+                navigationManager.NavigateTo("/demandenotedebit/liste");
             }
         }
         catch (Exception ex)

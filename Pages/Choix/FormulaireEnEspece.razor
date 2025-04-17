@@ -6,18 +6,18 @@
 @inject HttpClient http
 @inject NavigationManager navigationManager
 
-<MudItem Class="pa-4">
+<!--<MudItem Class="pa-4">
     <MudText Typo="Typo.h3" GutterBottom="true"> Formulaire de paiement en espèce</MudText>
     <MudForm Model="@espece" @ref="reference">
         <MudGrid>
-            <!-- Checkbox pour afficher les informations client -->
+             Checkbox pour afficher les informations client
             <MudItem xs="12">
                 <MudButton OnClick="ToggleAfficherClient">Client</MudButton>
             </MudItem>     
             
             @if (AfficherClient)
             {
-                <!-- Information Client (Caché au départ) -->
+                Information Client (Caché au départ)
                 <MudItem xs="12">
                     <MudTextField T="string" label="Titre" @bind-Value="espece.titre" Required="true" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
                 </MudItem>
@@ -43,7 +43,7 @@
 
             @if (!AfficherClient)
             {
-                <!-- Information du Payant -->
+                 Information du Payant 
                 <MudItem xs="12">
                     <MudTextField T="string" Label="Nom du Payant" @bind-Value="espece.nomPayant" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
                 </MudItem>
@@ -71,7 +71,77 @@
         </MudGrid>
 
     </MudForm>
-</MudItem>
+</MudItem>-->
+
+<MudPaper Class="p-6 mx-auto my-6" Style="max-width: 850px;">
+    <MudText Typo="Typo.h4" GutterBottom="true" Class="text-center mb-6">
+        Formulaire de Paiement en Espèce
+    </MudText>
+
+    <MudForm Model="@espece" @ref="reference">
+        <MudGrid GutterSize="3">
+            <MudItem xs="12" class="text-end">
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ToggleAfficherClient">
+                    Client : @(AfficherClient ? "Oui" : "Non")
+                </MudButton>
+            </MudItem>
+
+            @if (AfficherClient)
+            {
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" Label="Titre" @bind-Value="espece.titre" Disabled="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" Label="Clients" @bind-Value="espece.clients" HelperText="Particulier ou Entreprise" Disabled="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Identité" @bind-Value="espece.identite" HelperText="CIN ou NIF/STAT ou Passeport" Disabled="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Adresse" @bind-Value="espece.adresse" Disabled="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Contact" @bind-Value="espece.contact" Disabled="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Email" @bind-Value="espece.email" Disabled="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="État de Décompte" @bind-Value="espece.etatDecompte" Disabled="true" />
+                </MudItem>
+            }
+            else
+            {
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" Label="Nom du Payant" @bind-Value="espece.nomPayant" Required="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" Label="Prénom du Payant" @bind-Value="espece.prenomPayant" Required="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="int" Label="Contact du Payant" @bind-Value="espece.contactdupayant" Required="true" />
+                </MudItem>
+            }
+
+            <MudItem xs="12" sm="6">
+                <MudDatePicker Label="Date" Date="@SelectedDate" DateChange="OnDateChange" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="double" Label="Montant" @bind-Value="espece.montant" Disabled="true" />
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudHidden T="int" @bind-Value="espece.id_etat_decompte" />
+            </MudItem>
+
+            <MudItem xs="12" class="d-flex justify-center mt-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" OnClick="SubmitPaiementEspece">
+                    Payer
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+</MudPaper>
 
 @code {
     private bool AfficherClient = false;

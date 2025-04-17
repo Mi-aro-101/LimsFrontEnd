@@ -1,11 +1,9 @@
 ﻿@page "/choixoperateur/{id_etat_decompte:int}"
 
-
-
-<MudItem>
+<!--<MudItem>
     <MudText Typo="Typo.h3" GutterBottom="true"> Choix de l'opérateur </MudText>
     <MudGrid Gutter="true">
-        <!-- Opérateur Telma -->
+         Opérateur Telma 
         <MudItem xs="4" sm="4" md="4" lg="4" xl="4"  Style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
             <MudText Typo="Typo.subtitle1" Align="Align.Center">Mvola</MudText>
             <MudLink class="nav-link" href="@($"formulaireMobile/{id_etat_decompte}")" Style="text-decoration: none;">
@@ -13,7 +11,7 @@
             </MudLink>
         </MudItem>
 
-        <!-- Opérateur airtel -->
+         Opérateur airtel 
         <MudItem xs="4" sm="4" md="4" lg="4" xl="4"  Style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
             <MudText Typo="Typo.subtitle1" Align="Align.Center">Airtel</MudText>
             <MudLink class="nav-link" href="@($"formulaireMobile/{id_etat_decompte}")" Style="text-decoration: none;">
@@ -21,13 +19,59 @@
             </MudLink>
         </MudItem> 
 
-        <!-- Opérateur orange -->
+        Opérateur orange 
         <MudItem xs="4" sm="4" md="4" lg="4" xl="4"  Style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
             <MudText Typo="Typo.subtitle1" Align="Align.Center">Orange money</MudText>
             <MudLink class="nav-link" href="@($"formulaireMobile/{id_etat_decompte}")" Style="text-decoration: none;">
                 <MudImage Src="img/Orange_money.png" Alt="logo Orange Money" Style="width: 150px; height: 150px; margin-bottom: 8px; margin-left: 12px;" />    
             </MudLink>
         </MudItem>
+    </MudGrid>
+</MudItem>-->
+
+<MudItem Class="pa-6">
+    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6 font-semibold text-primary">
+        Choisissez votre opérateur de paiement
+    </MudText>
+
+    <MudGrid Gutter="true" Justify="Justify.Center">
+
+        <!-- Carte opérateur MVola -->
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Class="hover:scale-105 transition-transform duration-300 cursor-pointer" Style="text-align: center;">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Class="mb-2">MVola</MudText>
+                    <MudLink href="@($"formulaireMobile/Yas/{id_etat_decompte}")" Style="text-decoration: none;">
+                        <MudImage Src="img/Mvola.png" Alt="Logo MVola" Style="width: 120px; height: 120px; margin: auto;" />
+                    </MudLink>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Carte opérateur Airtel -->
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Class="hover:scale-105 transition-transform duration-300 cursor-pointer" Style="text-align: center;">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Class="mb-2">Airtel</MudText>
+                    <MudLink href="@($"formulaireMobile/Airtel/{id_etat_decompte}")" Style="text-decoration: none;">
+                        <MudImage Src="img/Airtel.png" Alt="Logo Airtel" Style="width: 120px; height: 120px; margin: auto;" />
+                    </MudLink>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Carte opérateur Orange Money -->
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Class="hover:scale-105 transition-transform duration-300 cursor-pointer" Style="text-align: center;">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Class="mb-2">Orange Money</MudText>
+                    <MudLink href="@($"formulaireMobile/Orange/{id_etat_decompte}")" Style="text-decoration: none;">
+                        <MudImage Src="img/Orange_money.png" Alt="Logo Orange Money" Style="width: 120px; height: 120px; margin: auto;" />
+                    </MudLink>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
     </MudGrid>
 </MudItem>
 

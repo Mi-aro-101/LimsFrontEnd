@@ -18,7 +18,7 @@
                 <MudTextField T="double" Label="Montant reçu" @bind-Value="recue.montantRecu" Variant="Variant.Text" Margin="Margin.Dense"/>
             </MudItem>
             <MudItem xs="12">
-                <MudHidden T="int" @bind-Value="recue.id_paiement" />
+                <MudHidden T="int" @bind-Value="recue.id_paiement"/>
             </MudItem>
             <MudItem xs="12" Class="d-flex justify-center">
                 <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8" OnClick="RecepetionEnEspece">Payé</MudButton>
@@ -39,7 +39,7 @@
         try
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await http.GetFromJsonAsync<ApiResponse>(url, option);
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>(url+"/Confirmer", option);
             apiResponse.HandleResponse<RecuDto>();
             recue = apiResponse.Data as RecuDto ?? new RecuDto();
         }
@@ -74,7 +74,7 @@
             }
             else
             {
-                navigationManager.NavigateTo("/success");
+                navigationManager.NavigateTo("/demandenotedebit/liste");
             }
         }
         catch (Exception ex)

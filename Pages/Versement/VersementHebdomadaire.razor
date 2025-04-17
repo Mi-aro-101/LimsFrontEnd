@@ -4,6 +4,7 @@
 @using LimsUtils.Api
 @using System.Text.Json
 @inject HttpClient http
+@inject NavigationManager navigation
 
 <MudPaper Class="pa-4">
     <MudText Typo="Typo.h5" Class="mb-4">Tableau des versements hebdomadaires</MudText>
@@ -72,7 +73,14 @@
 
             apiResponse2 = await http.GetFromJsonAsync<ApiResponse>($"{url}/transfert", option);
             apiResponse2.HandleResponse<List<VersementHebdomadaireDto>>();
-            data = apiResponse2.Data as List<VersementHebdomadaireDto> ?? new List<VersementHebdomadaireDto>();
+            if(apiResponse2.StatusCode == 200)
+            {
+                data = apiResponse2.Data as List<VersementHebdomadaireDto> ?? new List<VersementHebdomadaireDto>();
+            }
+            else if (apiResponse2.StatusCode == 404)
+            {
+                navigation.NavigateTo("/Semaine");
+            }
         }
         catch (Exception ex)
         {

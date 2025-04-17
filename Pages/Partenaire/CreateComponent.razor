@@ -7,33 +7,29 @@
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 
-<MudCard Class="pa-3" MaxWidth="30rem">
+<MudCard Class="rounded-xl shadow-md" MaxWidth="100%">
     <MudCardHeader>
-        <MudText Typo="Typo.h6" Class="text-center">Ajouter un partenaire</MudText>
+        <MudText Typo="Typo.h6" Class="text-center">Nouveau partenaire</MudText>
     </MudCardHeader>
     <MudCardContent>
         <MudForm Model="@contrat" @ref="form">
-            <MudStack Spacing="2">
-                <MudTextField T="string" Label="Nom" @bind-Value="contrat.nomEntreprise"
-                              Placeholder="Entreprise ou particulier" FullWidth="true" Required="true" Immediate="true" Dense="true" />
-
-                <MudTextField T="string" Label="Référence" @bind-Value="contrat.referenceContrat"
-                              Placeholder="Référence du contrat" FullWidth="true" Required="true" Immediate="true" Dense="true" />
-
-                <MudDatePicker Label="Date de paiement" @bind-Date="contrat.datePaiement"
-                               Margin="Margin.Dense" Required="true" Class="w-full" />
+            <MudStack Spacing="3">
+                <MudTextField Label="Nom de l'entreprise" T="string" @bind-Value="contrat.nomEntreprise" Required="true"  />
+                <MudTextField Label="Référence contrat" T="string" @bind-Value="contrat.referenceContrat" Required="true" />
+                <MudDatePicker Label="Date de paiement" @bind-Date="contrat.datePaiement" Required="true" />
             </MudStack>
 
-            <MudDivider Class="my-3" />
+            <MudDivider Class="my-4" />
 
             <MudCardActions Class="justify-center">
-                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitForm" Size="Size.Small">
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" Size="Size.Medium" OnClick="SubmitForm">
                     Ajouter
                 </MudButton>
             </MudCardActions>
         </MudForm>
     </MudCardContent>
 </MudCard>
+
 
 @code {
     private MudForm form;
@@ -73,6 +69,9 @@
                 // Réinitialiser le formulaire après l'ajout
                 contrat = new ContratDto();
                 await form.ResetAsync();
+
+                // 🔔 Invoquer le callback pour signaler la création
+                await OnContratCreated.InvokeAsync();
             }
         }
         catch (Exception ex)
