@@ -16,6 +16,6 @@ builder.Services.AddMudServices(); // MudBlazor Services
 // builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5077/api/") });
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+//builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddBlazoredSessionStorage(); //service for session storage
 await builder.Build().RunAsync();
