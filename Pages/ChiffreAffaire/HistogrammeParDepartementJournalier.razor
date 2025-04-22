@@ -48,7 +48,28 @@
 
 <br>
 
-<div id="myDiv"></div>
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                Diagramme en baton
+            </div>
+            <div class="card-body">
+                <div id="myDiv"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                Client Interne/externe camembert
+            </div>
+            <div class="card-body">
+                <CamembertDepartementMensuelComponent Sorter="@sorter" ChiffreAffaires="@chiffreAffaires"/>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code
 {
@@ -142,5 +163,11 @@
         public string[] x { get; set; }
         public decimal[] y { get; set; }
         public string? name { get; set; }
+        public ColorPalette marker { get; set; } = new ColorPalette();
+    }
+
+    class ColorPalette
+    {
+        public string[] colors { get; set; } = ["orange", "blue", "green", "red", "purple", "yellow", "brown"];
     }
 }

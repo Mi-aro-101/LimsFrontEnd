@@ -1,0 +1,70 @@
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using LimsUtils.Utility
+@using System.Text.Json
+@using System.Globalization
+
+<div id="yourDiv"></div>
+
+@code
+{
+    public ChiffreAffaireDto sorter = new ChiffreAffaireDto();
+    [Parameter]
+    public ChiffreAffaireDepartementDto[] ChiffreAffaires { get; set; }
+    [Parameter]
+    public ChiffreAffaireDto Sorter { get; set; }
+
+    private string exception = string.Empty;
+    ICollection<string> xs = new List<string>();
+    ICollection<decimal> ys = new List<decimal>();
+    private IJSObjectReference? jsModule;
+    private string chartTitle = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await FetchCA();
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        string mois = new DateTime(2000, sorter!.Mois!.Value, 1).ToString("MMMM", new CultureInfo("fr-FR"));
+        chartTitle = $"Chiffre d'affaire journalier {mois} {sorter!.Annee!.Value}";
+        await FetchCA();
+    }
+
+    private async Task FetchCA()
+    {   
+        sorter!.Annee = Sorter!.Annee!.Value;
+        sorter!.Mois = Sorter!.Mois!.Value;
+
+        string mois = new DateTime(2000, sorter!.Mois!.Value, 1).ToString("MMMM", new CultureInfo("fr-FR"));
+        chartTitle = $"Chiffre d'affaire journalier {mois} {sorter!.Annee!.Value}";
+        
+        await MatchData(ChiffreAffaires);
+        Console.WriteLine(JsonSerializer.Serialize(xs));
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./js/chiffre-affaire.js");
+        await jsModule.InvokeVoidAsync("chiffreAffaireClient", xs, ys, chartTitle);
+    }
+
+    private async Task MatchData(ChiffreAffaireDepartementDto[] chiffreAffaires)
+    {
+        ICollection<decimal> initValues = new List<decimal>();
+        ICollection<string> departements = new List<string>();
+        xs = departements;
+        ys = initValues;
+        foreach(ChiffreAffaireDepartementDto chiffreAffaire in chiffreAffaires)
+        {
+            xs.Add(chiffreAffaire!.Designation);
+            decimal sum = 0.0m;
+            foreach(ChiffreAffaireDto caParMois in chiffreAffaire!.ChiffreAffaires)
+            {
+                sum+=caParMois!.Montant!.Value;
+            }
+            ys.Add(sum);
+        }
+    }
+}

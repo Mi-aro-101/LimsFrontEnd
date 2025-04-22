@@ -21,13 +21,13 @@
                 <MudForm>
 
                     <MudGrid>
-                        <MudItem xs="12" sm="4">
+                        <MudItem xs="12" sm="3">
                             <MudTextField T="string" Label="Reference fiche de travail" @bind-Value="sorter.ReferenceFicheTravail" />
                         </MudItem>
-                        <MudItem xs="12" sm="4">
+                        <MudItem xs="12" sm="3">
                             <MudTextField T="int" Label="Année" @bind-Value="sorter.AnneeExercice" />
                         </MudItem>
-                        <MudItem xs="12" sm="4">
+                        <MudItem xs="12" sm="3">
                             <MudSelect @bind-Value="sorter.IdEtatPrestation" Label="Statut">
                                 <MudSelectItem Value="0">___</MudSelectItem>
                                 @foreach (var etatPrestation in etatPrestations)
@@ -36,22 +36,11 @@
                                 }
                             </MudSelect>
                         </MudItem>
+                        <MudItem xs="12" sm="3">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>OnSubmit())" Class="ml-auto">Filtrer</MudButton>
+                        </MudItem>
                     </MudGrid>
-                    
-                    @* <MudTextField T="string" Label="Reference fiche de travail" @bind-Value="sorter.ReferenceFicheTravail" />
-                    <MudTextField T="int" Label="Année" @bind-Value="sorter.AnneeExercice" />
-                    <MudSelect @bind-Value="sorter.IdEtatPrestation" Label="Statut">
-                        <MudSelectItem Value="0">___</MudSelectItem>
-                        @foreach (var etatPrestation in etatPrestations)
-                        {
-                            <MudSelectItem Value="etatPrestation.IdEtatPrestation">@etatPrestation.Designation</MudSelectItem>
-                        }
-                    </MudSelect> *@
-                    <br>
 
-                     <MudPaper Class="pa-4 mt-4">
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>OnSubmit())" Class="ml-auto">Filtrer</MudButton>
-                    </MudPaper>
                 </MudForm>
             </MudPaper>
         </MudItem>

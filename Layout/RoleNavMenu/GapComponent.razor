@@ -1,8 +1,9 @@
 @namespace LimsFrontEnd.NavigationMenu
 <MudNavMenu Margin="Margin.Dense" Color="Color.Warning">
-<div class="nav-item px-3">
-    <MudNavLink Href="/recette/previsionnelle/nouveau" Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Inherit">
-        Recette previsionnelle
-    </MudNavLink>
-</div>
+    <div class="nav-item px-3">
+        <MudNavGroup Title="Recette previsionnelle" Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Inherit"  Expanded="false">
+            <MudNavLink Href="/recette/previsionnelle/nouveau" IconColor="Color.Inherit" Match="NavLinkMatch.All">Recette Previsionnelle</MudNavLink>
+            <MudNavLink Href="/comparaison" IconColor="Color.Inherit" Match="NavLinkMatch.All">Comparaison avec chiffre reelle</MudNavLink>
+        </MudNavGroup>
+    </div>
 </MudNavMenu>
