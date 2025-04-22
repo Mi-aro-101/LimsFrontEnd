@@ -1,0 +1,139 @@
+@page "/comparaison"
+
+@inject HttpClient Http
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using LimsUtils.Utility
+@using System.Text.Json
+@using System.Globalization;
+@using Component.Prestation;
+@inject NavigationManager NavigationManager
+
+@* <SortComponent /> *@
+<style>
+    .chiffre{
+        text-align: right;
+    }
+    tr:hover{
+        cursor: pointer;
+    }
+</style>
+
+<center><h2>Liste des prestations</h2></center>
+<hr>
+
+<MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudPaper Class="pa-4">
+                <MudForm>
+
+                    <MudGrid>
+                        <MudItem xs="12" sm="4">
+                            <MudTextField T="int" Label="Reference fiche de travail" @bind-Value="annee" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>LoadComparaisons())" Class="ml-auto">Valider</MudButton>
+                        </MudItem>
+                    </MudGrid>
+                    <br>
+
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+<hr>
+
+<h2>Compraison @annee</h2>
+
+<div class="col">
+    @if (!string.IsNullOrEmpty(exception))
+    {
+        <p><em>@exception</em></p>
+    }
+    else
+    {
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">Departement</th>
+                        <th scope="col">Prévision (Ar)</th>
+                        <th scope="col">Chiffre d'affaire (Ar)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var comparaison in comparaisons)
+                    {
+                        <tr>
+                            <td>@comparaison.Designation</td>
+                            <td class="chiffre">@ViewUtils.RenderMoney(comparaison.Prevision) Ar</td>
+                            <td class="chiffre">@ViewUtils.RenderMoney(comparaison.ChiffreAffaire) Ar</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <p> Prevision : <strong>@ViewUtils.RenderMoney(Convert.ToDecimal(totalPrevision))</strong></p>
+            <p> Chiffre reelle : <strong>@ViewUtils.RenderMoney(Convert.ToDecimal(totalChiffreReelle))</strong></p>
+
+            <div class="progress">
+                <div class="progress-bar bg-success" role="progressbar" 
+                style="width: @(percent)%" 
+                aria-valuenow="@percent" 
+                aria-valuemin="0" 
+                aria-valuemax="100"></div>
+            </div>
+
+            <MudText Typo="Typo.body2">@($"{(percent):F2}% atteint")</MudText>
+    }
+</div>
+
+@code
+{
+    VComparaisonRecetteDto[] comparaisons = new VComparaisonRecetteDto[0];
+    string exception = "";
+    int annee = DateUtils.GetCurrentYear();
+    double totalPrevision = 0.0;
+    double totalChiffreReelle = 0.0;
+    double percent = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadComparaisons();
+    }
+
+    private async Task LoadComparaisons()
+    {
+        ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"recette/previsionnelle/comparaison/prevision/realite/{annee}");
+        if(apiResponse?.IsSuccess == true)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(apiResponse));
+            apiResponse.HandleResponse<VComparaisonRecetteDto[]>();
+            comparaisons = (VComparaisonRecetteDto[])apiResponse.Data;
+        }
+        else{
+            exception = (string?)apiResponse.Message;
+        }
+        CalculTotal();
+        StateHasChanged();
+    }
+
+    private void CalculTotal()
+    {
+        double totalPrev = 0.0;
+        foreach(VComparaisonRecetteDto comp in comparaisons)
+        {
+            totalPrev+=Decimal.ToDouble(comp.Prevision);
+        }
+
+
+        double totalCA = 0.0;
+        foreach(VComparaisonRecetteDto comp in comparaisons)
+        {
+            totalCA+=Decimal.ToDouble(comp.ChiffreAffaire);
+        }
+        totalPrevision = totalPrev;
+        totalChiffreReelle = totalCA;
+        percent = (totalChiffreReelle*100) / totalPrevision;
+    }
+}

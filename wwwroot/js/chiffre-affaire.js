@@ -12,6 +12,9 @@ export function chiffreAffaire(xs, ys, titre)
             x: x,
             type: "bar",
             name: "Profit",
+            marker: {
+                colors: ['orange', 'blue', 'green', 'red', 'purple', 'yellow', 'brown'] // Same order/colors as above
+              }
         }
     ];
 
@@ -79,7 +82,10 @@ export function chiffreAffaireClient(xs, ys, titre)
     var data = [{
         values: ys,
         labels: xs,
-        type: 'pie'
+        type: 'pie',
+        marker: {
+            colors: ['blue', 'orange', 'green', 'red', 'purple', 'yellow', 'brown'] // Same order/colors as above
+        }
       }];
       
       var layout = {
