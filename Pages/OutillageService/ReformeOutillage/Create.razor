@@ -1,0 +1,166 @@
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models.Outillage
+@using LimsUtils.Api
+@using System.Text.Json
+@using System.Linq
+
+<div class="card border-dark mb-3">
+    <div class="card-header">Ajouter une Réforme d'Outillage</div>
+    <div class="card-body text-dark">
+        <EditForm Model="@reformeOutillage" OnValidSubmit="@HandleOnSubmit" FormName="reformeOutillageForm">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label>Date de la Réforme</label>
+                <InputDate class="form-control" @bind-Value="reformeOutillage.DateReforme" disabled />
+            </div>
+            <div class="form-group">
+                <label>Objet</label>
+                <InputText class="form-control" @bind-Value="reformeOutillage.Objet" />
+                @if (isObjetInvalid)
+                {
+                    <div class="text-danger">L'objet est obligatoire.</div>
+                }
+            </div>
+            <div class="form-group">
+                <label>Nombre</label>
+                <InputNumber class="form-control" @bind-Value="reformeOutillage.Nombre" />
+                @if (isNombreInvalid)
+                {
+                    <div class="text-danger">Le nombre doit être supérieur à zéro.</div>
+                }
+            </div>
+            <div class="form-group">
+                <label>Outillage</label>
+                <div class="position-relative">
+                    <InputText class="form-control" @bind-Value="searchTerm" @oninput="HandleSearch" placeholder="Rechercher un outillage..." />
+                    @if (suggestions.Any())
+                    {
+                        <ul class="list-group position-absolute" style="z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto;">
+                            @foreach (var suggestion in suggestions)
+                            {
+                                <li class="list-group-item list-group-item-action" @onclick="() => SelectSuggestion(suggestion)">
+                                    @suggestion.Designation
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+                @if (isOutillageSelectionInvalid)
+                {
+                    <div class="text-danger">Veuillez sélectionner un outillage.</div>
+                }
+            </div>
+            <br />
+            <button type="submit" class="btn btn-primary">Créer</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private ReformeOutillageDto reformeOutillage = new() { DateReforme = DateTime.Today };
+    private string searchTerm = string.Empty;
+    private List<OutillageDto> suggestions = new();
+    private bool isObjetInvalid = false;
+    private bool isNombreInvalid = false;
+    private bool isOutillageSelectionInvalid = false;
+
+    private string reformeOutillageUrl = "http://localhost:5077/api/reforme-outillages";
+    private string outillageSearchUrl = "http://localhost:5077/api/outillages/search";
+
+    [Parameter]
+    public EventCallback OnReformeOutillageCreated { get; set; }
+
+    private async Task HandleSearch(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            suggestions.Clear();
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{outillageSearchUrl}?searchTerm={Uri.EscapeDataString(searchTerm)}");
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var allResults = JsonSerializer.Deserialize<List<OutillageDto>>(
+                    apiResponse.Data.ToString(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new List<OutillageDto>();
+
+                suggestions = allResults
+                    .Where(o => o.Designation.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(o => o.Designation)
+                    .ToList();
+            }
+            else
+            {
+                suggestions.Clear();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la recherche des outillages : {ex.Message}");
+            suggestions.Clear();
+        }
+        StateHasChanged();
+    }
+
+    private void SelectSuggestion(OutillageDto suggestion)
+    {
+        reformeOutillage.IdOutillage = suggestion.IdOutillage;
+        searchTerm = suggestion.Designation;
+        suggestions.Clear();
+        StateHasChanged();
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        isObjetInvalid = string.IsNullOrWhiteSpace(reformeOutillage.Objet);
+        isNombreInvalid = reformeOutillage.Nombre <= 0;
+        isOutillageSelectionInvalid = reformeOutillage.IdOutillage == 0;
+
+        if (isObjetInvalid || isNombreInvalid || isOutillageSelectionInvalid)
+        {
+            StateHasChanged();
+            return;
+        }
+
+        string outillageDesignation = suggestions.FirstOrDefault(o => o.IdOutillage == reformeOutillage.IdOutillage)?.Designation ?? searchTerm;
+        string message = $"Veuillez vérifier les informations suivantes avant de créer la réforme d'outillage :\n\n" +
+                         $"Date de la Réforme : {reformeOutillage.DateReforme.ToShortDateString()}\n" +
+                         $"Objet : {reformeOutillage.Objet}\n" +
+                         $"Nombre : {reformeOutillage.Nombre}\n" +
+                         $"Outillage : {outillageDesignation}\n\n" +
+                         "Êtes-vous sûr de ces informations ? Une fois créée, la réforme ne pourra plus être modifiée ou supprimée.";
+
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", message);
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync(reformeOutillageUrl, reformeOutillage);
+            response.EnsureSuccessStatusCode();
+            if (OnReformeOutillageCreated.HasDelegate)
+                await OnReformeOutillageCreated.InvokeAsync();
+            reformeOutillage = new ReformeOutillageDto() { DateReforme = DateTime.Today };
+            searchTerm = string.Empty;
+            suggestions.Clear();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la création de la réforme : {ex.Message}");
+        }
+    }
+}

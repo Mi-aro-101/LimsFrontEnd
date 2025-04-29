@@ -1,0 +1,84 @@
+@page "/objets-indisponibilite/edit/{Id:int}"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@using System.Net.Http.Json
+@using System.Text.Json
+@using LimsFrontEnd.Models.Immobilisation
+@using LimsUtils.Api
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-dark mb-3">
+                <div class="card-header text-center">Modifier l'Objet d'Indisponibilité</div>
+                <div class="card-body text-dark">
+                    @if (objetIndisponibilite == null)
+                    {
+                        <p>Chargement...</p>
+                    }
+                    else
+                    {
+                        <EditForm Model="@objetIndisponibilite" OnValidSubmit="@HandleOnSubmit">
+                            <DataAnnotationsValidator />
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Désignation</label>
+                                <div class="col-sm-9">
+                                    <InputText class="form-control" @bind-Value="objetIndisponibilite.Designation" />
+                                </div>
+                            </div>
+                            <br />
+                            <center>
+                                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                            </center>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private ObjetIndisponibiliteDto objetIndisponibilite;
+    private string url = "http://localhost:5077/api/objets-indisponibilite";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadObjetIndisponibilite();
+    }
+
+    private async Task LoadObjetIndisponibilite()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<ApiResponse>($"{url}/{Id}");
+            if (response != null && response.IsSuccess && response.Data != null)
+            {
+                objetIndisponibilite = JsonSerializer.Deserialize<ObjetIndisponibiliteDto>(
+                    response.Data.ToString(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement de l'objet d'indisponibilité : {ex.Message}");
+        }
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"{url}/{objetIndisponibilite.IdObjetIndisponibilite}", objetIndisponibilite);
+            response.EnsureSuccessStatusCode();
+            NavigationManager.NavigateTo("/objets-indisponibilite");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la mise à jour : {ex.Message}");
+        }
+    }
+}

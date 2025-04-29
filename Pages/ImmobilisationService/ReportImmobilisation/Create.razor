@@ -1,0 +1,156 @@
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models.Immobilisation
+@using LimsUtils.Api
+@using System.Text.Json
+@using System.Linq
+
+<div class="card border-dark mb-3">
+    <div class="card-header">Ajouter un inventaire d'Immobilisation</div>
+    <div class="card-body text-dark">
+        <EditForm Model="@reportImmobilisation" OnValidSubmit="@HandleOnSubmit" FormName="reportImmobilisationForm">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label>Date du Report</label>
+                <InputDate class="form-control" @bind-Value="reportImmobilisation.DateReport" disabled />
+            </div>
+            <div class="form-group">
+                <label>Quantité</label>
+                <InputNumber class="form-control" @bind-Value="reportImmobilisation.Quantite" />
+                @if (isQuantiteInvalid)
+                {
+                    <div class="text-danger">La quantité doit être supérieure à zéro.</div>
+                }
+            </div>
+            <div class="form-group">
+                <label>Immobilisation</label>
+                <div class="position-relative">
+                    <InputText class="form-control" @bind-Value="searchTerm" @oninput="HandleSearch" placeholder="Rechercher une immobilisation..." />
+                    @if (suggestions.Any())
+                    {
+                        <ul class="list-group position-absolute" style="z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto;">
+                            @foreach (var suggestion in suggestions)
+                            {
+                                <li class="list-group-item list-group-item-action" @onclick="() => SelectSuggestion(suggestion)">
+                                    @suggestion.Designation
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+                @if (isImmobilisationSelectionInvalid)
+                {
+                    <div class="text-danger">Veuillez sélectionner une immobilisation.</div>
+                }
+            </div>
+            <br />
+            <button type="submit" class="btn btn-primary">Créer</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private ReportImmobilisationDto reportImmobilisation = new() { DateReport = DateTime.Today };
+    private string searchTerm = string.Empty;
+    private List<ImmobilisationDto> suggestions = new();
+    private bool isQuantiteInvalid = false;
+    private bool isImmobilisationSelectionInvalid = false;
+
+    private string reportImmobilisationUrl = "http://localhost:5077/api/report-immobilisation";
+    private string immobilisationSearchUrl = "http://localhost:5077/api/immobilisation/search";
+
+    [Parameter]
+    public EventCallback OnReportImmobilisationCreated { get; set; }
+
+    private async Task HandleSearch(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            suggestions.Clear();
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{immobilisationSearchUrl}?searchTerm={searchTerm}");
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var allResults = JsonSerializer.Deserialize<List<ImmobilisationDto>>(
+                    apiResponse.Data.ToString(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new List<ImmobilisationDto>();
+
+                // Filtrer côté client pour ne garder que les immobilisations commençant par searchTerm
+                suggestions = allResults
+                    .Where(i => i.Designation.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(i => i.Designation)
+                    .ToList();
+            }
+            else
+            {
+                suggestions.Clear();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la recherche des immobilisations : {ex.Message}");
+            suggestions.Clear();
+        }
+        StateHasChanged();
+    }
+
+    private void SelectSuggestion(ImmobilisationDto suggestion)
+    {
+        reportImmobilisation.IdImmobilisation = suggestion.IdImmobilisation;
+        searchTerm = suggestion.Designation;
+        suggestions.Clear();
+        StateHasChanged();
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        isQuantiteInvalid = reportImmobilisation.Quantite <= 0;
+        isImmobilisationSelectionInvalid = reportImmobilisation.IdImmobilisation == null;
+
+        if (isQuantiteInvalid || isImmobilisationSelectionInvalid)
+        {
+            StateHasChanged();
+            return;
+        }
+
+        string immobilisationDesignation = suggestions.FirstOrDefault(s => s.IdImmobilisation == reportImmobilisation.IdImmobilisation)?.Designation ?? searchTerm;
+        string message = $"Veuillez vérifier les informations suivantes avant de créer le rapport d'immobilisation :\n\n" +
+                         $"Date du Report : {reportImmobilisation.DateReport.ToShortDateString()}\n" +
+                         $"Quantité : {reportImmobilisation.Quantite}\n" +
+                         $"Immobilisation : {immobilisationDesignation}\n\n" +
+                         "Êtes-vous sûr de ces informations ? Une fois créé, le rapport ne pourra plus être modifié ou supprimé.";
+
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", message);
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync(reportImmobilisationUrl, reportImmobilisation);
+            response.EnsureSuccessStatusCode();
+            if (OnReportImmobilisationCreated.HasDelegate)
+                await OnReportImmobilisationCreated.InvokeAsync();
+            reportImmobilisation = new ReportImmobilisationDto() { DateReport = DateTime.Today };
+            searchTerm = string.Empty;
+            suggestions.Clear();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la création du rapport : {ex.Message}");
+        }
+    }
+}

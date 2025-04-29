@@ -1,0 +1,158 @@
+﻿@page "/reactif/edit/{Id:int}"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models.Reactif
+@using LimsUtils.Api
+@using System.Text.Json
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-dark mb-3">
+                <div class="card-header text-center">Modifier le Reactif</div>
+                <div class="card-body text-dark">
+                    @if (reactif == null)
+                    {
+                        <p>Chargement...</p>
+                    }
+                    else
+                    {
+                        <EditForm Model="@reactif" OnValidSubmit="@HandleOnSubmit">
+                            <DataAnnotationsValidator />
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Désignation</label>
+                                <div class="col-sm-9">
+                                    <InputText class="form-control" @bind-Value="reactif.Designation" />
+                                </div>
+                            </div>
+                            <br />
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Type de Sortie</label>
+                                <div class="col-sm-9">
+                                    <InputSelect class="form-control" @bind-Value="reactif.IdTypeSortie">
+                                        <option value="">-- Sélectionner --</option>
+                                        @foreach (var typeSortie in TypeSorties)
+                                        {
+                                            <option value="@typeSortie.IdTypeSortie">@typeSortie.Designation</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                            </div>
+                            <br />
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Unité</label>
+                                <div class="col-sm-9">
+                                    <InputSelect class="form-control" @bind-Value="reactif.IdUnite">
+                                        <option value="">-- Sélectionner --</option>
+                                        @foreach (var unite in Unites)
+                                        {
+                                            <option value="@unite.IdUnite">@unite.Designation</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                            </div>
+                            <br />
+                            <center>
+                                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                            </center>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private ReactifDto reactif;
+    private ICollection<TypeSortieDto> TypeSorties = new List<TypeSortieDto>();
+    private ICollection<UniteDto> Unites = new List<UniteDto>();
+    private string url = "http://localhost:5077/api/reactifs";
+
+    protected override async Task OnInitializedAsync()
+    {
+        TypeSorties = await LoadTypeSorties();
+        Unites = await LoadUnites();
+        await LoadReactif();
+    }
+
+    private async Task<ICollection<TypeSortieDto>> LoadTypeSorties()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/typesSortie");
+            if (apiResponse != null && apiResponse.IsSuccess && apiResponse.Data != null)
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<ICollection<TypeSortieDto>>(jsonData, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<TypeSortieDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des types de sortie : {ex.Message}");
+        }
+        return new List<TypeSortieDto>();
+    }
+
+    private async Task<ICollection<UniteDto>> LoadUnites()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/unites");
+            if (apiResponse != null && apiResponse.IsSuccess && apiResponse.Data != null)
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<ICollection<UniteDto>>(jsonData, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<UniteDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des unités : {ex.Message}");
+        }
+        return new List<UniteDto>();
+    }
+
+    private async Task LoadReactif()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<ApiResponse>($"{url}/{Id}");
+            if (response != null && response.IsSuccess && response.Data != null)
+            {
+                reactif = JsonSerializer.Deserialize<ReactifDto>(
+                    response.Data.ToString(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement du reactif : {ex.Message}");
+        }
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"{url}/{reactif.IdReactif}", reactif);
+            response.EnsureSuccessStatusCode();
+            NavigationManager.NavigateTo("/reactif");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la mise à jour : {ex.Message}");
+        }
+    }
+}

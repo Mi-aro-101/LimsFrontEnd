@@ -1,0 +1,176 @@
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using System.Text.Json
+@using LimsFrontEnd.Models.Immobilisation
+@using LimsUtils.Api
+@using System.Linq
+
+<style>
+    .bordered-cell-one {
+        border-right: none;
+        text-align: center;
+    }
+
+    .bordered-cell-two {
+        border-left: none;
+        text-align: center;
+    }
+</style>
+
+<div class="row">
+    <!-- Colonne de création -->
+    <div class="col">
+        <Create OnIndisponibiliteCreated="HandleIndisponibiliteCreated" />
+    </div>
+
+    <!-- Colonne de la liste -->
+    <div class="col">
+        @if (indisponibilites == null || indisponibilites.Count == 0)
+        {
+            <p><em>Aucune indisponibilité disponible</em></p>
+        }
+        else
+        {
+            if (apiResponse != null && apiResponse.ViewBag != null &&
+                apiResponse.ViewBag.ContainsKey("position") &&
+                apiResponse.ViewBag.ContainsKey("nbrPerPage") &&
+                apiResponse.ViewBag.ContainsKey("nbrLinks"))
+            {
+                var currentPage = int.Parse(apiResponse.ViewBag["position"].ToString());
+                var totalPages = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">Date Début</th>
+                            <th scope="col">Date Fin</th>
+                            <th scope="col">Immobilisation Immatriculée</th>
+                            <th scope="col">Objet d'Indisponibilité</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ind in indisponibilites)
+                        {
+                            <tr>
+                                <td>@ind.DateDebut.ToShortDateString()</td>
+                                <td>@ind.DateFin.ToShortDateString()</td>
+                                <td>
+                                    @{
+                                        var imm = allImmobilisationsImmatriculees.FirstOrDefault(i => i.IdImmobilisationPropre == ind.IdImmobilisationPropre);
+                                    }
+                                    @((imm != null) ? $"{imm.EntreeImmobilisation?.Immobilisation?.Designation} - {imm.Matricule}" : "N/A")
+                                </td>
+                                <td>
+                                    @{
+                                        var obj = allObjetsIndisponibilite.FirstOrDefault(o => o.IdObjetIndisponibilite == ind.IdObjetIndisponibilite);
+                                    }
+                                    @((obj != null) ? obj.Designation : "N/A")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" href="#" @onclick:preventDefault="true" @onclick="@(() => LoadIndisponibilites(currentPage - 1))">Précédent</a>
+                        </li>
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" href="#" @onclick:preventDefault="true" @onclick="@(() => LoadIndisponibilites(currentPage + 1))">Suivant</a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <center>
+                    <p>Page @apiResponse.ViewBag["position"] sur @apiResponse.ViewBag["nbrLinks"]</p>
+                </center>
+            }
+            else
+            {
+                <p>Informations de pagination indisponibles.</p>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private List<IndisponibiliteDto> indisponibilites = new List<IndisponibiliteDto>();
+    private ApiResponse? apiResponse;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private string url = "http://localhost:5077/api/indisponibilites";
+
+    private List<ImmobilisationImmatriculationDto> allImmobilisationsImmatriculees = new List<ImmobilisationImmatriculationDto>();
+    private List<ObjetIndisponibiliteDto> allObjetsIndisponibilite = new List<ObjetIndisponibiliteDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadIndisponibilites(currentPage);
+        await LoadAllImmobilisationsImmatriculees();
+        await LoadAllObjetsIndisponibilite();
+    }
+
+    private async Task LoadIndisponibilites(int page)
+    {
+        currentPage = page;
+        try
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{url}?position={currentPage}&pageSize={pageSize}", options);
+            if (apiResponse != null && apiResponse.IsSuccess && apiResponse.Data != null)
+            {
+                indisponibilites = JsonSerializer.Deserialize<List<IndisponibiliteDto>>(
+                    apiResponse.Data.ToString(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new List<IndisponibiliteDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des indisponibilités : {ex.Message}");
+        }
+    }
+
+    private async Task LoadAllImmobilisationsImmatriculees()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/immobilisation-immatriculations");
+            if (apiResponse != null && apiResponse.IsSuccess && apiResponse.Data != null)
+            {
+                var jsonData = apiResponse.Data.ToString();
+                allImmobilisationsImmatriculees = JsonSerializer.Deserialize<List<ImmobilisationImmatriculationDto>>(jsonData, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<ImmobilisationImmatriculationDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des immobilisations immatriculées : {ex.Message}");
+        }
+    }
+
+    private async Task LoadAllObjetsIndisponibilite()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/objets-indisponibilite");
+            if (apiResponse != null && apiResponse.IsSuccess && apiResponse.Data != null)
+            {
+                var jsonData = apiResponse.Data.ToString();
+                allObjetsIndisponibilite = JsonSerializer.Deserialize<List<ObjetIndisponibiliteDto>>(jsonData, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<ObjetIndisponibiliteDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des objets d'indisponibilité : {ex.Message}");
+        }
+    }
+
+    private async Task HandleIndisponibiliteCreated()
+    {
+        await LoadIndisponibilites(currentPage);
+    }
+}

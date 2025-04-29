@@ -12,14 +12,14 @@
 <div class="row">
     <!-- Colonne de création -->
     <div class="col">
-        <Create OnFournisseurCreated="HandleFournisseurCreated" />
+        <Create OnLocalisationCreated="HandleLocalisationCreated" />
     </div>
 
     <!-- Colonne de la liste -->
     <div class="col">
-        @if (fournisseurs == null || fournisseurs.Count == 0)
+        @if (localisations == null || localisations.Count == 0)
         {
-            <p><em>Aucun fournisseur disponible</em></p>
+            <p><em>Aucune localisation disponible</em></p>
         }
         else
         {
@@ -40,14 +40,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var fournisseur in fournisseurs.OrderByDescending(f => f.IdFournisseur)){
+                        @foreach (var localisation in localisations.OrderByDescending(l => l.IdLocalisation)) 
+                        {
                             <tr>
-                                @* <td>@fournisseur.IdFournisseur</td> *@
-                                <td>@fournisseur.Designation</td>
+                                @* <td>@localisation.IdLocalisation</td> *@
+                                <td>@localisation.Designation</td>
                                 <td>
                                     <center>
                                         <MudButton Size="Size.Small"
-                                                   @onclick="@(() => HandleUpdate(fournisseur.IdFournisseur))"
+                                                   @onclick="@(() => HandleUpdate(localisation.IdLocalisation))"
                                                    Variant="Variant.Filled"
                                                    StartIcon="@Icons.Material.Filled.Edit"
                                                    Color="Color.Warning">
@@ -56,17 +57,16 @@
                                 </td>
                             </tr>
                         }
-                        
                     </tbody>
                 </table>
 
                 <nav aria-label="Page navigation">
                     <ul class="pagination">
                         <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                            <a class="page-link" href="#" @onclick:preventDefault="true" @onclick="@(() => LoadFournisseurs(currentPage - 1))">Précédent</a>
+                            <a class="page-link" href="#" @onclick:preventDefault="true" @onclick="@(() => LoadLocalisations(currentPage - 1))">Précédent</a>
                         </li>
                         <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                            <a class="page-link" href="#" @onclick:preventDefault="true" @onclick="@(() => LoadFournisseurs(currentPage + 1))">Suivant</a>
+                            <a class="page-link" href="#" @onclick:preventDefault="true" @onclick="@(() => LoadLocalisations(currentPage + 1))">Suivant</a>
                         </li>
                     </ul>
                 </nav>
@@ -84,18 +84,18 @@
 </div>
 
 @code {
-    private List<FournisseurDto> fournisseurs = new List<FournisseurDto>();
+    private List<LocalisationDto> localisations = new List<LocalisationDto>();
     private ApiResponse? apiResponse;
     private int currentPage = 1;
     private int pageSize = 10;
-    private string url = "http://localhost:5077/api/fournisseurs";
+    private string url = "http://localhost:5077/api/localisations";
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadFournisseurs(currentPage);
+        await LoadLocalisations(currentPage);
     }
 
-    private async Task LoadFournisseurs(int page)
+    private async Task LoadLocalisations(int page)
     {
         currentPage = page;
         try
@@ -105,33 +105,33 @@
             
             if (apiResponse != null && apiResponse.IsSuccess && apiResponse.Data != null)
             {
-                fournisseurs = apiResponse.Data != null
-                    ? JsonSerializer.Deserialize<List<FournisseurDto>>(
+                localisations = apiResponse.Data != null
+                    ? JsonSerializer.Deserialize<List<LocalisationDto>>(
                         apiResponse.Data?.ToString() ?? string.Empty,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                    ) ?? new List<FournisseurDto>()
-                    : new List<FournisseurDto>();
+                    ) ?? new List<LocalisationDto>()
+                    : new List<LocalisationDto>();
 
                 // Tri par ID décroissant pour avoir les plus récents en premier
-                fournisseurs = fournisseurs.OrderByDescending(f => f.IdFournisseur).ToList();
+                localisations = localisations.OrderByDescending(l => l.IdLocalisation).ToList();
 
-                Console.WriteLine($"Chargement de la page {currentPage}. Enregistrements reçus: {fournisseurs.Count}");
+                Console.WriteLine($"Chargement de la page {currentPage}. Enregistrements reçus: {localisations.Count}");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erreur lors du chargement des fournisseurs : {ex.Message}");
+            Console.WriteLine($"Erreur lors du chargement des localisations : {ex.Message}");
         }
     }
 
-    private async Task HandleFournisseurCreated()
+    private async Task HandleLocalisationCreated()
     {
-        // Recharger la première page pour voir le nouveau fournisseur
-        await LoadFournisseurs(1);
+        // Recharger la première page pour voir la nouvelle localisation
+        await LoadLocalisations(1);
     }
 
     private void HandleUpdate(int id)
     {
-        NavigationManager.NavigateTo($"/fournisseur/edit/{id}");
+        NavigationManager.NavigateTo($"/localisation/edit/{id}");
     }
 }
