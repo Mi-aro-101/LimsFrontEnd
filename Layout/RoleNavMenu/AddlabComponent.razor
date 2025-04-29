@@ -6,9 +6,13 @@
 </style>
 <MudNavMenu Margin="Margin.Dense" Color="Color.Warning">
     <div class="nav-item px-3">
-        <MudNavLink Href="/departement" Icon="@Icons.Material.Filled.Warehouse" IconColor="Color.Inherit">
-            Departement
-        </MudNavLink>
+        <MudNavGroup Title="Dashboard" Icon="@Icons.Material.Filled.SpaceDashboard" IconColor="Color.Inherit"  Expanded="false">
+            <MudNavGroup Title="Chiffre d'affaire" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AttachMoney" Expanded="false">
+                <MudNavLink Href="/chiffre/affaire/annuel" IconColor="Color.Inherit" Match="NavLinkMatch.All">Annuel</MudNavLink>
+                <MudNavLink Href="/chiffre/affaire/mensuel" IconColor="Color.Inherit" Match="NavLinkMatch.All">Mensuel</MudNavLink>
+                <MudNavLink Href="/chiffre/affaire/journalier" IconColor="Color.Inherit" Match="NavLinkMatch.All">Journalier</MudNavLink>
+            </MudNavGroup>
+        </MudNavGroup>
     </div>
     <div class="nav-item px-3">
     <MudNavLink Href="/poste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Desk">
@@ -38,6 +42,7 @@
     <div class="nav-item px-3">
         <MudNavGroup Title="Prestation" IconColor="Color.Inherit" Icon="@Icons.Custom.FileFormats.FileDocument" Expanded="false">
             <MudNavLink Href="/prestation" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.FormatListBulleted">Liste</MudNavLink>
+            <MudNavLink Href="/echantillon/details" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.IncompleteCircle">Echantillon</MudNavLink>
         </MudNavGroup>
     </div>
 </MudNavMenu>

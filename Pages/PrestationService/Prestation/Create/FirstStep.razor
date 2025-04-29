@@ -1,0 +1,83 @@
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+
+@if(!string.IsNullOrEmpty(exception))
+{
+    <div class="alert alert-danger">
+        @exception
+    </div>
+}
+else
+{
+    <center><h4>Client</h4></center>
+    <hr>
+    <RowTemplate>
+        <MudTd DataLabel="Description">
+            <MudSelect Style="width: 200px;" @bind-Value="Prestation.IdClient" TValue="int" TItem="ClientDto" Label="Client">
+                    @foreach (var client in clients)
+                    {
+                        <MudSelectItem Value="@client.IdClient" Text="@client.Nom">@client.Nom</MudSelectItem>
+                    }
+            </MudSelect>
+        </MudTd>
+        <MudTd DataLabel="Submit">
+            <MudButton Color="Color.Dark" Size="Size.Small" Variant="Variant.Text" @onclick="NouveauClient" >Nouveau client</MudButton>
+        </MudTd>
+    </RowTemplate>
+}
+
+
+@code
+{
+    [Parameter]
+    public CreatePrestationDto Prestation { get; set; } = new CreatePrestationDto();
+    private ICollection<ClientDto> clients = new List<ClientDto>();
+    string exception = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine(JsonSerializer.Serialize(Prestation));
+        await LoadClients();
+        Prestation.IdClient = clients.First().IdClient;
+        StateHasChanged();
+    }
+
+    private async Task LoadClients()
+    {
+        ApiResponse? apiResponse;
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        apiResponse = await Http.GetFromJsonAsync<ApiResponse>("client");
+        if(apiResponse?.IsSuccess == true)
+        {
+            apiResponse.HandleResponse<List<ClientDto>>();
+            if(apiResponse.Data is List<ClientDto>)
+            {
+                clients = (List<ClientDto>)apiResponse.Data;
+            }
+            else
+            {
+                exception = "Pas de datas reçus";
+            }
+        }
+        else{
+            if(string.IsNullOrEmpty(apiResponse?.Message))
+            {
+                exception = "Une erreur est survenue";
+            }
+            else
+            {
+                exception = (string)apiResponse.Message;
+            }
+        }
+    }
+
+    private void NouveauClient()
+    {
+        NavigationManager.NavigateTo("/client/nouveau");
+    }
+
+}

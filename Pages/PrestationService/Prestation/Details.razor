@@ -6,6 +6,7 @@
 @using LimsUtils.Api
 @using System.Text.Json;
 @using System.Net.Http.Json
+@inject NavigationManager NavigationManager
 
 @if(!(string.IsNullOrEmpty(exception)))
 {
@@ -55,10 +56,10 @@ else
                         </thead>
                         <tbody>
                             <tr>
-                                <td><button type="button" class="btn btn-outline-info">Etat de décompte</button></td>
+                                <td><FicheTravail Id="@prestation.IdPrestation"/></td>
                             </tr>
                             <tr>
-                                <td><button type="button" class="btn btn-outline-dark">Fiche de travail</button></td>
+                                <td><EtatDecompte Id="@prestation.IdPrestation"/></td>
                             </tr>
                         </tbody>
                     </table>
@@ -80,10 +81,10 @@ else
 
                         <hr>
                         <p class="card-text">Nom : <strong> @prestation.Client?.Nom </strong></p>
-                        <p class="card-text">NifStat : <strong> @prestation.Client?.Email </strong></p>
+                        <p class="card-text">Email : <strong> @prestation.Client?.Email </strong></p>
                         <p class="card-text">Contact : <strong> @prestation.Client?.Contact </strong></p>
-                        <p class="card-text">Contact : <strong> @prestation.Client?.Adresse </strong></p>
-                        <p class="card-text">NifStat : <strong> @prestation.Client?.Cin </strong></p>
+                        <p class="card-text">Adresse : <strong> @prestation.Client?.Adresse </strong></p>
+                        <p class="card-text">CIN : <strong> @prestation.Client?.Cin </strong></p>
                         <p class="card-text">NifStat : <strong> @prestation.Client?.NifStat </strong></p>
                 </div>
             </div>
@@ -102,15 +103,17 @@ else
                             <th>Reference du client</th>
                             <th>Travail demandé</th>
                             <th>Tarif du travail</th>
+                            <th>Qr Code</th>
                         </thead>
                         <tbody>
                             @foreach(var details in prestation.PrestationDetails)
                             {
                             <tr>
-                                <td>@details.ReferenceClient</td>
                                 <td>@details.Reference</td>
+                                <td>@details.ReferenceClient</td>
                                 <td>@details.Designation</td>
                                 <td>@details.Tarif</td>
+                                <td><QRCodeEchnatillon Id="@details.IdEchantillon"/></td>
                             </tr>
                             }
                         </tbody>
@@ -158,5 +161,10 @@ else
         else{
             exception = await response.Content.ReadAsStringAsync();
         }
+    }
+
+    private void DownloadPdf(int id)
+    {
+        NavigationManager.NavigateTo("/etat/decompte/pdf/"+$"{id}");
     }
 }

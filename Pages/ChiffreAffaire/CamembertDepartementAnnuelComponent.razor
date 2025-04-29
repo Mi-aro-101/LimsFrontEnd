@@ -1,0 +1,74 @@
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using LimsUtils.Utility
+@using System.Text.Json
+
+<div id="yourDiv"></div>
+
+@code
+{
+    public ChiffreAffaireDto sorter = new ChiffreAffaireDto();
+    public ChiffreAffaireDepartementDto[] chiffreAffaires = new ChiffreAffaireDepartementDto[2];
+    [Parameter]
+    public ChiffreAffaireDto Sorter { get; set; }
+
+    private string exception = string.Empty;
+    ICollection<string> xs = new List<string>();
+    ICollection<decimal> ys = new List<decimal>();
+    private IJSObjectReference? jsModule;
+    private string chartTitle = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await FetchCA();
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FetchCA();
+    }
+
+    private async Task FetchCA()
+    {
+        sorter!.Annee = Sorter!.Annee!.Value;
+
+        var response = await Http.PostAsJsonAsync("chiffre/affaire/departement/mensuel", sorter);
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        ApiResponse? apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
+        
+        if(apiResponse?.IsSuccess == true || apiResponse != null)
+        {
+            apiResponse.HandleResponse<ChiffreAffaireDepartementDto[]>();
+            chiffreAffaires = (ChiffreAffaireDepartementDto[])apiResponse.Data;
+        }
+        else{
+            exception = "Une erreur s'est produite";
+        }
+        chartTitle = "Chiffre d'affaire annuel "+sorter!.Annee!.Value+" par département";
+        await MatchData(chiffreAffaires);
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./js/chiffre-affaire.js");
+        await jsModule.InvokeVoidAsync("chiffreAffaireClient", xs, ys, chartTitle);
+    }
+
+    private async Task MatchData(ChiffreAffaireDepartementDto[] chiffreAffaires)
+    {
+        ICollection<decimal> initValues = new List<decimal>();
+        ICollection<string> departements = new List<string>();
+        xs = departements;
+        ys = initValues;
+        foreach(ChiffreAffaireDepartementDto chiffreAffaire in chiffreAffaires)
+        {
+            xs.Add(chiffreAffaire!.Designation);
+            decimal sum = 0.0m;
+            foreach(ChiffreAffaireDto caParMois in chiffreAffaire!.ChiffreAffaires)
+            {
+                sum+=caParMois!.Montant!.Value;
+            }
+            ys.Add(sum);
+        }
+    }
+}

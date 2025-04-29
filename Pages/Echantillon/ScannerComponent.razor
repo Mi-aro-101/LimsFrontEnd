@@ -1,0 +1,129 @@
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using LimsFrontEnd.Models
+@using LimsUtils.Utility
+@using LimsUtils.Api
+@using System.Net.Http.Json
+@using System.Text.Json
+@using Microsoft.AspNetCore.Components;
+
+@implements IAsyncDisposable
+
+<h1>QR Code Scanner</h1>
+
+<div class="scanner-container">
+    <video id="video" width="300" height="200" style="border: 1px solid gray;"></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+</div>
+
+@if (!string.IsNullOrEmpty(DetectedCode))
+{
+    <div class="alert alert-success mt-3">
+        <strong>Reference:</strong> @DetectedCode
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="alert alert-danger mt-3">
+        <strong>Erreur:</strong> @ErrorMessage
+    </div>
+}
+
+<div class="mt-3">
+    <button @onclick="StartScanning" class="btn btn-primary" disabled="@isScanning">Scanner</button>
+    <button @onclick="StopScanning" class="btn btn-danger" disabled="@(!isScanning)">Arrêter</button>
+</div>
+
+@code {
+    [Parameter]
+    public EchantillonDto Echantillon { get; set; } = new();
+    [Parameter]
+    public EventCallback Reload { get; set; }
+    private bool isScanning = false;
+    private string? DetectedCode { get; set; }
+    private string? ErrorMessage { get; set; }
+    private IJSObjectReference? scannerModule;
+    private DotNetObjectReference<ScannerComponent>? dotNetHelper;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dotNetHelper = DotNetObjectReference.Create(this);
+            scannerModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./js/qrscanner.js");
+        }
+    }
+
+    private async Task StartScanning()
+    {
+        try
+        {
+            DetectedCode = null;
+            ErrorMessage = null;
+            await scannerModule.InvokeVoidAsync("startScanning", "video", "canvas", dotNetHelper);
+            isScanning = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+            StateHasChanged();
+        }
+    }
+
+    private async Task StopScanning()
+    {
+        await scannerModule.InvokeVoidAsync("stopScanning");
+        isScanning = false;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async void OnQRCodeDetected(string qrCode)
+    {
+        DetectedCode = qrCode;
+        await FetchEchantillon();
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void OnError(string errorMessage)
+    {
+        ErrorMessage = errorMessage;
+        isScanning = false;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (scannerModule != null)
+        {
+            await scannerModule.InvokeVoidAsync("stopScanning");
+            await scannerModule.DisposeAsync();
+        }
+        dotNetHelper?.Dispose();
+    }
+
+    private async Task FetchEchantillon()
+    {
+        ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"echantillon/{DetectedCode}");
+        if(apiResponse != null){
+            apiResponse.HandleResponse<EchantillonDto>();
+            foreach (var prop in typeof(EchantillonDto).GetProperties())
+            {
+                if (prop.CanWrite)
+                {
+                    prop.SetValue(Echantillon, prop.GetValue((EchantillonDto)apiResponse.Data));
+                }
+            }
+            await Reload.InvokeAsync();
+            Console.WriteLine(JsonSerializer.Serialize((EchantillonDto)apiResponse.Data));
+            Console.WriteLine(JsonSerializer.Serialize(Echantillon));
+        }
+    }
+}

@@ -1,0 +1,69 @@
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using LimsUtils.Utility
+@using System.Text.Json
+
+<div id="yourDiv"></div>
+
+@code
+{
+    public ChiffreAffaireInterneExterneDto sorter = new ChiffreAffaireInterneExterneDto();
+    public ChiffreAffaireInterneExterneDto[] chiffreAffaires = new ChiffreAffaireInterneExterneDto[2];
+    [Parameter]
+    public ChiffreAffaireDto Sorter { get; set; }
+
+    private string exception = string.Empty;
+    string[] xs = ["Interne", "Externe"];
+    decimal[] ys = [0, 0];
+    private IJSObjectReference? jsModule;
+    private string chartTitle = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await FetchCA();
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        chartTitle = "Chiffre d'affaire "+sorter!.Annee!.Value+" client interne/externe";
+        await FetchCA();
+    }
+
+    private async Task FetchCA()
+    {
+        sorter!.Annee = Sorter!.Annee!.Value;
+        sorter!.Mois = Sorter!.Mois!.Value;
+
+        var response = await Http.PostAsJsonAsync("chiffre/affaire/client/mensuel", sorter);
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        ApiResponse? apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
+        
+        if(apiResponse?.IsSuccess == true || apiResponse != null)
+        {
+            apiResponse.HandleResponse<ChiffreAffaireInterneExterneDto[]>();
+            chiffreAffaires = (ChiffreAffaireInterneExterneDto[])apiResponse.Data;
+        }
+        else{
+            exception = "Une erreur s'est produite";
+        }
+        Console.WriteLine(JsonSerializer.Serialize(chiffreAffaires));
+        chartTitle = chartTitle = "Chiffre d'affaire "+sorter!.Annee!.Value+" client interne/externe";
+        await MatchData(chiffreAffaires);
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import", "./js/chiffre-affaire.js");
+        await jsModule.InvokeVoidAsync("chiffreAffaireClient", xs, ys, chartTitle);
+    }
+
+    private async Task MatchData(ChiffreAffaireInterneExterneDto[] chiffreAffaires)
+    {
+        decimal[] initValues = [0, 0];
+        foreach(ChiffreAffaireInterneExterneDto chiffreAffaire in chiffreAffaires)
+        {
+            initValues[chiffreAffaire!.IsInterne!.Value] = chiffreAffaire!.Montant!.Value;
+        }
+        ys = initValues;
+    }
+}
