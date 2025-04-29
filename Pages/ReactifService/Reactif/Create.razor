@@ -1,0 +1,306 @@
+﻿@* @inject HttpClient Http
+@inject NavigationManager NavigationManager
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models.Reactif
+@using LimsUtils.Api
+@using System.Text.Json
+
+<div class="card border-dark mb-3" style="max-width: 39rem;">
+    <div class="card-header">Créer un Reactif</div>
+    <div class="card-body text-dark">
+        <EditForm Model="@reactif" OnValidSubmit="@HandleOnSubmit">
+            <DataAnnotationsValidator />
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Désignation</label>
+                <div class="col-sm-9">
+                    <InputText class="form-control" @bind-Value="reactif.Designation" placeholder="Désignation" />
+                </div>
+            </div>
+            <br />
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Type de Sortie</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" @bind-Value="reactif.IdTypeSortie">
+                        <option value="">-- Sélectionner --</option>
+                        @foreach (var typeSortie in TypeSorties)
+                        {
+                            <option value="@typeSortie.IdTypeSortie">@typeSortie.Designation</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <br />
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Unité</label>
+                <div class="col-sm-9">
+                    <InputSelect class="form-control" @bind-Value="reactif.IdUnite">
+                        <option value="">-- Sélectionner --</option>
+                        @foreach (var unite in Unites)
+                        {
+                            <option value="@unite.IdUnite">@unite.Designation</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <br />
+            <center>
+                <button type="submit" class="btn btn-primary">Créer</button>
+            </center>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private ReactifDto reactif = new();
+    private ICollection<TypeSortieDto> TypeSorties = new List<TypeSortieDto>();
+    private ICollection<UniteDto> Unites = new List<UniteDto>();
+    private string url = "http://localhost:5077/api/reactifs";
+
+    [Parameter]
+    public EventCallback OnReactifCreated { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        TypeSorties = await LoadTypeSorties();
+        Unites = await LoadUnites();
+    }
+
+    private async Task<ICollection<TypeSortieDto>> LoadTypeSorties()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/typesSortie");
+            if (apiResponse != null && apiResponse.IsSuccess && apiResponse.Data != null)
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<ICollection<TypeSortieDto>>(jsonData, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<TypeSortieDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des types de sortie : {ex.Message}");
+        }
+        return new List<TypeSortieDto>();
+    }
+
+    private async Task<ICollection<UniteDto>> LoadUnites()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/unites");
+            if (apiResponse != null && apiResponse.IsSuccess && apiResponse.Data != null)
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<ICollection<UniteDto>>(jsonData, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<UniteDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des unités : {ex.Message}");
+        }
+        return new List<UniteDto>();
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync(url, reactif);
+            response.EnsureSuccessStatusCode();
+            if (OnReactifCreated.HasDelegate)
+                await OnReactifCreated.InvokeAsync();
+            else
+                Console.WriteLine("Aucun delegate assigné à l'événement OnReactifCreated");
+            reactif = new ReactifDto();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception : {ex.Message}");
+        }
+    }
+} *@
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models.Reactif
+@using LimsUtils.Api
+@using System.Text.Json
+
+<div class="card border-dark mb-3" style="max-width: 39rem;">
+    <div class="card-header">Créer un Reactif</div>
+    <div class="card-body text-dark">
+        <EditForm Model="@reactif" OnValidSubmit="@HandleOnSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Désignation</label>
+                <div class="col-sm-9">
+                    <InputText class="@($"form-control {(designationError != null ? "is-invalid" : "")}")"
+                               @bind-Value="reactif.Designation" placeholder="Désignation" />
+                    @if (!string.IsNullOrEmpty(designationError))
+                    {
+                        <div class="text-danger">@designationError</div>
+                    }
+                </div>
+            </div>
+            <br />
+
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Type de Sortie</label>
+                <div class="col-sm-9">
+                    <InputSelect class="@($"form-control {(typeSortieError != null ? "is-invalid" : "")}")"
+                                 @bind-Value="reactif.IdTypeSortie">
+                        <option value="">-- Sélectionner --</option>
+                        @foreach (var typeSortie in TypeSorties)
+                        {
+                            <option value="@typeSortie.IdTypeSortie">@typeSortie.Designation</option>
+                        }
+                    </InputSelect>
+                    @if (!string.IsNullOrEmpty(typeSortieError))
+                    {
+                        <div class="text-danger">@typeSortieError</div>
+                    }
+                </div>
+            </div>
+            <br />
+
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Unité</label>
+                <div class="col-sm-9">
+                    <InputSelect class="@($"form-control {(uniteError != null ? "is-invalid" : "")}")"
+                                 @bind-Value="reactif.IdUnite">
+                        <option value="">-- Sélectionner --</option>
+                        @foreach (var unite in Unites)
+                        {
+                            <option value="@unite.IdUnite">@unite.Designation</option>
+                        }
+                    </InputSelect>
+                    @if (!string.IsNullOrEmpty(uniteError))
+                    {
+                        <div class="text-danger">@uniteError</div>
+                    }
+                </div>
+            </div>
+            <br />
+
+            <center>
+                <button type="submit" class="btn btn-primary">Créer</button>
+            </center>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private ReactifDto reactif = new();
+    private ICollection<TypeSortieDto> TypeSorties = new List<TypeSortieDto>();
+    private ICollection<UniteDto> Unites = new List<UniteDto>();
+    private string url = "http://localhost:5077/api/reactifs";
+
+    private string? designationError;
+    private string? typeSortieError;
+    private string? uniteError;
+
+    [Parameter]
+    public EventCallback OnReactifCreated { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        TypeSorties = await LoadTypeSorties();
+        Unites = await LoadUnites();
+    }
+
+    private async Task<ICollection<TypeSortieDto>> LoadTypeSorties()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/typesSortie");
+            if (apiResponse?.IsSuccess == true && apiResponse.Data != null)
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<ICollection<TypeSortieDto>>(jsonData, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? new List<TypeSortieDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des types de sortie : {ex.Message}");
+        }
+        return new List<TypeSortieDto>();
+    }
+
+    private async Task<ICollection<UniteDto>> LoadUnites()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/unites");
+            if (apiResponse?.IsSuccess == true && apiResponse.Data != null)
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<ICollection<UniteDto>>(jsonData, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? new List<UniteDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des unités : {ex.Message}");
+        }
+        return new List<UniteDto>();
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        designationError = null;
+        typeSortieError = null;
+        uniteError = null;
+
+        // Contrôles côté client avant envoi
+        bool isValid = true;
+        if (string.IsNullOrWhiteSpace(reactif.Designation))
+        {
+            designationError = "La désignation est obligatoire.";
+            isValid = false;
+        }
+        if (reactif.IdTypeSortie == 0)
+        {
+            typeSortieError = "Veuillez sélectionner un type de sortie.";
+            isValid = false;
+        }
+        if (reactif.IdUnite == 0)
+        {
+            uniteError = "Veuillez sélectionner une unité.";
+            isValid = false;
+        }
+
+        if (!isValid) return;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync(url, reactif);
+            response.EnsureSuccessStatusCode();
+
+            if (OnReactifCreated.HasDelegate)
+                await OnReactifCreated.InvokeAsync();
+
+            reactif = new ReactifDto(); // Réinitialiser
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception : {ex.Message}");
+        }
+    }
+}

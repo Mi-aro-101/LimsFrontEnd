@@ -1,0 +1,777 @@
+﻿@* @inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models.Immobilisation
+@using LimsUtils.Api
+@using System.Text.Json
+
+<!-- Centrer le formulaire principal -->
+<div class="d-flex justify-content-center">
+    <div class="card border-dark mb-3" style="max-width: 60rem;">
+        <div class="card-header">Créer une Entrée Immobilisation</div>
+        <div class="card-body text-dark">
+            <EditForm Model="@entreeImmobilisation" OnValidSubmit="@HandleOnSubmit" FormName="entreeImmobilisationForm">
+                <DataAnnotationsValidator />
+                <div class="row">
+                    <!-- Première colonne -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Quantité</label>
+                            <InputNumber class="form-control" @bind-Value="entreeImmobilisation.Quantite" />
+                            @if (isQuantiteInvalid)
+                            {
+                                <div class="text-danger">La quantité doit être supérieure à zéro.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Prix d'achat</label>
+                            <InputNumber class="form-control" @bind-Value="entreeImmobilisation.PrixAchat" />
+                            @if (isPrixAchatInvalid)
+                            {
+                                <div class="text-danger">Le prix d'achat doit être supérieur à zéro.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Bordereau mouvement comptable immobilisation</label>
+                            <InputText class="form-control" @bind-Value="entreeImmobilisation.BonReception" placeholder="BMCI" />
+                            @if (isBonReceptionInvalid)
+                            {
+                                <div class="text-danger">Le bon de réception est obligatoire.</div>
+                            }
+                        </div>
+                    </div>
+                    <!-- Deuxième colonne -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Bon de Commande</label>
+                            <InputText class="form-control" @bind-Value="entreeImmobilisation.BonDeCommande" placeholder="Bon de commande" />
+                            @if (isBonDeCommandeInvalid)
+                            {
+                                <div class="text-danger">Le bon de commande est obligatoire.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Numéro de Facture</label>
+                            <InputText class="form-control" @bind-Value="entreeImmobilisation.NumeroFacture" placeholder="Numéro de facture" />
+                            @if (isNumeroFactureInvalid)
+                            {
+                                <div class="text-danger">Le numéro de facture est obligatoire.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Date d'Entrée</label>
+                            <InputDate class="form-control" @bind-Value="entreeImmobilisation.DateEntree" disabled />
+                        </div>
+                    </div>
+                    <!-- Troisième colonne -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Immobilisation</label>
+                            <InputText class="form-control"
+                                       Value="@searchTerm"
+                                       ValueChanged="@((string val) => OnSearchChanged(val))"
+                                       ValueExpression="@(() => searchTerm)"
+                                       placeholder="Rechercher une immobilisation"
+                                       @oninput="@(async (ChangeEventArgs e) => await OnSearchChanged(e.Value.ToString()))" />
+                            @if (!string.IsNullOrEmpty(searchTerm))
+                            {
+                                <ul class="list-group">
+                                    @if (filteredImmobilisations.Any())
+                                    {
+                                        @foreach (var immobilisation in filteredImmobilisations)
+                                        {
+                                            <li class="list-group-item" @onclick="() => SelectImmobilisation(immobilisation)">
+                                                @immobilisation.Designation
+                                            </li>
+                                        }
+                                    }
+                                    <li class="list-group-item">
+                                        <button type="button" class="btn btn-secondary" @onclick="() => ShowAddImmobilisationForm(searchTerm)">Ajouter</button>
+                                    </li>
+                                </ul>
+                            }
+                            @if (isImmobilisationSelectionInvalid)
+                            {
+                                <div class="text-danger">Veuillez sélectionner une immobilisation.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Fournisseur</label>
+                            <InputSelect class="form-control" @bind-Value="entreeImmobilisation.IdFournisseur">
+                                <option value="">-- Sélectionner --</option>
+                                @foreach (var fournisseur in fournisseurs)
+                                {
+                                    <option value="@fournisseur.IdFournisseur">@fournisseur.Designation</option>
+                                }
+                            </InputSelect>
+                            @if (isFournisseurInvalid)
+                            {
+                                <div class="text-danger">Veuillez sélectionner un fournisseur.</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <center>
+                    <button type="submit" class="btn btn-primary">Créer</button>
+                </center>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+<!-- Formulaire d'ajout d'immobilisation dans une modal Bootstrap -->
+@if (showAddImmobilisationForm)
+{
+    <div class="modal show" tabindex="-1" style="display:block; background-color:rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Créer une Immobilisation</h5>
+                    <button type="button" class="btn-close" @onclick="() => showAddImmobilisationForm = false"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@newImmobilisation" OnValidSubmit="@HandleAddImmobilisation">
+                        <DataAnnotationsValidator />
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Référence</label>
+                            <div class="col-sm-9">
+                                <InputText class="form-control" @bind-Value="newImmobilisation.Reference" placeholder="Référence" />
+                            </div>
+                        </div>
+                        <br />
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Désignation</label>
+                            <div class="col-sm-9">
+                                <InputText class="form-control" @bind-Value="newImmobilisation.Designation" placeholder="Désignation" />
+                            </div>
+                        </div>
+                        <br />
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Marque</label>
+                            <div class="col-sm-9">
+                                <InputSelect class="form-control" @bind-Value="newImmobilisation.IdMarque">
+                                    <option value="">-- Sélectionner --</option>
+                                    @foreach (var marque in Marques)
+                                    {
+                                        <option value="@marque.IdMarque">@marque.Designation</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+                        <br />
+                        <center>
+                            <button type="submit" class="btn btn-primary">Créer</button>
+                            <button type="button" class="btn btn-secondary" @onclick="() => showAddImmobilisationForm = false">Annuler</button>
+                        </center>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private EntreeImmobilisationDto entreeImmobilisation = new()
+        {
+            DateEntree = DateTime.Today,
+            Quantite = 0,
+            PrixAchat = 0m
+        };
+    private List<ImmobilisationDto> immobilisations = new();
+    private List<FournisseurDto> fournisseurs = new();
+    private string searchTerm = string.Empty;
+    private bool showAddImmobilisationForm = false;
+    private ImmobilisationDto newImmobilisation = new();
+    private ICollection<MarqueDto> Marques = new List<MarqueDto>();
+
+    private string entreeImmobilisationUrl = "http://localhost:5077/api/entree-immobilisations";
+    private string immobilisationUrl = "http://localhost:5077/api/immobilisation";
+    private string fournisseurUrl = "http://localhost:5077/api/fournisseurs";
+    private string marqueUrl = "http://localhost:5077/api/marque";
+
+    [Parameter]
+    public EventCallback OnEntreeImmobilisationCreated { get; set; }
+
+    // Flags de validation
+    private bool isQuantiteInvalid = false;
+    private bool isPrixAchatInvalid = false;
+    private bool isBonReceptionInvalid = false;
+    private bool isBonDeCommandeInvalid = false;
+    private bool isNumeroFactureInvalid = false;
+    private bool isFournisseurInvalid = false;
+    private bool isImmobilisationSelectionInvalid = false;
+
+    // Filtrer les immobilisations chargées (basé sur la désignation)
+    private List<ImmobilisationDto> filteredImmobilisations => immobilisations
+        .Where(i => !string.IsNullOrEmpty(i.Designation) &&
+                    i.Designation.StartsWith(searchTerm ?? string.Empty, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        entreeImmobilisation.DateEntree = DateTime.Today;
+        immobilisations = await LoadImmobilisations();
+        fournisseurs = await LoadFournisseurs();
+        Marques = await LoadMarques();
+    }
+
+    private async Task<List<ImmobilisationDto>> LoadImmobilisations()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{immobilisationUrl}/search?searchTerm={searchTerm}");
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<List<ImmobilisationDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<ImmobilisationDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des immobilisations : {ex.Message}");
+        }
+        return new List<ImmobilisationDto>();
+    }
+
+    private async Task<List<FournisseurDto>> LoadFournisseurs()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>(fournisseurUrl);
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<List<FournisseurDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<FournisseurDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des fournisseurs : {ex.Message}");
+        }
+        return new List<FournisseurDto>();
+    }
+
+    private async Task<ICollection<MarqueDto>> LoadMarques()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>(marqueUrl);
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<ICollection<MarqueDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<MarqueDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des marques : {ex.Message}");
+        }
+        return new List<MarqueDto>();
+    }
+
+    private void SelectImmobilisation(ImmobilisationDto immobilisation)
+    {
+        entreeImmobilisation.IdImmobilisation = immobilisation.IdImmobilisation;
+        searchTerm = immobilisation.Designation;
+    }
+
+    private void ShowAddImmobilisationForm(string immobilisationName)
+    {
+        newImmobilisation = new ImmobilisationDto { Designation = immobilisationName };
+        showAddImmobilisationForm = true;
+    }
+
+    private async Task HandleAddImmobilisation()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync(immobilisationUrl, newImmobilisation);
+            response.EnsureSuccessStatusCode();
+            immobilisations = await LoadImmobilisations();
+            entreeImmobilisation.IdImmobilisation = immobilisations.FirstOrDefault(i => i.Designation == newImmobilisation.Designation)?.IdImmobilisation;
+            searchTerm = newImmobilisation.Designation;
+            showAddImmobilisationForm = false;
+            newImmobilisation = new ImmobilisationDto();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la création de l'immobilisation : {ex.Message}");
+        }
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        ResetValidationFlags();
+
+        isQuantiteInvalid = entreeImmobilisation.Quantite <= 0;
+        isPrixAchatInvalid = entreeImmobilisation.PrixAchat <= 0;
+        isBonReceptionInvalid = string.IsNullOrWhiteSpace(entreeImmobilisation.BonReception);
+        isBonDeCommandeInvalid = string.IsNullOrWhiteSpace(entreeImmobilisation.BonDeCommande);
+        isNumeroFactureInvalid = string.IsNullOrWhiteSpace(entreeImmobilisation.NumeroFacture);
+        isFournisseurInvalid = entreeImmobilisation.IdFournisseur == 0;
+        isImmobilisationSelectionInvalid = entreeImmobilisation.IdImmobilisation == 0;
+
+        if (!isQuantiteInvalid && !isPrixAchatInvalid && !isBonReceptionInvalid &&
+            !isBonDeCommandeInvalid && !isNumeroFactureInvalid && !isFournisseurInvalid &&
+            !isImmobilisationSelectionInvalid)
+        {
+            string immobilisationDesignation = immobilisations.FirstOrDefault(i => i.IdImmobilisation == entreeImmobilisation.IdImmobilisation)?.Designation ?? "Non sélectionné";
+            string quantite = entreeImmobilisation.Quantite.ToString();
+            string prixAchat = entreeImmobilisation.PrixAchat.ToString();
+            string bonReception = entreeImmobilisation.BonReception ?? "Non renseigné";
+            string bonDeCommande = entreeImmobilisation.BonDeCommande ?? "Non renseigné";
+            string numeroFacture = entreeImmobilisation.NumeroFacture ?? "Non renseigné";
+            string fournisseurDesignation = fournisseurs.FirstOrDefault(f => f.IdFournisseur == entreeImmobilisation.IdFournisseur)?.Designation ?? "Non sélectionné";
+
+            string message = $"Veuillez vérifier les informations suivantes avant de créer l'entrée d'immobilisation :\n\n" +
+                             $"Immobilisation : {immobilisationDesignation}\n" +
+                             $"Quantité : {quantite}\n" +
+                             $"Prix d'achat : {prixAchat}\n" +
+                             $"Bon de réception : {bonReception}\n" +
+                             $"Bon de commande : {bonDeCommande}\n" +
+                             $"Numéro de facture : {numeroFacture}\n" +
+                             $"Fournisseur : {fournisseurDesignation}\n\n" +
+                             "Êtes-vous vraiment sûr de la véracité de ces informations ? Une fois créée, l'entrée ne pourra plus être modifiée ou supprimée.";
+
+            bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", message);
+            if (!confirmed)
+            {
+                return;
+            }
+
+            try
+            {
+                var response = await Http.PostAsJsonAsync(entreeImmobilisationUrl, entreeImmobilisation);
+                response.EnsureSuccessStatusCode();
+                if (OnEntreeImmobilisationCreated.HasDelegate)
+                    await OnEntreeImmobilisationCreated.InvokeAsync();
+                entreeImmobilisation = new EntreeImmobilisationDto() { DateEntree = DateTime.Today };
+                searchTerm = string.Empty;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la création de l'entrée d'immobilisation : {ex.Message}");
+            }
+        }
+        else
+        {
+            StateHasChanged();
+        }
+    }
+
+    private void ResetValidationFlags()
+    {
+        isQuantiteInvalid = false;
+        isPrixAchatInvalid = false;
+        isBonReceptionInvalid = false;
+        isBonDeCommandeInvalid = false;
+        isNumeroFactureInvalid = false;
+        isFournisseurInvalid = false;
+        isImmobilisationSelectionInvalid = false;
+    }
+
+    private async Task OnSearchChanged(string val)
+    {
+        searchTerm = val;
+        immobilisations = await LoadImmobilisations();
+        StateHasChanged();
+    }
+} *@
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models.Immobilisation
+@using LimsUtils.Api
+@using System.Text.Json
+
+<!-- Centrer le formulaire principal -->
+<div class="d-flex justify-content-center">
+    <div class="card border-dark mb-3" style="max-width: 60rem;">
+        <div class="card-header">Créer une Entrée Immobilisation</div>
+        <div class="card-body text-dark">
+            <EditForm Model="@entreeImmobilisation" OnValidSubmit="@HandleOnSubmit" FormName="entreeImmobilisationForm">
+                <DataAnnotationsValidator />
+                <div class="row">
+                    <!-- Première colonne -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Quantité</label>
+                            <InputNumber class="form-control" @bind-Value="entreeImmobilisation.Quantite" />
+                            @if (isQuantiteInvalid)
+                            {
+                                <div class="text-danger">La quantité doit être supérieure à zéro.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Prix d'achat</label>
+                            <InputNumber class="form-control" @bind-Value="entreeImmobilisation.PrixAchat" />
+                            @if (isPrixAchatInvalid)
+                            {
+                                <div class="text-danger">Le prix d'achat doit être supérieur à zéro.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Bordereau mouvement comptable immobilisation</label>
+                            <InputText class="form-control" @bind-Value="entreeImmobilisation.BonReception" placeholder="BMCI" />
+                        </div>
+                    </div>
+                    <!-- Deuxième colonne -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Bon de Commande</label>
+                            <InputText class="form-control" @bind-Value="entreeImmobilisation.BonDeCommande" placeholder="Bon de commande" />
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Numéro de Facture</label>
+                            <InputText class="form-control" @bind-Value="entreeImmobilisation.NumeroFacture" placeholder="Numéro de facture" />
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Date d'Entrée</label>
+                            <InputDate class="form-control" @bind-Value="entreeImmobilisation.DateEntree" disabled />
+                        </div>
+                    </div>
+                    <!-- Troisième colonne -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Immobilisation</label>
+                            <InputText class="form-control"
+                                       Value="@searchTerm"
+                                       ValueChanged="@((string val) => OnSearchChanged(val))"
+                                       ValueExpression="@(() => searchTerm)"
+                                       placeholder="Rechercher une immobilisation"
+                                       @oninput="@(async (ChangeEventArgs e) => await OnSearchChanged(e.Value.ToString()))" />
+                            @if (!string.IsNullOrEmpty(searchTerm))
+                            {
+                                <ul class="list-group">
+                                    @if (filteredImmobilisations.Any())
+                                    {
+                                        @foreach (var immobilisation in filteredImmobilisations)
+                                        {
+                                            <li class="list-group-item" @onclick="() => SelectImmobilisation(immobilisation)">
+                                                @immobilisation.Designation
+                                            </li>
+                                        }
+                                    }
+                                    <li class="list-group-item">
+                                        <button type="button" class="btn btn-secondary" @onclick="() => ShowAddImmobilisationForm(searchTerm)">Ajouter</button>
+                                    </li>
+                                </ul>
+                            }
+                            @if (isImmobilisationSelectionInvalid)
+                            {
+                                <div class="text-danger">Veuillez sélectionner une immobilisation.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Fournisseur</label>
+                            <InputSelect class="form-control" @bind-Value="entreeImmobilisation.IdFournisseur">
+                                <option value="">-- Sélectionner --</option>
+                                @foreach (var fournisseur in fournisseurs)
+                                {
+                                    <option value="@fournisseur.IdFournisseur">@fournisseur.Designation</option>
+                                }
+                            </InputSelect>
+                            @if (isFournisseurInvalid)
+                            {
+                                <div class="text-danger">Veuillez sélectionner un fournisseur.</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <center>
+                    <button type="submit" class="btn btn-primary">Créer</button>
+                </center>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+<!-- Formulaire d'ajout d'immobilisation dans une modal Bootstrap -->
+@if (showAddImmobilisationForm)
+{
+    <div class="modal show" tabindex="-1" style="display:block; background-color:rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Créer une Immobilisation</h5>
+                    <button type="button" class="btn-close" @onclick="() => showAddImmobilisationForm = false"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@newImmobilisation" OnValidSubmit="@HandleAddImmobilisation">
+                        <DataAnnotationsValidator />
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Référence</label>
+                            <div class="col-sm-9">
+                                <InputText class="form-control" @bind-Value="newImmobilisation.Reference" placeholder="Référence" />
+                            </div>
+                        </div>
+                        <br />
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Désignation</label>
+                            <div class="col-sm-9">
+                                <InputText class="form-control" @bind-Value="newImmobilisation.Designation" placeholder="Désignation" />
+                            </div>
+                        </div>
+                        <br />
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Marque</label>
+                            <div class="col-sm-9">
+                                <InputSelect class="form-control" @bind-Value="newImmobilisation.IdMarque">
+                                    <option value="">-- Sélectionner --</option>
+                                    @foreach (var marque in Marques)
+                                    {
+                                        <option value="@marque.IdMarque">@marque.Designation</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+                        <br />
+                        <center>
+                            <button type="submit" class="btn btn-primary">Créer</button>
+                            <button type="button" class="btn btn-secondary" @onclick="() => showAddImmobilisationForm = false">Annuler</button>
+                        </center>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private EntreeImmobilisationDto entreeImmobilisation = new()
+    {
+        DateEntree = DateTime.Today,
+        Quantite = 0,
+        PrixAchat = 0m
+    };
+    private List<ImmobilisationDto> immobilisations = new();
+    private List<FournisseurDto> fournisseurs = new();
+    private string searchTerm = string.Empty;
+    private bool showAddImmobilisationForm = false;
+    private ImmobilisationDto newImmobilisation = new();
+    private ICollection<MarqueDto> Marques = new List<MarqueDto>();
+
+    private string entreeImmobilisationUrl = "http://localhost:5077/api/entree-immobilisations";
+    private string immobilisationUrl = "http://localhost:5077/api/immobilisation";
+    private string fournisseurUrl = "http://localhost:5077/api/fournisseurs";
+    private string marqueUrl = "http://localhost:5077/api/marque";
+
+    [Parameter]
+    public EventCallback OnEntreeImmobilisationCreated { get; set; }
+
+    // Flags de validation
+    private bool isQuantiteInvalid = false;
+    private bool isPrixAchatInvalid = false;
+    private bool isFournisseurInvalid = false;
+    private bool isImmobilisationSelectionInvalid = false;
+
+    // Filtrer les immobilisations chargées (basé sur la désignation)
+    private List<ImmobilisationDto> filteredImmobilisations => immobilisations
+        .Where(i => !string.IsNullOrEmpty(i.Designation) &&
+                    i.Designation.StartsWith(searchTerm ?? string.Empty, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        entreeImmobilisation.DateEntree = DateTime.Today;
+        immobilisations = await LoadImmobilisations();
+        fournisseurs = await LoadFournisseurs();
+        Marques = await LoadMarques();
+    }
+
+    private async Task<List<ImmobilisationDto>> LoadImmobilisations()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{immobilisationUrl}/search?searchTerm={searchTerm}");
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<List<ImmobilisationDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<ImmobilisationDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des immobilisations : {ex.Message}");
+        }
+        return new List<ImmobilisationDto>();
+    }
+
+    private async Task<List<FournisseurDto>> LoadFournisseurs()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>(fournisseurUrl);
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<List<FournisseurDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<FournisseurDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des fournisseurs : {ex.Message}");
+        }
+        return new List<FournisseurDto>();
+    }
+
+    private async Task<ICollection<MarqueDto>> LoadMarques()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>(marqueUrl);
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<ICollection<MarqueDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<MarqueDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des marques : {ex.Message}");
+        }
+        return new List<MarqueDto>();
+    }
+
+    private void SelectImmobilisation(ImmobilisationDto immobilisation)
+    {
+        entreeImmobilisation.IdImmobilisation = immobilisation.IdImmobilisation;
+        searchTerm = immobilisation.Designation;
+        isImmobilisationSelectionInvalid = false; // Réinitialiser le flag
+    }
+
+    private void ShowAddImmobilisationForm(string immobilisationName)
+    {
+        newImmobilisation = new ImmobilisationDto { Designation = immobilisationName };
+        showAddImmobilisationForm = true;
+    }
+
+    private async Task HandleAddImmobilisation()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync(immobilisationUrl, newImmobilisation);
+            response.EnsureSuccessStatusCode();
+            immobilisations = await LoadImmobilisations();
+            entreeImmobilisation.IdImmobilisation = immobilisations.FirstOrDefault(i => i.Designation == newImmobilisation.Designation)?.IdImmobilisation;
+            searchTerm = newImmobilisation.Designation;
+            showAddImmobilisationForm = false;
+            newImmobilisation = new ImmobilisationDto();
+            isImmobilisationSelectionInvalid = false; // Réinitialiser le flag
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la création de l'immobilisation : {ex.Message}");
+        }
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        ResetValidationFlags();
+
+        isQuantiteInvalid = entreeImmobilisation.Quantite <= 0;
+        isPrixAchatInvalid = entreeImmobilisation.PrixAchat <= 0;
+        isFournisseurInvalid = entreeImmobilisation.IdFournisseur == 0;
+        isImmobilisationSelectionInvalid = entreeImmobilisation.IdImmobilisation == 0;
+
+        if (!isQuantiteInvalid && !isPrixAchatInvalid && !isFournisseurInvalid && !isImmobilisationSelectionInvalid)
+        {
+            // Assigner des valeurs par défaut si les champs sont vides
+            entreeImmobilisation.BonReception = string.IsNullOrWhiteSpace(entreeImmobilisation.BonReception) ? "Aucun BMCI" : entreeImmobilisation.BonReception;
+            entreeImmobilisation.BonDeCommande = string.IsNullOrWhiteSpace(entreeImmobilisation.BonDeCommande) ? "Aucun bon de commande" : entreeImmobilisation.BonDeCommande;
+            entreeImmobilisation.NumeroFacture = string.IsNullOrWhiteSpace(entreeImmobilisation.NumeroFacture) ? "Aucun numéro de facture" : entreeImmobilisation.NumeroFacture;
+
+            string immobilisationDesignation = immobilisations.FirstOrDefault(i => i.IdImmobilisation == entreeImmobilisation.IdImmobilisation)?.Designation ?? "Non sélectionné";
+            string quantite = entreeImmobilisation.Quantite.ToString();
+            string prixAchat = entreeImmobilisation.PrixAchat.ToString();
+            string bonReception = entreeImmobilisation.BonReception;
+            string bonDeCommande = entreeImmobilisation.BonDeCommande;
+            string numeroFacture = entreeImmobilisation.NumeroFacture;
+            string fournisseurDesignation = fournisseurs.FirstOrDefault(f => f.IdFournisseur == entreeImmobilisation.IdFournisseur)?.Designation ?? "Non sélectionné";
+
+            string message = $"Veuillez vérifier les informations suivantes avant de créer l'entrée d'immobilisation :\n\n" +
+                             $"Immobilisation : {immobilisationDesignation}\n" +
+                             $"Quantité : {quantite}\n" +
+                             $"Prix d'achat : {prixAchat}\n" +
+                             $"Bordereau mouvement comptable immobilisation : {bonReception}\n" +
+                             $"Bon de commande : {bonDeCommande}\n" +
+                             $"Numéro de facture : {numeroFacture}\n" +
+                             $"Fournisseur : {fournisseurDesignation}\n\n" +
+                             "Êtes-vous vraiment sûr de la véracité de ces informations ? Une fois créée, l'entrée ne pourra plus être modifiée ou supprimée.";
+
+            bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", message);
+            if (!confirmed)
+            {
+                return;
+            }
+
+            try
+            {
+                var response = await Http.PostAsJsonAsync(entreeImmobilisationUrl, entreeImmobilisation);
+                response.EnsureSuccessStatusCode();
+                if (OnEntreeImmobilisationCreated.HasDelegate)
+                    await OnEntreeImmobilisationCreated.InvokeAsync();
+                entreeImmobilisation = new EntreeImmobilisationDto() { DateEntree = DateTime.Today, Quantite = 0, PrixAchat = 0m };
+                searchTerm = string.Empty;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la création de l'entrée d'immobilisation : {ex.Message}");
+            }
+        }
+        else
+        {
+            StateHasChanged();
+        }
+    }
+
+    private void ResetValidationFlags()
+    {
+        isQuantiteInvalid = false;
+        isPrixAchatInvalid = false;
+        isFournisseurInvalid = false;
+        isImmobilisationSelectionInvalid = false;
+    }
+
+    private async Task OnSearchChanged(string val)
+    {
+        searchTerm = val;
+        immobilisations = await LoadImmobilisations();
+        StateHasChanged();
+    }
+}

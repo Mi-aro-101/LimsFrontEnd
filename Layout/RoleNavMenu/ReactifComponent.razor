@@ -1,0 +1,16 @@
+﻿@namespace LimsFrontEnd.NavigationMenu
+<div class="nav-item px-3">
+    <MudNavGroup Title="Service Réactif" Icon="@Icons.Material.Filled.Science" IconColor="Color.Inherit" Expanded="false">
+        <MudNavLink Href="/reactif" Icon="@Icons.Material.Filled.FormatListBulleted" IconColor="Color.Inherit">Liste des Réactifs</MudNavLink>
+        <MudNavLink Href="/entree-reactif" Icon="@Icons.Material.Filled.FileUpload" IconColor="Color.Inherit">Entrée Réactif</MudNavLink>
+        <!-- Icône modifiée ici : "Inventory" pour les objets physiques -->
+        <MudNavLink Href="/objetSortieReactif" Icon="@Icons.Material.Filled.Inventory" IconColor="Color.Inherit">Objets de Sortie</MudNavLink>
+        <!-- Icône "Output" réservée aux types abstraits -->
+        <MudNavLink Href="/typesSortie" Icon="@Icons.Material.Filled.Output" IconColor="Color.Inherit">Types de Sortie</MudNavLink>
+        <MudNavLink Href="/unites" Icon="@Icons.Material.Filled.Straighten" IconColor="Color.Inherit">Unités</MudNavLink>
+        <!-- Nouveau lien ajouté pour la sortie réactif -->
+        <MudNavLink Href="/sortie-reactif" Icon="@Icons.Material.Filled.AssignmentReturned" IconColor="Color.Inherit">Sortie Réactif</MudNavLink>
+        <!-- Nouveau lien ajouté pour les reports réactif -->
+        <MudNavLink Href="/report-reactif" Icon="@Icons.Material.Filled.Report" IconColor="Color.Inherit">Reports Réactif</MudNavLink>
+    </MudNavGroup>
+</div>

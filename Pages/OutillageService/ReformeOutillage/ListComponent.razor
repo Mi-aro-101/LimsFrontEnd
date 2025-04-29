@@ -1,0 +1,123 @@
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using System.Text.Json
+@using LimsFrontEnd.Models.Outillage
+@using LimsUtils.Api
+@using System.Linq
+
+<div class="container">
+    <div class="row">
+        <!-- Colonne pour le formulaire -->
+        <div class="col-md-6">
+            <Create OnReformeOutillageCreated="HandleReformeOutillageCreated" />
+        </div>
+        <!-- Colonne pour la liste -->
+        <div class="col-md-6">
+            @if (reformeOutillages == null || reformeOutillages.Count == 0)
+            {
+                <p><em>Aucune réforme d'outillage disponible</em></p>
+            }
+            else
+            {
+                if (apiResponse != null && apiResponse.ViewBag != null &&
+                    apiResponse.ViewBag.ContainsKey("position") &&
+                    apiResponse.ViewBag.ContainsKey("nbrPerPage") &&
+                    apiResponse.ViewBag.ContainsKey("nbrLinks"))
+                {
+                    var currentPage = int.Parse(apiResponse.ViewBag["position"].ToString());
+                    var totalPages = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th scope="col">Date de la Réforme</th>
+                                <th scope="col">Objet</th>
+                                <th scope="col">Nombre</th>
+                                <th scope="col">Outillage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var reforme in reformeOutillages)
+                            {
+                                <tr>
+                                    <td>@reforme.DateReforme.ToShortDateString()</td>
+                                    <td>@reforme.Objet</td>
+                                    <td>@reforme.Nombre</td>
+                                    <td>@(reforme.Outillage != null ? reforme.Outillage.Designation : "N/A")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" href="#" @onclick:preventDefault="true" @onclick="@(() => LoadReformeOutillages(currentPage - 1))">Précédent</a>
+                            </li>
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link" href="#" @onclick:preventDefault="true" @onclick="@(() => LoadReformeOutillages(currentPage + 1))">Suivant</a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <center>
+                        <p>Page @apiResponse.ViewBag["position"] sur @apiResponse.ViewBag["nbrLinks"]</p>
+                    </center>
+                }
+                else
+                {
+                    <p>Informations de pagination indisponibles.</p>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<ReformeOutillageDto> reformeOutillages = new();
+    private ApiResponse? apiResponse;
+    private int currentPage = 1;
+    private int pageSize = 5;
+    private string reformeOutillageUrl = "http://localhost:5077/api/reforme-outillages";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReformeOutillages(currentPage);
+    }
+
+    private async Task LoadReformeOutillages(int page)
+    {
+        if (page < 1) page = 1; // Empêcher les pages négatives
+        currentPage = page;
+        try
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{reformeOutillageUrl}?position={currentPage}&pageSize={pageSize}", options);
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                reformeOutillages = JsonSerializer.Deserialize<List<ReformeOutillageDto>>(
+                    apiResponse.Data.ToString(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new List<ReformeOutillageDto>();
+            }
+            else
+            {
+                reformeOutillages.Clear();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des réformes d'outillage : {ex.Message}");
+            reformeOutillages.Clear();
+        }
+        StateHasChanged();
+    }
+
+    private async Task HandleReformeOutillageCreated()
+    {
+        await LoadReformeOutillages(currentPage);
+    }
+}

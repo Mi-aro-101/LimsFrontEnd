@@ -1,0 +1,165 @@
+﻿@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models.Reactif
+@using LimsUtils.Api
+@using System.Text.Json
+@using System.Linq
+
+<div class="card border-dark mb-3">
+    <div class="card-header">Ajouter un Inventaire </div>
+    <div class="card-body text-dark">
+        <EditForm Model="@reportReactif" OnValidSubmit="@HandleOnSubmit" FormName="reportReactifForm">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label>Date de l'inventaire</label>
+                <InputDate class="form-control" @bind-Value="reportReactif.DateReport" disabled />
+            </div>
+            <div class="form-group">
+                <label>Quantité</label>
+                <InputNumber class="form-control" @bind-Value="reportReactif.Quantite" />
+                @if (isQuantiteInvalid)
+                {
+                    <div class="text-danger">La quantité doit être supérieure à zéro.</div>
+                }
+            </div>
+            <div class="form-group">
+                <label>Réactif</label>
+                <div class="position-relative">
+                    <InputText class="form-control" @bind-Value="searchTerm" @oninput="HandleSearch" placeholder="Rechercher un réactif..." />
+                    @if (suggestions.Any())
+                    {
+                        <ul class="list-group position-absolute" style="z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto;">
+                            @foreach (var suggestion in suggestions)
+                            {
+                                <li class="list-group-item list-group-item-action" @onclick="() => SelectSuggestion(suggestion)">
+                                    @suggestion.Designation (@(suggestion.Unite?.Designation ?? "N/A"))
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+                @if (isReactifSelectionInvalid)
+                {
+                    <div class="text-danger">Veuillez sélectionner un réactif.</div>
+                }
+            </div>
+            <div class="form-group">
+                <label>Unité</label>
+                <InputText class="form-control" @bind-Value="selectedUnite" readonly />
+            </div>
+            <br />
+            <button type="submit" class="btn btn-primary">Créer</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private ReportReactifDo reportReactif = new() { DateReport = DateTime.Today };
+    private string searchTerm = string.Empty;
+    private string selectedUnite = string.Empty; // Champ pour afficher l'unité
+    private List<ReactifDto> suggestions = new();
+    private bool isQuantiteInvalid = false;
+    private bool isReactifSelectionInvalid = false;
+
+    private string reportReactifUrl = "http://localhost:5077/api/report-reactifs";
+    private string reactifSearchUrl = "http://localhost:5077/api/reactifs/search";
+
+    [Parameter]
+    public EventCallback OnReportReactifCreated { get; set; }
+
+    private async Task HandleSearch(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        selectedUnite = string.Empty; // Réinitialiser l'unité si on recherche à nouveau
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            suggestions.Clear();
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{reactifSearchUrl}?searchTerm={Uri.EscapeDataString(searchTerm)}");
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var allResults = JsonSerializer.Deserialize<List<ReactifDto>>(
+                    apiResponse.Data.ToString(),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                ) ?? new List<ReactifDto>();
+
+                // Filtrer côté client pour ne garder que les réactifs commençant par searchTerm
+                suggestions = allResults
+                    .Where(r => r.Designation.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(r => r.Designation)
+                    .ToList();
+            }
+            else
+            {
+                suggestions.Clear();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la recherche des réactifs : {ex.Message}");
+            suggestions.Clear();
+        }
+        StateHasChanged();
+    }
+
+    private void SelectSuggestion(ReactifDto suggestion)
+    {
+        reportReactif.IdReactif = suggestion.IdReactif;
+        searchTerm = suggestion.Designation;
+        selectedUnite = suggestion.Unite?.Designation ?? "N/A"; // Utiliser Designation au lieu de Nom
+        suggestions.Clear();
+        StateHasChanged();
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        isQuantiteInvalid = reportReactif.Quantite <= 0;
+        isReactifSelectionInvalid = reportReactif.IdReactif == 0;
+
+        if (isQuantiteInvalid || isReactifSelectionInvalid)
+        {
+            StateHasChanged();
+            return;
+        }
+
+        string reactifDesignation = suggestions.FirstOrDefault(r => r.IdReactif == reportReactif.IdReactif)?.Designation ?? searchTerm;
+        string message = $"Veuillez vérifier les informations suivantes avant de créer le report de réactif :\n\n" +
+                         $"Date du Report : {reportReactif.DateReport.ToShortDateString()}\n" +
+                         $"Quantité : {reportReactif.Quantite}\n" +
+                         $"Réactif : {reactifDesignation}\n" +
+                         $"Unité : {selectedUnite}\n\n" +
+                         "Êtes-vous sûr de ces informations ? Une fois créé, le report ne pourra plus être modifié ou supprimé.";
+
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", message);
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync(reportReactifUrl, reportReactif);
+            response.EnsureSuccessStatusCode();
+            if (OnReportReactifCreated.HasDelegate)
+                await OnReportReactifCreated.InvokeAsync();
+            reportReactif = new ReportReactifDo() { DateReport = DateTime.Today };
+            searchTerm = string.Empty;
+            selectedUnite = string.Empty; // Réinitialiser l'unité après création
+            suggestions.Clear();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la création du report : {ex.Message}");
+        }
+    }
+}

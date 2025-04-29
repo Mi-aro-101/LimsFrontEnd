@@ -2,24 +2,24 @@
 @inject NavigationManager NavigationManager
 @using System.Net.Http.Json
 @using System.Text.Json
-@using LimsFrontEnd.Models.Immobilisation
+@using LimsFrontEnd.Models.Reactif
 @using LimsUtils.Api
 @using System.Collections.Generic
 @using System.Linq
-@using System.Threading.Tasks
+@using MudBlazor
 @using LimsFrontEnd.Components
 
 <div class="row">
     <!-- Colonne de création -->
     <div class="col">
-        <Create OnFournisseurCreated="HandleFournisseurCreated" />
+        <Create OnObjetSortieReactifCreated="HandleObjetSortieReactifCreated" />
     </div>
 
     <!-- Colonne de la liste -->
     <div class="col">
-        @if (fournisseurs == null || fournisseurs.Count == 0)
+        @if (objetsSortieReactif == null || !objetsSortieReactif.Any())
         {
-            <p><em>Aucun fournisseur disponible</em></p>
+            <p><em>Aucun objet de sortie réactif disponible</em></p>
         }
         else
         {
@@ -40,14 +40,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var fournisseur in fournisseurs.OrderByDescending(f => f.IdFournisseur)){
+                        @foreach (var osr in objetsSortieReactif.OrderByDescending(o => o.IdObjetSortieReactif))
+                        {
                             <tr>
-                                @* <td>@fournisseur.IdFournisseur</td> *@
-                                <td>@fournisseur.Designation</td>
+                                @* <td>@osr.IdObjetSortieReactif</td> *@
+                                <td>@osr.Designation</td>
                                 <td>
                                     <center>
                                         <MudButton Size="Size.Small"
-                                                   @onclick="@(() => HandleUpdate(fournisseur.IdFournisseur))"
+                                                   @onclick="@(() => HandleUpdate(osr.IdObjetSortieReactif))"
                                                    Variant="Variant.Filled"
                                                    StartIcon="@Icons.Material.Filled.Edit"
                                                    Color="Color.Warning">
@@ -56,17 +57,16 @@
                                 </td>
                             </tr>
                         }
-                        
                     </tbody>
                 </table>
 
                 <nav aria-label="Page navigation">
                     <ul class="pagination">
                         <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                            <a class="page-link" href="#" @onclick:preventDefault="true" @onclick="@(() => LoadFournisseurs(currentPage - 1))">Précédent</a>
+                            <a class="page-link" href="#" @onclick:preventDefault="true" @onclick="@(() => LoadObjetsSortieReactif(currentPage - 1))">Précédent</a>
                         </li>
                         <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                            <a class="page-link" href="#" @onclick:preventDefault="true" @onclick="@(() => LoadFournisseurs(currentPage + 1))">Suivant</a>
+                            <a class="page-link" href="#" @onclick:preventDefault="true" @onclick="@(() => LoadObjetsSortieReactif(currentPage + 1))">Suivant</a>
                         </li>
                     </ul>
                 </nav>
@@ -84,18 +84,18 @@
 </div>
 
 @code {
-    private List<FournisseurDto> fournisseurs = new List<FournisseurDto>();
+    private List<ObjetSortieReactifDto> objetsSortieReactif = new();
     private ApiResponse? apiResponse;
     private int currentPage = 1;
     private int pageSize = 10;
-    private string url = "http://localhost:5077/api/fournisseurs";
+    private string url = "http://localhost:5077/api/objetSortieReactif";
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadFournisseurs(currentPage);
+        await LoadObjetsSortieReactif(currentPage);
     }
 
-    private async Task LoadFournisseurs(int page)
+    private async Task LoadObjetsSortieReactif(int page)
     {
         currentPage = page;
         try
@@ -105,33 +105,31 @@
             
             if (apiResponse != null && apiResponse.IsSuccess && apiResponse.Data != null)
             {
-                fournisseurs = apiResponse.Data != null
-                    ? JsonSerializer.Deserialize<List<FournisseurDto>>(
+                objetsSortieReactif = apiResponse.Data != null
+                    ? JsonSerializer.Deserialize<List<ObjetSortieReactifDto>>(
                         apiResponse.Data?.ToString() ?? string.Empty,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                    ) ?? new List<FournisseurDto>()
-                    : new List<FournisseurDto>();
+                    ) ?? new List<ObjetSortieReactifDto>()
+                    : new List<ObjetSortieReactifDto>();
 
                 // Tri par ID décroissant pour avoir les plus récents en premier
-                fournisseurs = fournisseurs.OrderByDescending(f => f.IdFournisseur).ToList();
-
-                Console.WriteLine($"Chargement de la page {currentPage}. Enregistrements reçus: {fournisseurs.Count}");
+                objetsSortieReactif = objetsSortieReactif.OrderByDescending(o => o.IdObjetSortieReactif).ToList();
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erreur lors du chargement des fournisseurs : {ex.Message}");
+            Console.WriteLine($"Erreur lors du chargement : {ex.Message}");
         }
     }
 
-    private async Task HandleFournisseurCreated()
+    private async Task HandleObjetSortieReactifCreated()
     {
-        // Recharger la première page pour voir le nouveau fournisseur
-        await LoadFournisseurs(1);
+        // Recharger la première page pour voir le nouvel objet
+        await LoadObjetsSortieReactif(1);
     }
 
     private void HandleUpdate(int id)
     {
-        NavigationManager.NavigateTo($"/fournisseur/edit/{id}");
+        NavigationManager.NavigateTo($"/objetSortieReactif/edit/{id}");
     }
 }

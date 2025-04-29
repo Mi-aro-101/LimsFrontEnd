@@ -9,7 +9,7 @@ namespace LimsFrontEnd.Models.Outillage
         public int IdOutillage { get; set; }
 
         [JsonPropertyName("designation")]
-        public required string Designation { get; set; }
+        public  string? Designation { get; set; }
 
         [JsonPropertyName("idMarque")]
         public int? IdMarque { get; set; }

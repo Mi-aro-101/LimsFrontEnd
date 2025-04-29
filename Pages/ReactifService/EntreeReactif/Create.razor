@@ -1,0 +1,861 @@
+﻿ @* @inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models.Reactif
+@using LimsUtils.Api
+@using System.Text.Json
+
+<!-- Centrer le formulaire principal -->
+<div class="d-flex justify-content-center">
+    <div class="card border-dark mb-3" style="max-width: 60rem;">
+        <div class="card-header">Créer une Entrée Réactif</div>
+        <div class="card-body text-dark">
+            <EditForm Model="@entreeReactif" OnValidSubmit="@HandleOnSubmit" FormName="entreeReactifForm">
+                <DataAnnotationsValidator />
+                <div class="row">
+                    <!-- Première colonne -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Quantité</label>
+                            <InputNumber class="form-control" @bind-Value="entreeReactif.Quantite" />
+                            @if (isQuantiteInvalid)
+                            {
+                                <div class="text-danger">La quantité doit être supérieure à zéro.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Prix d'achat</label>
+                            <InputNumber class="form-control" @bind-Value="entreeReactif.PrixAchat" />
+                            @if (isPrixAchatInvalid)
+                            {
+                                <div class="text-danger">Le prix d'achat doit être supérieur à zéro.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Bon de Réception</label>
+                            <InputText class="form-control" @bind-Value="entreeReactif.BonReception" placeholder="Référence du bon" />
+                        </div>
+                    </div>
+                    <!-- Deuxième colonne -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Bon de Commande</label>
+                            <InputText class="form-control" @bind-Value="entreeReactif.BonDeCommande" placeholder="Bon de commande" />
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Numéro de Facture</label>
+                            <InputText class="form-control" @bind-Value="entreeReactif.NumeroFacture" placeholder="Numéro de facture" />
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Date d'Entrée</label>
+                            <InputDate class="form-control" @bind-Value="entreeReactif.DateEntree" disabled />
+                        </div>
+                    </div>
+                    <!-- Troisième colonne -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Date de Péremption</label>
+                            <InputDate class="form-control" @bind-Value="entreeReactif.DatePeremption" />
+                            @if (!isDatePeremptionValid)
+                            {
+                                <div class="text-danger">La date de péremption doit être supérieure à la date d'entrée.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Réactif</label>
+                            <!-- Champ de recherche pour le réactif -->
+                            <InputText class="form-control"
+                                       Value="@searchTerm"
+                                       ValueChanged="@( (string val) => OnSearchChanged(val) )"
+                                       ValueExpression="@(() => searchTerm)"
+                                       placeholder="Rechercher un réactif"
+                                       @oninput="@(async (ChangeEventArgs e) => await OnSearchChanged(e.Value.ToString()))" />
+                            @if (!string.IsNullOrEmpty(searchTerm))
+                            {
+                                <ul class="list-group">
+                                    @if (filteredReactifs.Any())
+                                    {
+                                        @foreach (var reactif in filteredReactifs)
+                                        {
+                                            <li class="list-group-item" @onclick="() => SelectReactif(reactif)">
+                                                @reactif.Designation
+                                            </li>
+                                        }
+                                    }
+                                    <li class="list-group-item">
+                                        <button type="button" class="btn btn-secondary" @onclick="() => ShowAddReactifForm(searchTerm)">Ajouter</button>
+                                    </li>
+                                </ul>
+                            }
+                            @if (isReactifSelectionInvalid)
+                            {
+                                <div class="text-danger">Veuillez sélectionner un réactif.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Fournisseur</label>
+                            <InputSelect class="form-control" @bind-Value="entreeReactif.IdFournisseur">
+                                <option value="">-- Sélectionner --</option>
+                                @foreach (var fournisseur in fournisseurs)
+                                {
+                                    <option value="@fournisseur.IdFournisseur">@fournisseur.Designation</option>
+                                }
+                            </InputSelect>
+                            @if (isFournisseurInvalid)
+                            {
+                                <div class="text-danger">Veuillez sélectionner un fournisseur.</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <center>
+                    <button type="submit" class="btn btn-primary">Créer</button>
+                </center>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+<!-- Formulaire d'ajout de réactif dans une modal Bootstrap -->
+@if (showAddReactifForm)
+{
+    <div class="modal show" tabindex="-1" style="display:block; background-color:rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Créer un Réactif</h5>
+                    <button type="button" class="btn-close" @onclick="() => showAddReactifForm = false"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@newReactif" OnValidSubmit="@HandleAddReactif">
+                        <DataAnnotationsValidator />
+                        <div class="form-group row">
+                            <label class="col-sm-4 col-form-label">Désignation</label>
+                            <div class="col-sm-8">
+                                <InputText class="form-control" @bind-Value="newReactif.Designation" placeholder="Désignation" />
+                            </div>
+                        </div>
+                        <br />
+                        <div class="form-group row">
+                            <label class="col-sm-4 col-form-label">Type de Sortie</label>
+                            <div class="col-sm-8">
+                                <InputSelect class="form-control" @bind-Value="newReactif.IdTypeSortie">
+                                    <option value="">-- Sélectionner --</option>
+                                    @foreach (var typeSortie in TypeSorties)
+                                    {
+                                        <option value="@typeSortie.IdTypeSortie">@typeSortie.Designation</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="form-group row">
+                            <label class="col-sm-4 col-form-label">Unité</label>
+                            <div class="col-sm-8">
+                                <InputSelect class="form-control" @bind-Value="newReactif.IdUnite">
+                                    <option value="">-- Sélectionner --</option>
+                                    @foreach (var unite in Unites)
+                                    {
+                                        <option value="@unite.IdUnite">@unite.Designation</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+                        <br />
+                        <center>
+                            <button type="submit" class="btn btn-primary">Créer</button>
+                            <button type="button" class="btn btn-secondary" @onclick="() => showAddReactifForm = false">Annuler</button>
+                        </center>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private EntreeReactifDto entreeReactif = new() { DateEntree = DateTime.Today };
+    private List<ReactifDto> reactifs = new();
+    private List<FournisseurEntreeReactifDto> fournisseurs = new();
+    private bool isDatePeremptionValid = true;
+    private string searchTerm = string.Empty;
+    private bool showAddReactifForm = false;
+    private ReactifDto newReactif = new();
+    private ICollection<TypeSortieDto> TypeSorties = new List<TypeSortieDto>();
+    private ICollection<UniteDto> Unites = new List<UniteDto>();
+
+    private string entreeReactifUrl = "http://localhost:5077/api/entree-reactifs";
+    private string fournisseurUrl = "http://localhost:5077/api/fournisseurs-entree";
+    private string reactifUrl = "http://localhost:5077/api/reactifs";
+    
+    [Parameter]
+    public EventCallback OnEntreeReactifCreated { get; set; }
+
+    // Flags de validation (suppression des flags pour les champs non obligatoires)
+    private bool isQuantiteInvalid = false;
+    private bool isPrixAchatInvalid = false;
+    private bool isFournisseurInvalid = false;
+    private bool isReactifSelectionInvalid = false;
+
+    private List<ReactifDto> filteredReactifs => reactifs
+        .Where(r => !string.IsNullOrEmpty(r.Designation) &&
+                    r.Designation.StartsWith(searchTerm ?? string.Empty, System.StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        entreeReactif.DateEntree = DateTime.Today;
+        reactifs = await LoadReactifs();
+        fournisseurs = await LoadFournisseurs();
+        TypeSorties = await LoadTypeSorties();
+        Unites = await LoadUnites();
+    }
+
+    private async Task<List<ReactifDto>> LoadReactifs()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{reactifUrl}/search?searchTerm={searchTerm}");
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<List<ReactifDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<ReactifDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des réactifs : {ex.Message}");
+        }
+        return new List<ReactifDto>();
+    }
+
+    private async Task<List<FournisseurEntreeReactifDto>> LoadFournisseurs()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>(fournisseurUrl);
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<List<FournisseurEntreeReactifDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<FournisseurEntreeReactifDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des fournisseurs : {ex.Message}");
+        }
+        return new List<FournisseurEntreeReactifDto>();
+    }
+
+    private async Task<ICollection<TypeSortieDto>> LoadTypeSorties()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/typesSortie");
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<ICollection<TypeSortieDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<TypeSortieDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des types de sortie : {ex.Message}");
+        }
+        return new List<TypeSortieDto>();
+    }
+
+    private async Task<ICollection<UniteDto>> LoadUnites()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/unites");
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<ICollection<UniteDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<UniteDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des unités : {ex.Message}");
+        }
+        return new List<UniteDto>();
+    }
+
+    private void SelectReactif(ReactifDto reactif)
+    {
+        entreeReactif.IdReactif = reactif.IdReactif;
+        searchTerm = reactif.Designation;
+    }
+
+    private void ShowAddReactifForm(string reactifName)
+    {
+        newReactif = new ReactifDto { Designation = reactifName };
+        showAddReactifForm = true;
+    }
+
+    private async Task HandleAddReactif()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync(reactifUrl, newReactif);
+            response.EnsureSuccessStatusCode();
+            reactifs = await LoadReactifs();
+            showAddReactifForm = false;
+            newReactif = new ReactifDto();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la création du réactif : {ex.Message}");
+        }
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        ResetValidationFlags();
+
+        if (entreeReactif.DatePeremption <= entreeReactif.DateEntree)
+        {
+            isDatePeremptionValid = false;
+        }
+        else
+        {
+            isDatePeremptionValid = true;
+        }
+
+        isQuantiteInvalid = entreeReactif.Quantite <= 0;
+        isPrixAchatInvalid = entreeReactif.PrixAchat <= 0;
+        isFournisseurInvalid = entreeReactif.IdFournisseur == 0;
+        isReactifSelectionInvalid = entreeReactif.IdReactif == 0;
+
+        if (isDatePeremptionValid && !isQuantiteInvalid && !isPrixAchatInvalid && !isFournisseurInvalid && !isReactifSelectionInvalid)
+        {
+            // Si les champs sont vides, définir les valeurs par défaut
+            if (string.IsNullOrWhiteSpace(entreeReactif.BonReception))
+            {
+                entreeReactif.BonReception = "Aucun bon de réception";
+            }
+            if (string.IsNullOrWhiteSpace(entreeReactif.BonDeCommande))
+            {
+                entreeReactif.BonDeCommande = "Aucun bon de commande";
+            }
+            if (string.IsNullOrWhiteSpace(entreeReactif.NumeroFacture))
+            {
+                entreeReactif.NumeroFacture = "Aucun numéro de facture";
+            }
+
+            string reactifDesignation = reactifs.FirstOrDefault(r => r.IdReactif == entreeReactif.IdReactif)?.Designation ?? "Non sélectionné";
+            string quantite = entreeReactif.Quantite.ToString();
+            string prixAchat = entreeReactif.PrixAchat.ToString();
+            string bonReception = entreeReactif.BonReception;
+            string bonDeCommande = entreeReactif.BonDeCommande;
+            string numeroFacture = entreeReactif.NumeroFacture;
+            string fournisseurDesignation = fournisseurs.FirstOrDefault(f => f.IdFournisseur == entreeReactif.IdFournisseur)?.Designation ?? "Non sélectionné";
+
+            string message = $"Veuillez vérifier les informations suivantes avant de créer l'entrée de réactif :\n\n" +
+                             $"Réactif : {reactifDesignation}\n" +
+                             $"Quantité : {quantite}\n" +
+                             $"Prix d'achat : {prixAchat}\n" +
+                             $"Bon de réception : {bonReception}\n" +
+                             $"Bon de commande : {bonDeCommande}\n" +
+                             $"Numéro de facture : {numeroFacture}\n" +
+                             $"Fournisseur : {fournisseurDesignation}\n\n" +
+                             "Êtes-vous vraiment sûr de la véracité de ces informations ? Une fois créée, l'entrée ne pourra plus être modifiée ou supprimée.";
+
+            bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", message);
+            if (!confirmed)
+            {
+                return;
+            }
+
+            try
+            {
+                var response = await Http.PostAsJsonAsync(entreeReactifUrl, entreeReactif);
+                response.EnsureSuccessStatusCode();
+                if (OnEntreeReactifCreated.HasDelegate)
+                    await OnEntreeReactifCreated.InvokeAsync();
+                entreeReactif = new EntreeReactifDto() { DateEntree = DateTime.Today };
+                searchTerm = string.Empty;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la création de l'entrée de réactif : {ex.Message}");
+            }
+        }
+        else
+        {
+            StateHasChanged();
+        }
+    }
+
+    private void ResetValidationFlags()
+    {
+        isQuantiteInvalid = false;
+        isPrixAchatInvalid = false;
+        isFournisseurInvalid = false;
+        isReactifSelectionInvalid = false;
+        isDatePeremptionValid = true;
+    }
+
+    private async Task OnSearchChanged(string val)
+    {
+        searchTerm = val;
+        reactifs = await LoadReactifs();
+        StateHasChanged();
+    }
+} 
+ *@
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models.Reactif
+@using LimsUtils.Api
+@using System.Text.Json
+
+<!-- Centrer le formulaire principal -->
+<div class="d-flex justify-content-center">
+    <div class="card border-dark mb-3" style="max-width: 60rem;">
+        <div class="card-header">Créer une Entrée Réactif</div>
+        <div class="card-body text-dark">
+            <EditForm Model="@entreeReactif" OnValidSubmit="@HandleOnSubmit" FormName="entreeReactifForm">
+                <DataAnnotationsValidator />
+                <div class="row">
+                    <!-- Première colonne -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Quantité</label>
+                            <InputNumber class="form-control" @bind-Value="entreeReactif.Quantite" />
+                            @if (isQuantiteInvalid)
+                            {
+                                <div class="text-danger">La quantité doit être supérieure à zéro.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Prix d'achat</label>
+                            <InputNumber class="form-control" @bind-Value="entreeReactif.PrixAchat" />
+                            @if (isPrixAchatInvalid)
+                            {
+                                <div class="text-danger">Le prix d'achat doit être supérieur à zéro.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Bon de Réception</label>
+                            <InputText class="form-control" @bind-Value="entreeReactif.BonReception" placeholder="Référence du bon" />
+                        </div>
+                    </div>
+                    <!-- Deuxième colonne -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Bon de Commande</label>
+                            <InputText class="form-control" @bind-Value="entreeReactif.BonDeCommande" placeholder="Bon de commande" />
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Numéro de Facture</label>
+                            <InputText class="form-control" @bind-Value="entreeReactif.NumeroFacture" placeholder="Numéro de facture" />
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Date d'Entrée</label>
+                            <InputDate class="form-control" @bind-Value="entreeReactif.DateEntree" disabled />
+                        </div>
+                    </div>
+                    <!-- Troisième colonne -->
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Date de Péremption</label>
+                            <InputDate class="form-control" @bind-Value="entreeReactif.DatePeremption" />
+                            @if (isDatePeremptionInvalid)
+                            {
+                                <div class="text-danger">La date de péremption doit être supérieure à la date d'entrée.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Réactif</label>
+                            <!-- Champ de recherche pour le réactif -->
+                            <InputText class="form-control"
+                                       Value="@searchTerm"
+                                       ValueChanged="@( (string val) => OnSearchChanged(val) )"
+                                       ValueExpression="@(() => searchTerm)"
+                                       placeholder="Rechercher un réactif"
+                                       @oninput="@(async (ChangeEventArgs e) => await OnSearchChanged(e.Value.ToString()))" />
+                            @if (!string.IsNullOrEmpty(searchTerm))
+                            {
+                                <ul class="list-group">
+                                    @if (filteredReactifs.Any())
+                                    {
+                                        @foreach (var reactif in filteredReactifs)
+                                        {
+                                            <li class="list-group-item" @onclick="() => SelectReactif(reactif)">
+                                                @reactif.Designation
+                                            </li>
+                                        }
+                                    }
+                                    <li class="list-group-item">
+                                        <button type="button" class="btn btn-secondary" @onclick="() => ShowAddReactifForm(searchTerm)">Ajouter</button>
+                                    </li>
+                                </ul>
+                            }
+                            @if (isReactifSelectionInvalid)
+                            {
+                                <div class="text-danger">Veuillez sélectionner un réactif.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Unité</label>
+                            <input class="form-control" value="@selectedUnite" readonly />
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Fournisseur</label>
+                            <InputSelect class="form-control" @bind-Value="entreeReactif.IdFournisseur">
+                                <option value="">-- Sélectionner --</option>
+                                @foreach (var fournisseur in fournisseurs)
+                                {
+                                    <option value="@fournisseur.IdFournisseur">@fournisseur.Designation</option>
+                                }
+                            </InputSelect>
+                            @if (isFournisseurInvalid)
+                            {
+                                <div class="text-danger">Veuillez sélectionner un fournisseur.</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <center>
+                    <button type="submit" class="btn btn-primary">Créer</button>
+                </center>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+<!-- Formulaire d'ajout de réactif dans une modal Bootstrap -->
+@if (showAddReactifForm)
+{
+    <div class="modal show" tabindex="-1" style="display:block; background-color:rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Créer un Réactif</h5>
+                    <button type="button" class="btn-close" @onclick="() => showAddReactifForm = false"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@newReactif" OnValidSubmit="@HandleAddReactif">
+                        <DataAnnotationsValidator />
+                        <div class="form-group row">
+                            <label class="col-sm-4 col-form-label">Désignation</label>
+                            <div class="col-sm-8">
+                                <InputText class="form-control" @bind-Value="newReactif.Designation" placeholder="Désignation" />
+                            </div>
+                        </div>
+                        <br />
+                        <div class="form-group row">
+                            <label class="col-sm-4 col-form-label">Type de Sortie</label>
+                            <div class="col-sm-8">
+                                <InputSelect class="form-control" @bind-Value="newReactif.IdTypeSortie">
+                                    <option value="">-- Sélectionner --</option>
+                                    @foreach (var typeSortie in TypeSorties)
+                                    {
+                                        <option value="@typeSortie.IdTypeSortie">@typeSortie.Designation</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="form-group row">
+                            <label class="col-sm-4 col-form-label">Unité</label>
+                            <div class="col-sm-8">
+                                <InputSelect class="form-control" @bind-Value="newReactif.IdUnite">
+                                    <option value="">-- Sélectionner --</option>
+                                    @foreach (var unite in Unites)
+                                    {
+                                        <option value="@unite.IdUnite">@unite.Designation</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+                        <br />
+                        <center>
+                            <button type="submit" class="btn btn-primary">Créer</button>
+                            <button type="button" class="btn btn-secondary" @onclick="() => showAddReactifForm = false">Annuler</button>
+                        </center>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private EntreeReactifDto entreeReactif = new() { DateEntree = DateTime.Today, DatePeremption = DateTime.Today };
+    private List<ReactifDto> reactifs = new();
+    private List<FournisseurEntreeReactifDto> fournisseurs = new();
+    private string searchTerm = string.Empty;
+    private bool showAddReactifForm = false;
+    private ReactifDto newReactif = new();
+    private ICollection<TypeSortieDto> TypeSorties = new List<TypeSortieDto>();
+    private ICollection<UniteDto> Unites = new List<UniteDto>();
+    private string selectedUnite = string.Empty; // Variable pour stocker l'unité sélectionnée
+
+    private string entreeReactifUrl = "http://localhost:5077/api/entree-reactifs";
+    private string fournisseurUrl = "http://localhost:5077/api/fournisseurs-entree";
+    private string reactifUrl = "http://localhost:5077/api/reactifs";
+    
+    [Parameter]
+    public EventCallback OnEntreeReactifCreated { get; set; }
+
+    // Flags de validation
+    private bool isQuantiteInvalid = false;
+    private bool isPrixAchatInvalid = false;
+    private bool isFournisseurInvalid = false;
+    private bool isReactifSelectionInvalid = false;
+    private bool isDatePeremptionInvalid = false;
+
+    private List<ReactifDto> filteredReactifs => reactifs
+        .Where(r => !string.IsNullOrEmpty(r.Designation) &&
+                    r.Designation.StartsWith(searchTerm ?? string.Empty, System.StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        entreeReactif.DateEntree = DateTime.Today;
+        entreeReactif.DatePeremption = DateTime.Today; // Initialiser à aujourd'hui
+        reactifs = await LoadReactifs();
+        fournisseurs = await LoadFournisseurs();
+        TypeSorties = await LoadTypeSorties();
+        Unites = await LoadUnites();
+    }
+
+    private async Task<List<ReactifDto>> LoadReactifs()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{reactifUrl}/search?searchTerm={searchTerm}");
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<List<ReactifDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<ReactifDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des réactifs : {ex.Message}");
+        }
+        return new List<ReactifDto>();
+    }
+
+    private async Task<List<FournisseurEntreeReactifDto>> LoadFournisseurs()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>(fournisseurUrl);
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<List<FournisseurEntreeReactifDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<FournisseurEntreeReactifDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des fournisseurs : {ex.Message}");
+        }
+        return new List<FournisseurEntreeReactifDto>();
+    }
+
+    private async Task<ICollection<TypeSortieDto>> LoadTypeSorties()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/typesSortie");
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<ICollection<TypeSortieDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<TypeSortieDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des types de sortie : {ex.Message}");
+        }
+        return new List<TypeSortieDto>();
+    }
+
+    private async Task<ICollection<UniteDto>> LoadUnites()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/unites");
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<ICollection<UniteDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<UniteDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des unités : {ex.Message}");
+        }
+        return new List<UniteDto>();
+    }
+
+    private void SelectReactif(ReactifDto reactif)
+    {
+        entreeReactif.IdReactif = reactif.IdReactif;
+        searchTerm = reactif.Designation;
+        selectedUnite = reactif.Unite.Designation; // Assigner l'unité du réactif sélectionné
+        isReactifSelectionInvalid = false; // Réinitialiser le flag lorsque l'utilisateur sélectionne un réactif
+    }
+
+    private void ShowAddReactifForm(string reactifName)
+    {
+        newReactif = new ReactifDto { Designation = reactifName };
+        showAddReactifForm = true;
+    }
+
+    private async Task HandleAddReactif()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync(reactifUrl, newReactif);
+            response.EnsureSuccessStatusCode();
+            reactifs = await LoadReactifs();
+            showAddReactifForm = false;
+            newReactif = new ReactifDto();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la création du réactif : {ex.Message}");
+        }
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        ResetValidationFlags();
+
+        if (entreeReactif.DatePeremption <= entreeReactif.DateEntree)
+        {
+            isDatePeremptionInvalid = true;
+        }
+
+        isQuantiteInvalid = entreeReactif.Quantite <= 0;
+        isPrixAchatInvalid = entreeReactif.PrixAchat <= 0;
+        isFournisseurInvalid = entreeReactif.IdFournisseur == 0;
+        isReactifSelectionInvalid = entreeReactif.IdReactif == 0; // Vérifier si un réactif a été sélectionné
+
+        if (!isDatePeremptionInvalid && !isQuantiteInvalid && !isPrixAchatInvalid && !isFournisseurInvalid && !isReactifSelectionInvalid)
+        {
+            // Si les champs sont vides, définir les valeurs par défaut
+            if (string.IsNullOrWhiteSpace(entreeReactif.BonReception))
+            {
+                entreeReactif.BonReception = "Aucun bon de réception";
+            }
+            if (string.IsNullOrWhiteSpace(entreeReactif.BonDeCommande))
+            {
+                entreeReactif.BonDeCommande = "Aucun bon de commande";
+            }
+            if (string.IsNullOrWhiteSpace(entreeReactif.NumeroFacture))
+            {
+                entreeReactif.NumeroFacture = "Aucun numéro de facture";
+            }
+
+            string reactifDesignation = reactifs.FirstOrDefault(r => r.IdReactif == entreeReactif.IdReactif)?.Designation ?? "Non sélectionné";
+            string unite = selectedUnite;
+            string quantite = entreeReactif.Quantite.ToString();
+            string prixAchat = entreeReactif.PrixAchat.ToString();
+            string bonReception = entreeReactif.BonReception;
+            string bonDeCommande = entreeReactif.BonDeCommande;
+            string numeroFacture = entreeReactif.NumeroFacture;
+            string fournisseurDesignation = fournisseurs.FirstOrDefault(f => f.IdFournisseur == entreeReactif.IdFournisseur)?.Designation ?? "Non sélectionné";
+
+            string message = $"Veuillez vérifier les informations suivantes avant de créer l'entrée de réactif :\n\n" +
+                             $"Réactif : {reactifDesignation}\n" +
+                             $"Unité : {unite}\n" +
+                             $"Quantité : {quantite}\n" +
+                             $"Prix d'achat : {prixAchat}\n" +
+                             $"Bon de réception : {bonReception}\n" +
+                             $"Bon de commande : {bonDeCommande}\n" +
+                             $"Numéro de facture : {numeroFacture}\n" +
+                             $"Fournisseur : {fournisseurDesignation}\n\n" +
+                             "Êtes-vous vraiment sûr de la véracité de ces informations ? Une fois créée, l'entrée ne pourra plus être modifiée ou supprimée.";
+
+            bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", message);
+            if (!confirmed)
+            {
+                return;
+            }
+
+            try
+            {
+                var response = await Http.PostAsJsonAsync(entreeReactifUrl, entreeReactif);
+                response.EnsureSuccessStatusCode();
+                if (OnEntreeReactifCreated.HasDelegate)
+                    await OnEntreeReactifCreated.InvokeAsync();
+                entreeReactif = new EntreeReactifDto() { DateEntree = DateTime.Today, DatePeremption = DateTime.Today };
+                searchTerm = string.Empty;
+                selectedUnite = string.Empty; // Réinitialiser l'unité
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la.eot du réactif : {ex.Message}");
+            }
+        }
+        else
+        {
+            StateHasChanged();
+        }
+    }
+
+    private void ResetValidationFlags()
+    {
+        isQuantiteInvalid = false;
+        isPrixAchatInvalid = false;
+        isFournisseurInvalid = false;
+        isReactifSelectionInvalid = false;
+        isDatePeremptionInvalid = false;
+    }
+
+    private async Task OnSearchChanged(string val)
+    {
+        searchTerm = val;
+        reactifs = await LoadReactifs();
+        StateHasChanged();
+    }
+}

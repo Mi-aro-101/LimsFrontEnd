@@ -1,0 +1,152 @@
+﻿@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@using System.Net.Http.Json
+@using System.Collections.Generic
+@using System.Threading.Tasks
+@using LimsFrontEnd.Models.Immobilisation
+@using LimsUtils.Api
+@using System.Text.Json
+
+<div class="card border-dark mb-3" style="max-width: 39rem;">
+    <div class="card-header">Créer une Immobilisation</div>
+    <div class="card-body text-dark">
+        <EditForm Model="@immobilisation" OnValidSubmit="@HandleOnSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Code</label>
+                <div class="col-sm-9">
+                    <InputText class="@($"form-control {(referenceError != null ? "is-invalid" : "")}")"
+                               @bind-Value="immobilisation.Reference" placeholder="Référence" />
+                    @if (!string.IsNullOrEmpty(referenceError))
+                    {
+                        <div class="text-danger">@referenceError</div>
+                    }
+                </div>
+            </div>
+            <br />
+
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Désignation</label>
+                <div class="col-sm-9">
+                    <InputText class="@($"form-control {(designationError != null ? "is-invalid" : "")}")"
+                               @bind-Value="immobilisation.Designation" placeholder="Désignation" />
+                    @if (!string.IsNullOrEmpty(designationError))
+                    {
+                        <div class="text-danger">@designationError</div>
+                    }
+                </div>
+            </div>
+            <br />
+
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Marque</label>
+                <div class="col-sm-9">
+                    <InputSelect class="@($"form-control {(marqueError != null ? "is-invalid" : "")}")"
+                                 @bind-Value="immobilisation.IdMarque">
+                        <option value="">-- Sélectionner --</option>
+                        @foreach (var marque in Marques)
+                        {
+                            <option value="@marque.IdMarque">@marque.Designation</option>
+                        }
+                    </InputSelect>
+                    @if (!string.IsNullOrEmpty(marqueError))
+                    {
+                        <div class="text-danger">@marqueError</div>
+                    }
+                </div>
+            </div>
+            <br />
+
+            <center>
+                <button type="submit" class="btn btn-primary">Créer</button>
+            </center>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private ImmobilisationDto immobilisation = new();
+    private ICollection<MarqueDto> Marques = new List<MarqueDto>();
+    private string url = "http://localhost:5077/api/immobilisation";
+
+    private string? referenceError;
+    private string? designationError;
+    private string? marqueError;
+
+    [Parameter]
+    public EventCallback OnImmobilisationCreated { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Marques = await LoadMarques();
+    }
+
+    private async Task<ICollection<MarqueDto>> LoadMarques()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/marque");
+            if (apiResponse != null && apiResponse.IsSuccess && apiResponse.Data != null)
+            {
+                var jsonData = apiResponse.Data.ToString();
+                var marques = JsonSerializer.Deserialize<ICollection<MarqueDto>>(jsonData, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+                return marques ?? new List<MarqueDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des marques : {ex.Message}");
+        }
+        return new List<MarqueDto>();
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        // Réinitialiser les erreurs
+        referenceError = null;
+        designationError = null;
+        marqueError = null;
+
+        bool isValid = true;
+
+        if (string.IsNullOrWhiteSpace(immobilisation.Reference))
+        {
+            referenceError = "Le code est obligatoire.";
+            isValid = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(immobilisation.Designation))
+        {
+            designationError = "La désignation est obligatoire.";
+            isValid = false;
+        }
+
+        if (immobilisation.IdMarque == 0)
+        {
+            marqueError = "Veuillez sélectionner une marque.";
+            isValid = false;
+        }
+
+        if (!isValid)
+            return;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync(url, immobilisation);
+            response.EnsureSuccessStatusCode();
+
+            if (OnImmobilisationCreated.HasDelegate)
+                await OnImmobilisationCreated.InvokeAsync();
+
+            immobilisation = new ImmobilisationDto(); // Réinitialiser
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception : " + ex.Message);
+        }
+    }
+}
