@@ -6,14 +6,17 @@
 </style>
 <MudNavMenu Margin="Margin.Dense" Color="Color.Warning">
     <div class="nav-item px-3">
-        <MudNavGroup Title="Dashboard" Icon="@Icons.Material.Filled.SpaceDashboard" IconColor="Color.Inherit"  Expanded="false">
-            <MudNavGroup Title="Chiffre d'affaire" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AttachMoney" Expanded="false">
-                <MudNavLink Href="/chiffre/affaire/annuel" IconColor="Color.Inherit" Match="NavLinkMatch.All">Annuel</MudNavLink>
-                <MudNavLink Href="/chiffre/affaire/mensuel" IconColor="Color.Inherit" Match="NavLinkMatch.All">Mensuel</MudNavLink>
-                <MudNavLink Href="/chiffre/affaire/journalier" IconColor="Color.Inherit" Match="NavLinkMatch.All">Journalier</MudNavLink>
-            </MudNavGroup>
+    <MudNavGroup Title="Dashboard" Icon="@Icons.Material.Filled.SpaceDashboard" IconColor="Color.Inherit" Expanded="false">
+        <MudNavGroup Title="Chiffre d'affaire" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AttachMoney" Expanded="false">
+            <MudNavLink Href="/chiffre/affaire/annuel" IconColor="Color.Inherit" Match="NavLinkMatch.All">Annuel</MudNavLink>
+            <MudNavLink Href="/chiffre/affaire/mensuel" IconColor="Color.Inherit" Match="NavLinkMatch.All">Mensuel</MudNavLink>
+            <MudNavLink Href="/chiffre/affaire/journalier" IconColor="Color.Inherit" Match="NavLinkMatch.All">Journalier</MudNavLink>
         </MudNavGroup>
-    </div>
+        <MudNavGroup Title="Magasin" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Warehouse" Expanded="false">
+            <MudNavLink Href="/dashboard" Icon="@Icons.Material.Filled.Paid" IconColor="Color.Inherit" Match="NavLinkMatch.All">Dépenses sur stock</MudNavLink>
+        </MudNavGroup>
+    </MudNavGroup>
+</div>
     <div class="nav-item px-3">
     <MudNavLink Href="/poste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Desk">
         Poste
