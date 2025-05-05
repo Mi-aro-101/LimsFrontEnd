@@ -11,13 +11,19 @@
   <div class="card-body text-dark">
     <EditForm Model="@marque" OnValidSubmit="@HandleOnSubmit">
       <DataAnnotationsValidator />
+
       <div class="form-group row">
           <label class="col-sm-3 col-form-label">Désignation</label>
           <div class="col-sm-9">
               <InputText class="form-control" @bind-Value="marque.Designation" placeholder="Désignation" />
+              @if (!string.IsNullOrEmpty(designationError))
+              {
+                  <div class="text-danger">@designationError</div>
+              }
           </div>
       </div>
       <br />
+
       <center>
           <button type="submit" class="btn btn-primary">Créer</button>
       </center>
@@ -29,21 +35,32 @@
     private MarqueDto marque = new();
     private string url = "http://localhost:5077/api/marque";
 
+    private string? designationError;
+
     [Parameter]
     public EventCallback OnMarqueCreated { get; set; }
 
     private async Task HandleOnSubmit()
     {
+        designationError = null;
+
+        if (string.IsNullOrWhiteSpace(marque.Designation))
+        {
+            designationError = "Veuillez saisir une désignation.";
+            return;
+        }
+
         try
         {
             var response = await Http.PostAsJsonAsync(url, marque);
             response.EnsureSuccessStatusCode();
+
             if (OnMarqueCreated.HasDelegate)
                 await OnMarqueCreated.InvokeAsync();
             else
                 Console.WriteLine("Aucun delegate assigné à l'événement OnMarqueCreated");
-            // Réinitialiser le formulaire en recréant l'objet
-            marque = new MarqueDto();
+
+            marque = new MarqueDto(); // Réinitialiser le formulaire
         }
         catch (Exception ex)
         {
