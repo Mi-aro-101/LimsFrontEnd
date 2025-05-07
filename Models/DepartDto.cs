@@ -13,7 +13,7 @@ namespace LimsFrontEnd.Models
         [JsonPropertyName("objet")]
         public string? objet { get; set; }
 
-        [JsonPropertyName("DateDepart")]
+        [JsonPropertyName("dateDepart")]
         public DateTime? DateDepart { get; set; }
 
         [JsonPropertyName("designationDestinataire")]

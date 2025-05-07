@@ -1,9 +1,9 @@
 ﻿@page "/versementhebdomadaire"
 
-@using LimsFrontEnd.Models
 @using LimsUtils.Api
 @using System.Text.Json
 @inject HttpClient http
+@using LimsFrontEnd.Models
 @inject NavigationManager navigation
 
 <MudPaper Class="pa-4">
@@ -14,7 +14,7 @@
         @foreach (var semaine in ListeSemaines)
         {
             <MudSelectItem Value="@(semaine)">
-                Du @(semaine.debutSemaine?.ToString("dd/MM/yyyy") ?? "N/A") au @(semaine.finSemaine?.ToString("dd/MM/yyyy") ?? "N/A")
+                Du @(semaine.debutSemaine.HasValue ? semaine.debutSemaine.Value.ToString("dd MMM yyyy") : "N/A") au @(semaine.finSemaine.HasValue ? semaine.finSemaine.Value.ToString("dd MMM yyyy") : "N/A")
             </MudSelectItem>
         }
     </MudSelect>
@@ -67,11 +67,11 @@
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
-            apiResponse1 = await http.GetFromJsonAsync<ApiResponse>($"{url}/semaine", option);
+            apiResponse1 = await http.GetFromJsonAsync<ApiResponse>("versement/semaine", option);
             apiResponse1.HandleResponse<List<SemaineDto>>();
             ListeSemaines = apiResponse1.Data as List<SemaineDto> ?? new List<SemaineDto>();
 
-            apiResponse2 = await http.GetFromJsonAsync<ApiResponse>($"{url}/transfert", option);
+            apiResponse2 = await http.GetFromJsonAsync<ApiResponse>("versement/transfert", option);
             apiResponse2.HandleResponse<List<VersementHebdomadaireDto>>();
             if(apiResponse2.StatusCode == 200)
             {

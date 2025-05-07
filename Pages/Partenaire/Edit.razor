@@ -1,4 +1,4 @@
-﻿@page "/partenaire/{id_partenaire:int}"
+﻿@* @page "/partenaire/{id_partenaire:int}"
 
 @using System.Net.Http.Json
 @using System.Collections.Generic
@@ -7,9 +7,9 @@
 @using LimsUtils.Api
 @using System.Text.Json;
 @inject HttpClient Http
-@inject NavigationManager NavigationManager
+@inject NavigationManager NavigationManager *@
 
-<MudContainer Class="py-6 px-4">
+<!--MudContainer Class="py-6 px-4">
     <MudCard Class="rounded-xl shadow-md mx-auto" MaxWidth="500px">
         <MudCardHeader>
             <MudText Typo="Typo.h5" Align="Align.Center">Modifier le partenaire</MudText>
@@ -41,12 +41,12 @@
             </MudForm>
         </MudCardContent>
     </MudCard>
-</MudContainer>
+</MudContainer-->
 
 
-@code {
+@* @code {
     private ContratDto contrat = new();
-    private string url = "http://localhost:5077/api/contrat";
+    //private string url = "http://localhost:5077/api/contrat";
     private string? exception;
     [Parameter]
     public int Id_partenaire { get; set; }
@@ -61,13 +61,14 @@
         try
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var response = await Http.GetAsync($"{url}/{Id_partenaire}");
+            /* 
+                var response = await Http.GetAsync($"{url}/{Id_partenaire}");
 
-            string responseBody = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("API Response: " + responseBody); // Afficher la réponse JSON
-
-            ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{url}/{Id_partenaire}", options);
-            Console.WriteLine(url + $"/{Id_partenaire}");
+                string responseBody = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("API Response: " + responseBody); // Afficher la réponse JSON 
+            */
+            ApiResponse? apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"contrat/{Id_partenaire}", options);
+            //Console.WriteLine(url + $"/{Id_partenaire}");
             if (apiResponse.Data != null)
             {
                 apiResponse.HandleResponse<ContratDto>();
@@ -84,7 +85,7 @@
     {
         try
         {
-            var response = await Http.PutAsJsonAsync($"{url}/{Id_partenaire}/{id_contrat}", contrat);
+            var response = await Http.PutAsJsonAsync($"contrat/{Id_partenaire}/{id_contrat}", contrat);
             // Optionally handle the response (e.g., show a success message)
             NavigationManager.NavigateTo("/partenaire"); // Redirect to product list
         }
@@ -94,4 +95,4 @@
             StateHasChanged();
         }
     }
-}
+} *@

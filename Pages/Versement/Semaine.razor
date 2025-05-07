@@ -1,9 +1,9 @@
 ﻿@page "/Semaine"
 
-@using LimsFrontEnd.Models
 @using LimsUtils.Api
-@inject NavigationManager navigation
 @inject HttpClient http
+@using LimsFrontEnd.Models
+@inject NavigationManager navigation
 
 <MudItem xs="7">
     <MudText Typo="Typo.h4" GutterBottom="true">Exportation des états journaliéres</MudText>
@@ -27,7 +27,7 @@
     MudForm reference;
 
     private ApiResponse? apiResponse;
-    string url = "http://localhost:5077/api/versement";
+    //string url = "http://localhost:5077/api/versement";
 
     SemaineDto semaine = new();
 
@@ -47,7 +47,7 @@
                 finSemaine = semaine.finSemaine
             };
   
-            var response = await http.PostAsJsonAsync($"{url}", week);
+            var response = await http.PostAsJsonAsync("versement", week);
 
             if (!response.IsSuccessStatusCode)
             {

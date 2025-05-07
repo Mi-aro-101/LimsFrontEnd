@@ -1,12 +1,11 @@
 ﻿@page "/demandenotedebit/{id_etat_decompte:int}"
 
-@using LimsFrontEnd.Models
-@using System.Text.Json
 @using LimsUtils.Api
-@inject HttpClient http
-@inject NavigationManager navigationManager
 @inject IJSRuntime JS
-
+@using System.Text.Json
+@inject HttpClient http
+@using LimsFrontEnd.Models
+@inject NavigationManager navigationManager
 
 <MudItem Class="pa-4">
     <MudText Typo="Typo.h2" Class="mb-4">Formulaire de demande de note de débit</MudText>
@@ -55,20 +54,24 @@
     </MudForm>
 </MudItem>
 
+<GeneratePdf IsVisible="@showPdf" pdfsBase64="@pdfsBase64" OnClose="@(() => showPdf = false)"/>
+
 @code {
     [Parameter] public int id_etat_decompte { get; set; }
     MudForm? reference;
     private DemandeDto demandeNote = new DemandeDto();
     private List<DemandeDto>? demandeNotes;
     private ApiResponse? apiResponse;
-    string url = "http://localhost:5077/api/notedebit";
+    //string url = "http://localhost:5077/api/notedebit";
+    public bool showPdf = false;
+    public List<string> pdfsBase64 = new List<string>();
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"{url}/{id_etat_decompte}", option);
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"notedebit/{id_etat_decompte}", option);
             apiResponse.HandleResponse<List<DemandeDto>>();
             demandeNotes = apiResponse.Data as List<DemandeDto> ?? new List<DemandeDto>();
 
@@ -112,7 +115,7 @@
                 idEtatDecompte = demandeNote.idEtatDecompte
             };
 
-            var response = await http.PostAsJsonAsync(url, nouvelleDemande);            
+            var response = await http.PostAsJsonAsync("notedebit", nouvelleDemande);            
 
             if (!response.IsSuccessStatusCode)
             {
@@ -121,25 +124,24 @@
             }
             else
             {
-                //navigationManager.NavigateTo("/demandenotedebit/liste");
+                showPdf = true;
                 var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
 
                 // 🔥 Extraction dynamique du PdfURL depuis Data
                 var dataDict = apiResponse.Data as JsonElement?;
-                if (dataDict != null && dataDict.Value.TryGetProperty("PdfBase64", out var pdfBase64Element))
+                if (dataDict != null && dataDict.Value.TryGetProperty("pdfBase64", out var pdfBase64Element))
                 {
+                    // Nettoie l'ancienne liste
+                    pdfsBase64.Clear();
+
                     if (pdfBase64Element.ValueKind == JsonValueKind.Array)
-                    {
-                        int index = 0;
+                    {                        
                         foreach (var base64Element in pdfBase64Element.EnumerateArray())
                         {
-                            string base64 = base64Element.GetString();
+                            string? base64 = base64Element.GetString();
                             if (!string.IsNullOrEmpty(base64))
                             {
-                                // Nom du document pour identification JS (optionnel si tu veux)
-                                string label = index == 0 ? "demande" : "note_de_debit";
-                                await JS.InvokeVoidAsync("downloadPdfFromBase64", base64, label);
-                                index++;
+                                pdfsBase64.Add(base64);
                             }
                         }
                     }
@@ -148,7 +150,8 @@
                         string base64 = pdfBase64Element.GetString();
                         if (!string.IsNullOrEmpty(base64))
                         {
-                            await JS.InvokeVoidAsync("downloadPdfFromBase64", base64, "demande");
+                           // await JS.InvokeVoidAsync("downloadPdfFromBase64", base64, "demande");
+                           pdfsBase64.Add(base64);
                         }
                     }
                     else
@@ -156,8 +159,6 @@
                         Console.WriteLine("❌ PdfBase64 n'est pas un tableau !");
                     }
                 }
-                
-                navigationManager.NavigateTo("/demandenotedebit/liste");
             }
         }
         catch (Exception ex)

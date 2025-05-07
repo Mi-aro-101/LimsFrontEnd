@@ -1,0 +1,159 @@
+@page "/Delai/liste"
+
+@using LimsUtils.Api
+@inject HttpClient http
+@using System.Text.Json
+@using LimsFrontEnd.Models
+@inject NavigationManager navigationManager
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">Délai accordé</MudText>
+
+    <MudTextField @bind-Value="searchText" Label="Recherche" Placeholder="Client ou Etat de décompte" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
+
+    <MudTable Items="FilteredData" Dense="true" RowsPerPage="10" Hover="true" FixedHeader="true" Height="300px">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Liste des délai à payer</MudText>
+        </ToolBarContent>
+
+        <HeaderContent>
+            <MudTh> N°</MudTh>
+            <MudTh> Nom du client </MudTh>
+            <MudTh> Réference de l'état de décompte </MudTh>
+            <MudTh> Date d'état de décompte </MudTh>
+            <MudTh> Date du paiement </MudTh>
+            <MudTh> Date du fin de paiement </MudTh>
+            <MudTh> Montant (Ar) </MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd> @context.id_etat_decompte </MudTd>
+            <MudTd> @context.nomClient </MudTd>
+            <MudTd> @context.referenceEtatDecompte </MudTd>
+            <MudTd> @(context.date_etat_decompte.ToString("dd MMM yyyy") ?? "N/A") </MudTd>
+            <MudTd> @(context.datePaiement.HasValue ? context.datePaiement.Value.ToString("dd MMM yyyy") : "N/A") </MudTd>
+            <MudTd> @(context.DateFinDelai.ToString("dd MMM yyyy") ?? "N/A") </MudTd>
+            <MudTd> @context.montant </MudTd>
+            <MudTd>
+                @if (delaiListe == context)
+                {
+                    <MudButton Color="Color.Success" OnClick="@(() => GoToPaiement(context.id_etat_decompte, context.modePaiement))">
+                        Payer maintenant
+                    </MudButton>
+                
+                    <MudButton Color="Color.Warning" OnClick="@(() => OuvrirPopup(context.id_etat_decompte))">
+                        Changer mode de paiement
+                    </MudButton>
+
+                    <ChangementPaiement IsVisible="@showChange" IdEtatDecompte="@selectedId" OnClose="@(() => showChange = false)" />
+
+                    <MudButton Color="Color.Error" OnClick="CancelEdit">Annuler</MudButton>
+                }
+                else
+                {
+                    <MudButton Color="Color.Primary" OnClick="@(() => EditRow(context))">Action</MudButton>
+                }
+            </MudTd>            
+        </RowTemplate>
+    </MudTable>
+
+    <MudPaper Class="pa-3 mt-4" Elevation="4">
+        <MudText Typo="Typo.h6">Arrêté à la somme de : <b>@FilteredData.Sum(x => x.montant).ToString("F2") Ar</b></MudText>
+    </MudPaper>
+</MudPaper>
+
+@code {
+    private string searchText = "";
+    private bool showChange = false;
+    private int selectedId;
+
+    private void OuvrirPopup(int id)
+    {
+        selectedId = id;
+        showChange = true;
+    }
+
+    private DelaiDto? delaiListe;
+    private List<DelaiDto> delaiListes = new List<DelaiDto>();
+    private ApiResponse? apiResponse;
+    //string url = "http://localhost:5077/api/delai";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>("delai/ListeDelaiApayer", option);
+            if (apiResponse != null)
+            {
+                apiResponse.HandleResponse<List<DelaiDto>>();
+            }
+            delaiListes = apiResponse?.Data as List<DelaiDto> ?? new List<DelaiDto>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+
+    private List<DelaiDto> FilteredData
+    {
+        get
+        {
+            var result = delaiListes
+            .Where(x => string.IsNullOrWhiteSpace(searchText)
+                || x.referenceEtatDecompte.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                || x.nomClient.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+            return result;
+        }
+    }
+
+    private void EditRow(DelaiDto delai)
+    {
+        delaiListe = delai;
+    }
+
+    private async void GoToPaiement(int id_etat_decompte, int modePaiement)
+    {
+        var requestUri = $"delai/PaiementDirect/{id_etat_decompte}/{modePaiement}";
+
+        var response = await http.PutAsJsonAsync<ApiResponse>(requestUri, null);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            // Affiche un message d'erreur à l'utilisateur
+            Console.WriteLine("Erreur lors de l'appel de l'API externe.");
+            return;
+        }
+
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        var apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
+
+        if (apiResponse?.IsSuccess == true)
+        {
+            // ✅ Paiement validé, on redirige selon le mode
+            switch (modePaiement)
+            {
+                case 1:
+                    navigationManager.NavigateTo($"/receptionEspece");
+                    break;
+                case 2:
+                    navigationManager.NavigateTo($"/choixoperateur/{id_etat_decompte}");
+                    break;
+                default:
+                    Console.WriteLine("Mode de paiement non reconnu.");
+                    break;
+            }
+        }
+        else
+        {
+            Console.WriteLine("Ohatran'ny nisy olana tao a");
+        }
+    }   
+
+    private void CancelEdit()
+    {
+       delaiListe = null; // Annuler l'édition
+    }
+}

@@ -1,9 +1,9 @@
 ﻿@page "/depart"
 
-@using LimsFrontEnd.Models
 @using LimsUtils.Api
 @using System.Text.Json
 @inject HttpClient http
+@using LimsFrontEnd.Models
 @inject NavigationManager navigationManager
 
 <MudPaper Class="pa-4 mx-auto" Style="max-width: 500px;">
@@ -35,13 +35,13 @@
     private List<DestinataireDto>? destinataires;
     private ApiResponse? apiresponse;
 
-    private string url = "http://localhost:5077/api/depart";
+    //private string url = "http://localhost:5077/api/depart";
 
     protected override async Task OnInitializedAsync()
     {
         // Récupérer les destinataires depuis l'API
         var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        apiresponse = await http.GetFromJsonAsync<ApiResponse>($"{url}/destinataireListe",option);
+        apiresponse = await http.GetFromJsonAsync<ApiResponse>("depart/destinataireListe",option);
         apiresponse.HandleResponse<List<DestinataireDto>>();
         destinataires = apiresponse.Data as List<DestinataireDto> ?? new List<DestinataireDto>();
     }
@@ -52,12 +52,11 @@
 
         if (departForm.IsValid)
         {
-            var response = await http.PostAsJsonAsync($"{url}/addDepart", departModel);
+            var response = await http.PostAsJsonAsync("depart/addDepart", departModel);
 
             if (response.IsSuccessStatusCode)
             {
                 // Redirection ou message de succès
-                //navigationManager.NavigateTo("/depart", forceLoad: true);
                 navigationManager.NavigateTo("/depart/liste");
             }
             else

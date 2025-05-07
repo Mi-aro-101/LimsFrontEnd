@@ -1,11 +1,10 @@
 ﻿@page "/receptionMobile/{operateur}"
 
-@using LimsFrontEnd.Models
 @using LimsUtils.Api
 @using System.Text.Json
 @inject HttpClient http
+@using LimsFrontEnd.Models
 @inject NavigationManager navigationManager
-
 
 <MudItem xs="7">
     <MudText Typo="Typo.h5" GutterBottom="true">Réception de l'argent par mobile</MudText>
@@ -13,6 +12,9 @@
         <MudGrid>
             <MudItem xs="12">
                 <MudTextField T="string" Label="Etat de décompte" @bind-Value="recue.referenceEtatDecompte" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="double" Label="Montant à payer" @bind-Value="recue.montantApayer" Variant="Variant.Text" Margin="Margin.Dense" />
             </MudItem>
             <MudItem xs="12">
                 <MudTextField T="string" Label="Opérateur mobile" @bind-Value="@operateur" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true"/>
@@ -37,14 +39,14 @@
     public string operateur { get; set; } = string.Empty;
 
     private ApiResponse? apiResponse;
-    string url = "http://localhost:5077/api/receptionpaiementmobile";
+    //string url = "http://localhost:5077/api/receptionpaiementmobile";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await http.GetFromJsonAsync<ApiResponse>(url+"/Confirmer", option);
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>("receptionpaiementmobile/Confirmer", option);
             apiResponse.HandleResponse<RecuDto>();
             recue = apiResponse.Data as RecuDto ?? new RecuDto();
         }
@@ -64,13 +66,14 @@
                 return;
             }
 
-            var recuPaiementEspece = new RecuDto
-                {
-                    montantRecu = recue.montantRecu,
-                    id_paiement = recue.id_paiement
-                };
+            var recuPaiementMobile = new RecuDto
+            {
+                referenceMobile = recue.referenceMobile,
+                operateurmobile = operateur,
+                id_paiement = recue.id_paiement
+            };
 
-            var response = await http.PostAsJsonAsync(url, recuPaiementEspece);
+            var response = await http.PostAsJsonAsync("receptionpaiementmobile", recuPaiementMobile);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -79,7 +82,7 @@
             }
             else
             {
-                navigationManager.NavigateTo("/demandenotedebit/liste");
+                navigationManager.NavigateTo("/demandenotedebit/demande");
             }
         }
         catch (Exception ex)

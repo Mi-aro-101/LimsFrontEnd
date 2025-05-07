@@ -1,10 +1,10 @@
 ﻿@page "/destinataire/{Id_destinataire:int}"
 
-@inject HttpClient Http
-@inject NavigationManager NavigationManager
-@using LimsFrontEnd.Models
 @using LimsUtils.Api
+@inject HttpClient Http
 @using System.Text.Json
+@using LimsFrontEnd.Models
+@inject NavigationManager NavigationManager
 
 <MudContainer MaxWidth="MaxWidth.ExtraSmall" Class="mt-6">
     <MudPaper Elevation="4" Class="p-6 rounded-2xl">
@@ -31,7 +31,7 @@
 @code {
     private MudForm form;
     private DestinataireDto destinataire = new();
-    private string url = "http://localhost:5077/api/destinataire";
+    //private string url = "http://localhost:5077/api/destinataire";
     private string? exception;
     [Parameter] public int Id_destinataire { get; set; }
 
@@ -42,7 +42,7 @@
         try
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{url}/{Id_destinataire}", options);
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"destinataire/{Id_destinataire}", options);
             if (apiResponse?.Data != null)
             {
                 apiResponse.HandleResponse<DestinataireDto>();
@@ -59,7 +59,7 @@
     {
         try
         {
-            var response = await Http.PutAsJsonAsync($"{url}/{Id_destinataire}", destinataire);
+            var response = await Http.PutAsJsonAsync($"destinataire/{Id_destinataire}", destinataire);
             NavigationManager.NavigateTo("/destinataire");
         }
         catch (Exception ex)

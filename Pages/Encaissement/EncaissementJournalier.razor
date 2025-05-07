@@ -1,9 +1,9 @@
 ﻿@page "/etatjournalier"
 
-@using LimsFrontEnd.Models
 @using LimsUtils.Api
 @using System.Text.Json
 @inject HttpClient http
+@using LimsFrontEnd.Models
 
 <MudPaper Class="p-6 mx-auto mt-6" MaxWidth="xl" Elevation="4" Style="border-radius: 16px;">
     <MudStack Spacing="3">
@@ -36,7 +36,7 @@
             </HeaderContent>
 
             <RowTemplate>
-                <MudTd>@(context.dateEncaissement?.ToString("dd/MM/yyyy") ?? "N/A")</MudTd>
+                <MudTd>@(context.dateEncaissement.HasValue ? context.dateEncaissement.Value.ToString("dd MMM yyyy") : "N/A")</MudTd>
                 <MudTd>@context.EtatDecompte</MudTd>
                 <MudTd>@context.clients</MudTd>
                 <MudTd>@context.montant.ToString("N0")</MudTd>
@@ -65,14 +65,14 @@
 
     private List<EncaissementJournalierDto> data = new List<EncaissementJournalierDto>();
     private ApiResponse? apiResponse;
-    string url = "http://localhost:5077/api/encaissement";
+    //string url = "http://localhost:5077/api/encaissement";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"{url}", option);
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>("encaissement", option);
             apiResponse.HandleResponse<List<EncaissementJournalierDto>>();
             data = apiResponse.Data as List<EncaissementJournalierDto> ?? new List<EncaissementJournalierDto>();
         }

@@ -9,17 +9,54 @@
 <MudNavMenu Margin="Margin.Dense" Color="Color.Warning">
 
     <div class="nav-item px-3">
-        <MudNavGroup Title="Note de Débit" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.ReceiptLong" Expanded="false">
-            <MudNavLink Href="/demandenotedebit/verification" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.CheckCircle">
-                Vérification
+        <MudNavGroup Title="Dashboard" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Dashboard" Expanded="false">
+            <MudNavLink Href="/Dashboard/paiement" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.PieChart">
+                Paiement
             </MudNavLink>
+            <MudNavLink Href="/Dashboard/delai" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.PieChart">
+                Délai
+            </MudNavLink>
+        </MudNavGroup>
+    </div>
+
+    <div class="nav-item px-3">
+        <MudNavLink Href="/prestation/apayer" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.WorkOutline" Class="nav-item px-3">
+            Prestation
+        </MudNavLink>
+    </div>
+
+    <div class="nav-item px-3">
+        <MudNavGroup Title="Liste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.List" Expanded="false">
+            <MudNavLink Href="/Delai/liste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.List">
+                Délais
+            </MudNavLink>
+            <MudNavLink Href="/SousContrat/liste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Description">
+                Sous Contrats
+            </MudNavLink>
+            <MudNavLink Href="/VirementBancaire/Liste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AccountBalance">
+                Virements Bancaires
+            </MudNavLink>
+        </MudNavGroup>
+    </div>
+
+    <div class="nav-item px-3">
+        <MudNavGroup Title="Note de Débit" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.ReceiptLong" Expanded="false">
             <MudNavLink Href="/demandenotedebit/demande" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Create">
                 Nouvelle Demande
             </MudNavLink>
             <MudNavLink Href="/demandenotedebit/liste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.FormatListBulleted">
                 Liste des Demandes
             </MudNavLink>
+            <MudNavLink Href="/demandenotedebit/verification" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.CheckCircle">
+                Vérification
+            </MudNavLink>
         </MudNavGroup>
+    </div>
+
+    <div class="nav-item px-3">
+        <MudNavLink Href="/destinataire" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Person" Class="nav-item px-3">
+            Destinataires
+        </MudNavLink>
     </div>
 
     <div class="nav-item px-3">
@@ -32,7 +69,7 @@
             </MudNavLink>
         </MudNavGroup>
     </div>
-
+    
     <div class="nav-item px-3">
         <MudNavLink Href="/etatjournalier" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Assessment" Class="nav-item px-3">
             État Journalier
@@ -48,18 +85,6 @@
                 Versement Hebdomadaire
             </MudNavLink>
         </MudNavGroup>
-    </div>
-
-    <div class="nav-item px-3">
-         <MudNavLink Href="/destinataire" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Person" Class="nav-item px-3">
-            Destinataires
-        </MudNavLink>
-    </div>
-
-    <div class="nav-item px-3">
-        <MudNavLink Href="/partenaire" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Groups" Class="nav-item px-3">
-            Partenaires
-        </MudNavLink>
     </div>
 
 </MudNavMenu>

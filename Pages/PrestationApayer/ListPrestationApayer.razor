@@ -1,0 +1,86 @@
+@page "/prestation/apayer"
+
+@using LimsUtils.Api
+@inject HttpClient http
+@using System.Text.Json
+@using LimsFrontEnd.Models
+@inject NavigationManager navigationManager
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4"> Prestaions à payer </MudText>
+
+    <MudTextField @bind-Value="searchText" Label="Recherche" Placeholder="Client ou Etat de décompte" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
+
+    <MudTable Items="FilteredData" Dense="true" RowsPerPage="10" Hover="true" FixedHeader="true" Height="300px">
+
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Liste des prestaions</MudText>
+        </ToolBarContent>
+
+        <HeaderContent> 
+            <MudTh> Nom du client </MudTh>
+            <MudTh> Réference de l'état de décompte </MudTh>
+            <MudTh> Date du prestation </MudTh>
+            <MudTh> Montant (Ar) </MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd> @context.clients </MudTd>
+            <MudTd> @context.etatDecompte </MudTd>
+            <MudTd> @(context.DatePaiement.ToString("dd MMM yyyy") ?? "N/A") </MudTd>
+            <MudTd> @context.montant </MudTd>
+            <MudTd>
+                <MudButton Color="Color.Primary" OnClick="@(() => EditRow(context.id_etat_decompte))">Payé</MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    <MudPaper Class="pa-3 mt-4" Elevation="4">
+        <MudText Typo="Typo.h6">Arrêté à la somme de : <b>@FilteredData.Sum(x => x.montant).ToString("F2") Ar</b></MudText>
+    </MudPaper>
+        
+</MudPaper>
+
+@code{
+    private string searchText = "";
+
+    private PaiementDto? prestationListe;
+    private List<PaiementDto> prestationListes = new List<PaiementDto>();
+    private ApiResponse? apiResponse;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>("delai/prestations", option);
+            if (apiResponse != null)
+            {
+                apiResponse.HandleResponse<List<PaiementDto>>();
+            }
+            prestationListes = apiResponse?.Data as List<PaiementDto> ?? new List<PaiementDto>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+
+    private List<PaiementDto> FilteredData
+    {
+        get
+        {
+            var result = prestationListes
+            .Where(x => string.IsNullOrWhiteSpace(searchText)
+                || x.etatDecompte.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                || x.clients.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+            return result;
+        }
+    }
+
+     private void EditRow(int id_etat_decompte)
+    {
+        navigationManager.NavigateTo($"/choixpaiement/{id_etat_decompte}");   
+    }
+}

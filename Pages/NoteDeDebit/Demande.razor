@@ -1,9 +1,9 @@
 ﻿@page "/demandenotedebit/demande"
 
-@using LimsFrontEnd.Models
 @using LimsUtils.Api
 @using System.Text.Json
 @inject HttpClient http
+@using LimsFrontEnd.Models
 @inject NavigationManager navigationManager
 
 <MudPaper Class="pa-4">
@@ -26,7 +26,7 @@
         <RowTemplate>
             <MudTd> @context.reference </MudTd>
             <MudTd> @context.referenceEtatDecompte </MudTd>
-            <MudTd> @(context.dateEtatDecompte?.ToString("dd/MM/yyyy", new System.Globalization.CultureInfo("fr-FR")) ?? "N/A") </MudTd>
+            <MudTd> @(context.dateEtatDecompte.HasValue ? context.dateEtatDecompte.Value.ToString("dd MMM yyyy") : "N/A") </MudTd>
             <MudTd> @context.montant </MudTd>
             <MudTd>
                 @if (demandeNote == context)
@@ -53,14 +53,14 @@
     private DemandeDto? demandeNote;
     private List<DemandeDto> demandeNotes = new List<DemandeDto>();
     private ApiResponse? apiResponse;
-    string url = "http://localhost:5077/api/notedebit";
+    //string url = "http://localhost:5077/api/notedebit";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"{url}/demande_a_faire", option);
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>("notedebit/demande_a_faire", option);
             apiResponse.HandleResponse<List<DemandeDto>>();
             demandeNotes = apiResponse.Data as List<DemandeDto> ?? new List<DemandeDto>();
         }

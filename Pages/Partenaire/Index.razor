@@ -1,4 +1,4 @@
-﻿@page "/partenaire"
+﻿@* @page "/partenaire"
 
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
@@ -8,18 +8,18 @@
 @using System.Threading.Tasks
 @using LimsFrontEnd.Models
 @using LimsUtils.Api
-@using System.Text.Json;
+@using System.Text.Json; *@
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-6 px-4">
+<!--MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-6 px-4">
     <MudGrid GutterSize="24px">
-        <!-- Formulaire d'ajout -->
+        -- Formulaire d'ajout --
         <MudItem xs="12" md="4">
             <MudPaper Elevation="4" Class="pa-4 rounded-xl shadow-md">
                 <CreateComponent OnContratCreated="@HandleContratCreated" />
             </MudPaper>
         </MudItem>
 
-        <!-- Liste des contrats -->
+        -- Liste des contrats --
         <MudItem xs="12" md="8">
             <MudPaper Elevation="4" Class="pa-4 rounded-xl shadow-md">
                 <MudText Typo="Typo.h6" Class="mb-4">Liste des partenaires</MudText>
@@ -40,7 +40,7 @@
                         var totalPages = int.Parse(apiResponse.ViewBag["TotalCount"].ToString());
                         var pageLinks = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
 
-                        <!-- Table -->
+                        -- Table --
                         <MudTable Items="contrats" Dense="true" Hover="true" Class="rounded-lg">
                             <HeaderContent>
                                 <MudTh>Nom</MudTh>
@@ -51,17 +51,17 @@
                             </HeaderContent>
                             <RowTemplate Context="contrat">
                                 <MudTd>@contrat.nomEntreprise</MudTd>
-                                <MudTd>@(contrat.etat == 200 ? "sous contrat" : (contrat.etat == 400 ? "rupture de contrat" : ""))</MudTd>
+                                @* <MudTd>@(contrat.etat == 200 ? "sous contrat" : (contrat.etat == 400 ? "rupture de contrat" : ""))</MudTd> *@
                                 <MudTd>@contrat.referenceContrat</MudTd>
-                                <MudTd>@contrat.datePaiement?.ToShortDateString()</MudTd>
+                                @* <MudTd>@(contrat.datePaiement.HasValue ? contrat.datePaiement.Value.ToString("dd MMM yyyy") : "N/A")</MudTd> *@
                                 <MudTd Align="Align.Center">
                                     <MudButton Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" Color="Color.Warning"
-                                            Size="Size.Small" OnClick="() => HandleUpdate(contrat.idContratPartenaire)" />
+                                            Size="Size.Large" OnClick="() => HandleUpdate(contrat.idContratPartenaire)" />
                                 </MudTd>
                             </RowTemplate>
                         </MudTable>
 
-                        <!-- Pagination -->
+                        -- Pagination --
                         <MudStack Direction="Row" JustifyContent="Center" Class="mt-4">
                             <MudPagination Page="@currentPage"
                                         PageSize="@pageSize"
@@ -77,14 +77,14 @@
             </MudPaper>
         </MudItem>
     </MudGrid>
-</MudContainer>
+</MudContainer-->
 
-@code {
+@* @code {
     private List<ContratDto> contrats = new List<ContratDto>();
     private ApiResponse? apiResponse;
     private int currentPage = 1;
     private int pageSize = 5; 
-    private string url = "http://localhost:5077/api/contrat";
+    //private string url = "http://localhost:5077/api/contrat";
 
     private async Task HandleContratCreated()
     {
@@ -113,7 +113,7 @@
         try
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url + "?position=" + currentPage + "&pageSize=" + pageSize, options);
+            apiResponse = await Http.GetFromJsonAsync<ApiResponse>("contrat" + "?position=" + currentPage + "&pageSize=" + pageSize, options);
 
             if (apiResponse == null)
             {
@@ -148,5 +148,4 @@
     {
         NavigationManager.NavigateTo($"/partenaire/{id}");
     }
-}
-
+} *@

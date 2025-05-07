@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <Reference Include="ApiService">
-        <HintPath>.\lib\ApiService.dll</HintPath>
+      <HintPath>.\lib\ApiService.dll</HintPath>
     </Reference>
     <PackageReference Include="Blazor.Bootstrap" Version="3.3.0" />
     <PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />

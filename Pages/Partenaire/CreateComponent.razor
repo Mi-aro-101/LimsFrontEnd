@@ -1,13 +1,13 @@
-﻿@using System.Net.Http.Json
+﻿@* @using System.Net.Http.Json
 @using System.Collections.Generic
 @using System.Threading.Tasks
 @using LimsFrontEnd.Models
 @using LimsUtils.Api
 @using System.Text.Json;
 @inject HttpClient Http
-@inject NavigationManager NavigationManager
+@inject NavigationManager NavigationManager *@
 
-<MudCard Class="rounded-xl shadow-md" MaxWidth="100%">
+<!--MudCard Class="rounded-xl shadow-md" MaxWidth="100%">
     <MudCardHeader>
         <MudText Typo="Typo.h6" Class="text-center">Nouveau partenaire</MudText>
     </MudCardHeader>
@@ -28,13 +28,13 @@
             </MudCardActions>
         </MudForm>
     </MudCardContent>
-</MudCard>
+</MudCard-->
 
 
-@code {
+@* @code {
     private MudForm form;
     private ContratDto contrat = new();
-    private string url = "http://localhost:5077/api/contrat";
+    //private string url = "http://localhost:5077/api/contrat";
 
     [Parameter]
     public EventCallback OnContratCreated { get; set; }
@@ -57,7 +57,7 @@
                 datePaiement = contrat.datePaiement
             };                   
 
-            var response = await Http.PostAsJsonAsync(url + "/ajout", contrats);            
+            var response = await Http.PostAsJsonAsync("contrat/ajout", contrats);            
 
             if (!response.IsSuccessStatusCode)
             {
@@ -79,4 +79,4 @@
             Console.WriteLine("Exception: " + ex.Message);
         }
     }
-}
+} *@

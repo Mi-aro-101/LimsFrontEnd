@@ -15,6 +15,9 @@
                 <MudTextField T="string" Label="Etat de décompte" @bind-Value="recue.referenceEtatDecompte" Variant="Variant.Text" Margin="Margin.Dense" />
             </MudItem>
             <MudItem xs="12">
+                <MudTextField T="double" Label="Montant à payer" @bind-Value="recue.montantApayer" Variant="Variant.Text" Margin="Margin.Dense"/>
+            </MudItem>
+            <MudItem xs="12">
                 <MudTextField T="double" Label="Montant reçu" @bind-Value="recue.montantRecu" Variant="Variant.Text" Margin="Margin.Dense"/>
             </MudItem>
             <MudItem xs="12">
@@ -32,14 +35,14 @@
     RecuDto recue = new RecuDto();
 
     private ApiResponse? apiResponse;
-    string url = "http://localhost:5077/api/receptionpaiementespece";
+    //string url = "http://localhost:5077/api/receptionpaiementespece";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await http.GetFromJsonAsync<ApiResponse>(url+"/Confirmer", option);
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>("receptionpaiementespece/Confirmer", option);
             apiResponse.HandleResponse<RecuDto>();
             recue = apiResponse.Data as RecuDto ?? new RecuDto();
         }
@@ -65,7 +68,7 @@
                id_paiement = recue.id_paiement
             };
 
-            var response = await http.PostAsJsonAsync(url, recuPaiementEspece);
+            var response = await http.PostAsJsonAsync("receptionpaiementespece", recuPaiementEspece);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -74,7 +77,7 @@
             }
             else
             {
-                navigationManager.NavigateTo("/demandenotedebit/liste");
+                navigationManager.NavigateTo("/demandenotedebit/demande");
             }
         }
         catch (Exception ex)

@@ -12,7 +12,7 @@ namespace LimsFrontEnd.Models
         [JsonPropertyName("referenceMobile")]
         public int referenceMobile { get; set; }
         [JsonPropertyName("operateurmobile")]
-        public int operateurmobile { get; set; }
+        public string? operateurmobile { get; set; }
 
         //reception virement
         [JsonPropertyName("referenceOV")]
@@ -21,6 +21,8 @@ namespace LimsFrontEnd.Models
         public string? banque { get; set; }
 
         //attribut commun
+        [JsonPropertyName("montantApayer")]
+        public double montantApayer { get; set; }
         [JsonPropertyName("referenceEtatDecompte")]
         public string? referenceEtatDecompte { get; set; }
         [JsonPropertyName("id_paiement")]

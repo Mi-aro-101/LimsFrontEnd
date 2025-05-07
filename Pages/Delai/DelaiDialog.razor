@@ -1,7 +1,8 @@
-@using LimsFrontEnd.Models
-@using System.Text.Json
 @using LimsUtils.Api
+@using System.Text.Json
 @inject HttpClient http
+@using LimsFrontEnd.Models
+@inject NavigationManager navigationManager
 
 @if (IsVisible)
 {
@@ -17,12 +18,8 @@
                     <label style="margin-left: 1rem;">
                         <InputRadio Value="2" /> Mobile
                     </label>
-                    <label style="margin-left: 1rem;">
-                        <InputRadio Value="3" /> Virement
-                    </label>
                 </InputRadioGroup>
-                <p>Vous avez sélectionné : @delaiDto.modePaiement</p>
-                <MudTable Items="delaiDtos">
+                <MudTable Items="delaiDtos" Dense="true" Hover="true" FixedHeader="true" Height="150px">
                     <HeaderContent>
                         <MudTh> Référence de l'état de décompte </MudTh>
                         <MudTh> Date de paiement </MudTh>
@@ -30,11 +27,12 @@
                     </HeaderContent>
                     <RowTemplate Context="row">                       
                         <MudTd>@row.referenceEtatDecompte</MudTd>
-                        <MudTd>@(row.datePaiement?.ToString("dd/MM/yyyy") ?? "N/A")</MudTd>
+                        <MudTd>@(row.datePaiement.HasValue ? row.datePaiement.Value.ToString("dd MMM yyyy") : "N/A")</MudTd>
                         <MudTd>@row.nombreEchantillon</MudTd>                    
                     </RowTemplate>
                 </MudTable>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">Accorder</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" ButtonType="ButtonType.Submit">Accorder</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" @onclick="CloseDialog">Refuser</MudButton>
             </EditForm>
         </div>
     </div>
@@ -45,7 +43,7 @@
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public ApiResponse? ApiResponse { get; set; }
 
-    string url = "http://localhost:5077/api/delai";
+    //string url = "http://localhost:5077/api/delai";
 
     private DelaiDto delaiDto = new DelaiDto();
 
@@ -114,7 +112,7 @@
             
             Console.WriteLine($"information délai: {delai.datePaiement}, {delai.EtatPaiement}, {delai.id_etat_decompte}, {delai.DateFinDelai}, {delai.modePaiement}");
 
-            var response = await http.PostAsJsonAsync(url, delai);
+            var response = await http.PostAsJsonAsync("delai", delai);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -124,11 +122,18 @@
             else
             {
                 await OnClose.InvokeAsync();
+                navigationManager.NavigateTo("/Delai/liste");
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Erreur lors de la fermeture du dialogue : {ex.Message}");
         }        
+    }
+
+    private async void CloseDialog()
+    {
+        IsVisible = false;
+        await OnClose.InvokeAsync();
     }
 }

@@ -1,10 +1,10 @@
-﻿@using System.Net.Http.Json
-@using System.Collections.Generic
-@using System.Threading.Tasks
-@using LimsFrontEnd.Models
-@using LimsUtils.Api
+﻿@using LimsUtils.Api
 @using System.Text.Json;
 @inject HttpClient Http
+@using LimsFrontEnd.Models
+@using System.Net.Http.Json
+@using System.Threading.Tasks
+@using System.Collections.Generic
 @inject NavigationManager NavigationManager
 
 <MudCard Elevation="3" Class="p-4 rounded-xl">
@@ -25,7 +25,7 @@
 @code {
     private MudForm form;
     private DestinataireDto destinataire = new();
-    private string url = "http://localhost:5077/api/destinataire";
+    //private string url = "http://localhost:5077/api/destinataire";
 
     [Parameter]
     public EventCallback OnDestinataireCreated { get; set; }
@@ -45,7 +45,7 @@
                designation = destinataire.designation    
             };
 
-            var response = await Http.PostAsJsonAsync(url + "/ajout", destinataires);
+            var response = await Http.PostAsJsonAsync("destinataire/ajout", destinataires);
 
             if (!response.IsSuccessStatusCode)
             {

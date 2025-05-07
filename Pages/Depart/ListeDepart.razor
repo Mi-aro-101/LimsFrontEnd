@@ -1,9 +1,9 @@
 ﻿@page "/depart/liste"
 
-@using LimsFrontEnd.Models
 @using LimsUtils.Api
 @using System.Text.Json
 @inject HttpClient http
+@using LimsFrontEnd.Models
 
 <MudPaper Class="pa-4">
     <MudText Typo="Typo.h2" Class="mb-4">Liste des départs</MudText>
@@ -25,8 +25,7 @@
         <RowTemplate>
             <MudTd> @context.reference </MudTd>
             <MudTd> @context.objet </MudTd>
-            <!--<MudTd> @(context.DateDepart?.ToString("dd/MM/yyyy", new System.Globalization.CultureInfo("fr-FR")) ?? "N/A") </MudTd>-->
-            <MudTd> @(context.DateDepart?.ToString("dd/MM/yyyy") ?? "N/A") </MudTd>
+            <MudTd> @(context.DateDepart.HasValue ? context.DateDepart.Value.ToString("dd MMM yyyy") : "N/A") </MudTd> 
             <MudTd> @context.designationDestinataire </MudTd>                
         </RowTemplate>
     </MudTable>
@@ -38,14 +37,14 @@
 
     private List<DepartDto> departs = new List<DepartDto>();
     private ApiResponse? apiResponse;
-    string url = "http://localhost:5077/api/depart";
+    //string url = "http://localhost:5077/api/depart";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"{url}/ListeDepart", option);
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>("depart/ListeDepart", option);
             apiResponse.HandleResponse<List<DepartDto>>();
             departs = apiResponse.Data as List<DepartDto> ?? new List<DepartDto>();
         }

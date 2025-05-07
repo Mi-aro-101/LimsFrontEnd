@@ -38,6 +38,7 @@
     <script src="js/bootstrap/bootstrap.bundle.min.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="js/chiffre-affaire.js"></script>
+    <script src="js/Pdf-generation.js"></script>
 
     <!--firebase-->
     <script type="module">
@@ -64,27 +65,5 @@
         const analytics = getAnalytics(app);
     </script>
 
-    <!--Pdf Demande-->
-    <script>
-        window.downloadPdfFromBase64 = function (base64Data, label) {
-            const byteCharacters = atob(base64Data);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-            }
-    
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: 'application/pdf' });
-            const blobUrl = URL.createObjectURL(blob);
-    
-            // Ouvre dans un nouvel onglet avec un nom dans le titre
-            const newWindow = window.open();
-            if (newWindow) {
-                newWindow.document.write(
-                    `<title>${label ?? "document"}</title><iframe src="${blobUrl}" type="application/pdf" width="100%" height="100%"></iframe>`
-                );
-            }
-        }
-    </script>
 </body>
 </html>

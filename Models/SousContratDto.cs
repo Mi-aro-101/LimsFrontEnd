@@ -6,7 +6,7 @@ namespace LimsFrontEnd.Models
     {
         [JsonPropertyName("paiement")]
         public PaiementDto? Paiement { get; set; }
-        [JsonPropertyName("contrat")]
-        public ContratDto? Contrat { get; set; }
+        // [JsonPropertyName("contrat")]
+        // public ContratDto? Contrat { get; set; }
     }
 }

@@ -1,9 +1,9 @@
 ﻿@page "/demandenotedebit/liste"
 
-@using LimsFrontEnd.Models
 @using LimsUtils.Api
 @using System.Text.Json
 @inject HttpClient http
+@using LimsFrontEnd.Models
 
 <MudPaper Class="pa-4">
     <MudText Typo="Typo.h2" Class="mb-4">Liste des demandes</MudText>
@@ -26,13 +26,11 @@
 
         <RowTemplate>
             <MudTd> @context.reference </MudTd>
-            <!--MudTd> @(context.dateDemande?.ToString("dd/MM/yyyy", new System.Globalization.CultureInfo("fr-FR")) ?? "N/A") </MudTd-->
-            <MudTd> @(context.dateDemande?.ToString("dd/MM/yyyy") ?? "N/A") </MudTd>
+            <MudTd> @(context.dateDemande.HasValue ? context.dateDemande.Value.ToString("dd MMM yyyy") : "N/A") </MudTd>
             <MudTd> @context.objet </MudTd>
             <MudTd> @context.montant </MudTd>
             <MudTd> @context.referenceEtatDecompte </MudTd>
-            <!--MudTd> @(context.dateEtatDecompte?.ToString("dd/MM/yyyy", new System.Globalization.CultureInfo("fr-FR")) ?? "N/A") </MudTd-->
-            <MudTd> @(context.dateEtatDecompte?.ToString("dd/MM/yyyy") ?? "N/A") </MudTd>
+            <MudTd> @(context.dateEtatDecompte.HasValue ? context.dateEtatDecompte.Value.ToString("dd MMM yyyy") : "N/A") </MudTd>
         </RowTemplate>
     </MudTable>
 
@@ -46,14 +44,14 @@
 
     private List<DemandeDto> demandeNotes = new List<DemandeDto>();
     private ApiResponse? apiResponse;
-    string url = "http://localhost:5077/api/notedebit";
+    //string url = "http://localhost:5077/api/notedebit";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"{url}/allliste", option);
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>("notedebit/allliste", option);
             apiResponse.HandleResponse<List<DemandeDto>>();
             demandeNotes = apiResponse.Data as List<DemandeDto> ?? new List<DemandeDto>();
         }
@@ -68,10 +66,10 @@
         get
         {
             return demandeNotes
-        .Where(x => string.IsNullOrWhiteSpace(searchText) ||
-                x.objet.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-                x.referenceEtatDecompte.Contains(searchText, StringComparison.OrdinalIgnoreCase))
-        .ToList();
+                .Where(x => string.IsNullOrWhiteSpace(searchText) ||
+                        x.objet.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                        x.referenceEtatDecompte.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+                .ToList();
         }
     }    
 }

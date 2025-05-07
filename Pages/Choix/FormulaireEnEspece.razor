@@ -1,77 +1,10 @@
 ﻿@page "/formulaireEspece/{id_etat_decompte:int}"
 
-@using System.Text.Json
-@using LimsFrontEnd.Models
 @using LimsUtils.Api
+@using System.Text.Json
 @inject HttpClient http
+@using LimsFrontEnd.Models
 @inject NavigationManager navigationManager
-
-<!--<MudItem Class="pa-4">
-    <MudText Typo="Typo.h3" GutterBottom="true"> Formulaire de paiement en espèce</MudText>
-    <MudForm Model="@espece" @ref="reference">
-        <MudGrid>
-             Checkbox pour afficher les informations client
-            <MudItem xs="12">
-                <MudButton OnClick="ToggleAfficherClient">Client</MudButton>
-            </MudItem>     
-            
-            @if (AfficherClient)
-            {
-                Information Client (Caché au départ)
-                <MudItem xs="12">
-                    <MudTextField T="string" label="Titre" @bind-Value="espece.titre" Required="true" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
-                </MudItem>
-                <MudItem xs="12">
-                    <MudTextField T="string" Label="Clients" @bind-Value="espece.clients" Required="true" Variant="Variant.Text" Margin="Margin.Dense" HelperText="Particulier ou Entreprise" HelperTextOnFocus="true" Disabled="true" />
-                </MudItem>
-                <MudItem xs="12">
-                    <MudTextField T="string" Label="Identité" @bind-Value="espece.identite" Required="true" Variant="Variant.Text" Margin="Margin.Dense" HelperText="CIN ou NIF/STAT ou Passeport" HelperTextOnFocus="true" Disabled="true" />
-                </MudItem>
-                <MudItem xs="6">
-                    <MudTextField T="string" Label="Adresse" @bind-Value="espece.adresse" Required="true" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
-                </MudItem>
-                <MudItem xs="6">
-                    <MudTextField T="string" Label="Contact" @bind-Value="espece.contact" Required="true" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
-                </MudItem>
-                <MudItem xs="12">
-                    <MudTextField T="string" Label="Email" @bind-Value="espece.email" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
-                </MudItem>
-                <MudItem xs="12">
-                    <MudTextField T="string" Label="Etat de décompte" @bind-Value="espece.etatDecompte" Required="true" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
-                </MudItem>
-            }
-
-            @if (!AfficherClient)
-            {
-                 Information du Payant 
-                <MudItem xs="12">
-                    <MudTextField T="string" Label="Nom du Payant" @bind-Value="espece.nomPayant" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12">
-                    <MudTextField T="string" Label="Prénom du Payant" @bind-Value="espece.prenomPayant" Required="true" Variant="Variant.Text" Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12">
-                    <MudTextField T="int" Label="Contact du Payant" Required="true" @bind-Value="espece.contactdupayant" Variant="Variant.Text" Margin="Margin.Dense" />
-                </MudItem>
-            }
-
-            <MudItem xs="6">
-                <MudDatePicker Label="Date" Date="@SelectedDate" DateChange="OnDateChange" Margin="Margin.Dense"  />
-            </MudItem>
-            <MudItem xs="6">
-                <MudTextField T="double" Label="Montant" Required="true" @bind-Value="espece.montant" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
-            </MudItem>
-            <MudItem xs="12">
-                <MudHidden T="int" @bind-Value="espece.id_etat_decompte" />
-            </MudItem>
-
-            <MudItem xs="12" class="d-flex justify-center">
-                <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8" OnClick="SubmitPaiementEspece">Payer</MudButton>
-            </MudItem>
-        </MudGrid>
-
-    </MudForm>
-</MudItem>-->
 
 <MudPaper Class="p-6 mx-auto my-6" Style="max-width: 850px;">
     <MudText Typo="Typo.h4" GutterBottom="true" Class="text-center mb-6">
@@ -154,14 +87,14 @@
 
     private List<PaiementDto>? especes;
     private ApiResponse? apiResponse;
-    string url = "http://localhost:5077/api/paiementenespece";
+    //string url = "http://localhost:5077/api/paiementenespece";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"{url}/{id_etat_decompte}", option);
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"paiementenespece/{id_etat_decompte}", option);
             apiResponse.HandleResponse<List<PaiementDto>>();
             especes = apiResponse.Data as List<PaiementDto> ?? new List<PaiementDto>();
 
@@ -200,7 +133,7 @@
                 id_etat_decompte = espece.id_etat_decompte
             };
 
-            var response = await http.PostAsJsonAsync(url, nouvellePaiementEspece);
+            var response = await http.PostAsJsonAsync("paiementenespece", nouvellePaiementEspece);
 
             if (!response.IsSuccessStatusCode)
             {
