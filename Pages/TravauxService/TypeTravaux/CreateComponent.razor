@@ -113,6 +113,7 @@
             {
                 typetravaux.Tarif = null;
             }
+            Console.WriteLine(JsonSerializer.Serialize(typetravaux));
             var response = await Http.PostAsJsonAsync(url+$"type/travaux", typetravaux);
             // Optionally handle the response (e.g., show a success message)
             if(OnTypeTravauxCreated.HasDelegate)

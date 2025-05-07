@@ -29,4 +29,6 @@ public class EchantillonDto
     public TypeEchantillonDto? TypeEchantillon { get; set; }
     [JsonPropertyName("detailsEchantillons")]
     public ICollection<VDetailsEchantillonDto> DetailsEchantillons { get; set; } = new List<VDetailsEchantillonDto>();
+    [JsonPropertyName("typeTravaux")]
+    public ICollection<TypeTravauxDto>? TypeTravaux { get; set; } = new List<TypeTravauxDto>();
 }
