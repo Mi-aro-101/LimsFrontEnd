@@ -19,23 +19,23 @@
 <MudThemeProvider Theme="MyCustomTheme" />
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
-         <AuthorizeView Roles="ADDLAB">
-            <Authorized>
+         @* <AuthorizeView Roles="ADDLAB">
+            <Authorized> *@
                 <AddlabComponent />
-            </Authorized>
+            @* </Authorized>
         </AuthorizeView>
         <AuthorizeView Roles="CDGAP">
-            <Authorized>
+            <Authorized> *@
                 <GapComponent />
-            </Authorized>
+            @* </Authorized>
         </AuthorizeView>
         <AuthorizeView Roles="Technicien">
-            <Authorized>
+            <Authorized> *@
                 <ReactifComponent />
                 <OutillageComponent/>
                 <ImmobilisationComponent/>
-            </Authorized>
-        </AuthorizeView>
+            @* </Authorized>
+        </AuthorizeView> *@
         <MenuDePaiement />
         <MenuDasboard />
 

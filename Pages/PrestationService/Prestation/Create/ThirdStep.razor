@@ -21,10 +21,10 @@
                         <MudSelectItem Value="echantillon.Key">@echantillon.Key</MudSelectItem>
                     }
             </MudSelect>
-            <MudSelect T="int" Label="Type Travaux" MultiSelection="true" @bind-SelectedValues="IdTypesTravaux">
+            <MudSelect T="TypeTravauxDto" Label="Type Travaux" ToStringFunc="x => x.Designation" MultiSelection="true" @bind-SelectedValues="TravauxEchantillons">
                     @foreach (TypeTravauxDto typeTravaux in TypesTravaux)
                     {
-                        <MudSelectItem T="int" Text="@typeTravaux.Designation" Value="@typeTravaux.IdTypeTravaux">@typeTravaux.Designation</MudSelectItem>
+                        <MudSelectItem T="TypeTravauxDto"  Text="@typeTravaux.Designation" Value="@typeTravaux">@typeTravaux.Designation</MudSelectItem>
                     }
                 </MudSelect>
             <MudButton Color="Color.Dark" Size="Size.Small" Variant="Variant.Text" @onclick="Ajouter">Ajouter</MudButton>
@@ -36,16 +36,17 @@
                     <th>Travaux</th>
                 </thead>
                 <tbody>
-                    @foreach(var key in Prestation.Travaux.Keys)
+                    @foreach(var key in Prestation.Echantillons.Keys)
                     {
                         <tr>
                             <td>@key</td>
                             <td>
                                 <ul>
-                                    @foreach (int travaux in Prestation.Travaux[key])
+                                    @* @foreach (int travaux in Prestation.Travaux[key]) *@
+                                    @foreach (TypeTravauxDto travaux in Prestation.Echantillons[key].TypeTravaux)
                                     {
                                         <li>
-                                            @TypesTravaux.Where(tt => tt.IdTypeTravaux == travaux).First().Designation
+                                            @travaux.Designation
                                         </li>
                                     }
                                 </ul>
@@ -62,7 +63,7 @@
 {
     [Parameter]
     public CreatePrestationDto Prestation { get; set; }
-    public IEnumerable<int> IdTypesTravaux  { get; set; } = new List<int>();
+    public IEnumerable<TypeTravauxDto> TravauxEchantillons  { get; set; } = new List<TypeTravauxDto>();
     private string ReferenceClient = string.Empty;
     private ICollection<TypeTravauxDto> TypesTravaux = new List<TypeTravauxDto>();
         string exception = "";
@@ -76,11 +77,12 @@
 
     private void Ajouter()
     {
-        Console.WriteLine(JsonSerializer.Serialize(IdTypesTravaux));
-            Prestation.Travaux.Add(ReferenceClient,IdTypesTravaux.ToList());
-            Console.WriteLine("eto");
+        @* Console.WriteLine(JsonSerializer.Serialize(IdTypesTravaux)); *@
+            Prestation.Echantillons[ReferenceClient].TypeTravaux = TravauxEchantillons.ToList();
+            @* Prestation.Travaux.Add(ReferenceClient,IdTypesTravaux.ToList());
+            Console.WriteLine("eto");yp
             IdTypesTravaux = new List<int>();
-            ReferenceClient= string.Empty;
+            ReferenceClient= string.Empty; *@
             Console.WriteLine(JsonSerializer.Serialize(Prestation));
             StateHasChanged();
     }
