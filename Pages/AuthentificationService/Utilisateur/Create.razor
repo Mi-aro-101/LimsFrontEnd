@@ -7,24 +7,43 @@
 @using LimsFrontEnd.Models
 @using MudBlazor
 @using LimsFrontEnd.Components
+@using LimsUtils.Api
 
 <center><h2>Inscription</h2></center>
 
 <hr>
 <br>
-    @if(string.IsNullOrEmpty(exception))
+    @if(!string.IsNullOrEmpty(exception))
     {
         <p>@exception</p>
     }
     else
     {
+         @if(!string.IsNullOrEmpty(message))
+        {
+            <div class="alert alert-success"> @message </div>
+        }
+
         <div class="row">
             <div class="card border-dark mb-3" style="max-width: 60rem;">
                 <div class="card-header">Nouveau(elle) Utilisateur</div>
                 <div class="card-body text-dark">
                     <EditForm Model="@utilisateur" OnValidSubmit="@HandleOnSubmit">
 
-                            <CUComponent Utilisateur="@utilisateur"  Roles="@roles"/>
+                             <CUComponent Utilisateur="@utilisateur"  Roles="@roles" Departements="@departements" RolesUtilisateur="@rolesUtilisateur"/>
+                            <br>
+                            <div class="form-group row">
+                                <label for="inputRoles" class="col-sm-2 col-form-label">Roles</label>
+                                <div class="col-sm-8">
+                                    <MudSelect T="RoleDto" Label="Roles" ToStringFunc="x => x.Designation" Delimiter="," MultiSelection="true" @bind-SelectedValues="rolesUtilisateur">
+                                        @foreach (RoleDto role in roles)
+                                        {
+                                            <MudSelectItem T="RoleDto" Value="@role">@role.Designation</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </div>
+                            </div>    
+                            <br>
 
                             <center>
                                 <button type="submit" class="btn btn-primary">Creer</button>
@@ -41,28 +60,51 @@
     UtilisateurDto utilisateur = new UtilisateurDto();
     ICollection<DepartementDto> departements = new List<DepartementDto>(); 
     ICollection<RoleDto> roles = new List<RoleDto>();
+    IEnumerable<RoleDto> rolesUtilisateur {get;set;} = new HashSet<RoleDto>();
+    string? message;
+    string? exception;
 
     protected override async Task OnInitializedAsync()
     {
        
         roles = await LoadRole();
-        @* utilisateur.R = roles.ElementAtOrDefault(0).IdRole; *@
+        departements = await LoadDepartement();
     }
 
     private async Task HandleOnSubmit()
     {
         try
         {
+            utilisateur.Roles = FromRoleToInt(rolesUtilisateur);
             Console.WriteLine(JsonSerializer.Serialize(utilisateur));
             var response = await Http.PostAsJsonAsync(url+"auth/register", utilisateur);
-            Console.WriteLine(JsonSerializer.Serialize(utilisateur));
-
+            using var responseStream = await response.Content.ReadAsStreamAsync();
+            ApiResponse? apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
+            if(apiResponse?.IsSuccess == true)
+            {
+                message = "Utilisateur cree avec succes";
+            }
+            if(apiResponse?.IsSuccess == false)
+            {
+                exception = apiResponse.Message;
+            }
             // Should reload to the last page of the pagination to show the added one
             NavigationManager.NavigateTo("/utilisateur/new");
         }
         catch(Exception ex)
         {
-            Console.WriteLine("Exception : " +ex);
+            exception = "Exception : " +ex;
         }
+    }
+
+    private List<int> FromRoleToInt(IEnumerable<RoleDto> roles)
+    {
+        List<int> result = new List<int>();
+        foreach(RoleDto role in roles)
+        {
+            Console.WriteLine(JsonSerializer.Serialize(role.IdRole));
+            result.Add(role.IdRole);
+        }    
+        return result;
     }
 }

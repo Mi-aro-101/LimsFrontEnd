@@ -1,6 +1,7 @@
 @page "/login"
 @layout EmptyLayout;
 
+@using LimsFrontEnd.Utils
 @using LimsUtils.Api
 @using System.Text.Json
 @inject HttpClient Http
@@ -11,6 +12,9 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Forms
 @using System.Threading.Tasks
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AutheStateProvider
+
 
 
 <!DOCTYPE html>
@@ -29,7 +33,7 @@
             <div class="form-group row">
                 <label for="staticEmail" class="col-sm-4 col-form-label">Identifiant</label>
                 <div class="col-sm-6">
-                <InputText class="form-control" @bind-Value="logindto.Identifiant" placeholder="Identifiant" />
+                <InputText class="form-control" type="password" @bind-Value="logindto.Identifiant" placeholder="Identifiant" />
                 </div>
             </div>
             <br>
@@ -75,8 +79,10 @@
 
                 if (tokenResponse != null)
                 {
+                    String token = (String)tokenResponse.Data;
                     // Store the token in SessionStorage
-                    await SessionStorage.SetItemAsync("authToken", tokenResponse.Data);
+                    var customProvider = (AuthStateProvider)AutheStateProvider;
+                    await customProvider.MarkUserAsAuthenticated(token);
 
                     // Redirect the user to the home page or any protected page
                     Navigation.NavigateTo("/");

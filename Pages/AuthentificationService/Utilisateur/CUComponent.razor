@@ -4,7 +4,7 @@
 
 @using LimsFrontEnd.Models
 
-@if(Roles == null  || Utilisateur == null)
+@if(Roles == null || Utilisateur == null || Departements == null)
     {
         <center><div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
@@ -29,17 +29,17 @@
         <br>
         
         <div class="form-group row">
-            <label for="inputRoles" class="col-sm-2 col-form-label">Roles</label>
+            <label for="inputPassword" class="col-sm-2 col-form-label">Departement</label>
             <div class="col-sm-8">
-                <MudSelect T="string" Label="Roles" MultiSelection="true" @bind-Value="_value" @bind-SelectedValues="Utilisateur.RoleDesignations">
-                    @foreach (RoleDto role in Roles)
-                    {
-                        <MudSelectItem T="string" Value="@role.Designation">@role.Designation</MudSelectItem>
-                    }
-                </MudSelect>
+                 <InputSelect class="form-control" @bind-Value="Utilisateur.IdDepartement">
+                <option value=""></option>"
+                @foreach(DepartementDto departement in Departements)
+                {
+                    <option value=@departement.IdDepartement>@departement.Designation</option>
+                }
+            </InputSelect>
             </div>
         </div>
-        <br>
     }
 
 @code
@@ -48,8 +48,9 @@
     public UtilisateurDto? Utilisateur {get; set;}
     [Parameter]
     public ICollection<RoleDto>? Roles {get; set; }
-    private string _value = "Nothing selected";
-
-    private IEnumerable<string> Options = new HashSet<string> ();
+    [Parameter]    
+    public ICollection<DepartementDto>? Departements {get;set;}
+    [Parameter]
+    public IEnumerable<RoleDto>? RolesUtilisateur {get;set;}
 
 }
