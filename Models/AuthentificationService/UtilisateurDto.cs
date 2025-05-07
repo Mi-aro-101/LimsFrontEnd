@@ -8,10 +8,11 @@ public class UtilisateurDto {
     public int? IdUser { get; set; }
     [JsonPropertyName("identifiant")]
     public string? Identifiant {get;set;}
-    
     [JsonPropertyName("password")]
     public string? Password {get;set;}
     [JsonPropertyName("roles")]
-    public IEnumerable<string> RoleDesignations {get;set;} = new HashSet<string>();
+     public List<int>? Roles {get;set;} = new List<int>();
+    [JsonPropertyName("idDepartement")]
+    public int? IdDepartement {get;set;}
     
 }
