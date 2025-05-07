@@ -1,0 +1,89 @@
+@page "/etatjournalier"
+
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient http
+@using LimsFrontEnd.Models
+
+<MudPaper Class="p-6 mx-auto mt-6" MaxWidth="xl" Elevation="4" Style="border-radius: 16px;">
+    <MudStack Spacing="3">
+        <MudText Typo="Typo.h5" Color="Color.Primary">Tableau des Encaissements</MudText>
+
+        <MudTextField @bind-Value="searchText"
+                      Label="Recherche"
+                      Placeholder="Référence de l'état de décompte ou client"
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Class="w-full" />
+
+        <MudTable Items="FilteredData"
+                  Dense="true"
+                  Hover="true"
+                  Elevation="1"
+                  Class="mt-2 rounded-lg">
+
+            <ToolBarContent>
+                <MudText Typo="Typo.h6" Class="pl-2">Encaissement Journalier</MudText>
+            </ToolBarContent>
+
+            <HeaderContent>
+                <MudTh><MudText Typo="Typo.subtitle2">Date d'encaissement</MudText></MudTh>
+                <MudTh><MudText Typo="Typo.subtitle2">État de décompte</MudText></MudTh>
+                <MudTh><MudText Typo="Typo.subtitle2">Clients</MudText></MudTh>
+                <MudTh><MudText Typo="Typo.subtitle2">Montant (Ar)</MudText></MudTh>
+                <MudTh><MudText Typo="Typo.subtitle2">Observation</MudText></MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd>@(context.dateEncaissement.HasValue ? context.dateEncaissement.Value.ToString("dd MMM yyyy") : "N/A")</MudTd>
+                <MudTd>@context.EtatDecompte</MudTd>
+                <MudTd>@context.clients</MudTd>
+                <MudTd>@context.montant.ToString("N0")</MudTd>
+                <MudTd>
+                    @(context.observation == 2 ? "Interne" : context.observation == 1 ? "Externe" : "")                       
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        <MudDivider Class="my-4" />
+
+        <MudPaper Class="p-4" Elevation="2" Style="border-radius: 12px;">
+            <MudText Typo="Typo.h6">
+                Arrêté à la somme de :
+                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="font-weight-bold d-inline">
+                    @FilteredData.Sum(x => x.montant).ToString("F2") Ar
+                </MudText>
+            </MudText>
+        </MudPaper>
+    </MudStack>
+</MudPaper>
+
+
+@code {    
+    private string searchText = "";
+
+    private List<EncaissementJournalierDto> data = new List<EncaissementJournalierDto>();
+    private ApiResponse? apiResponse;
+    //string url = "http://localhost:5077/api/encaissement";
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>("encaissement", option);
+            apiResponse.HandleResponse<List<EncaissementJournalierDto>>();
+            data = apiResponse.Data as List<EncaissementJournalierDto> ?? new List<EncaissementJournalierDto>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+
+    private List<EncaissementJournalierDto> FilteredData => data
+        .Where(x => string.IsNullOrWhiteSpace(searchText) ||
+                    x.clients.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                    x.EtatDecompte.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+}

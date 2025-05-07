@@ -1,0 +1,58 @@
+@inject HttpClient http
+@using LimsFrontEnd.Models
+@inject NavigationManager navigationManager
+
+@if (IsVisible)
+{
+    <div class="popup-overlay">
+        <div class="popup-content">
+            <h3>Client sous contrat</h3>
+            @if (Contrat != null)
+            {
+                <p><b>Entreprise :</b> @Contrat.Paiement?.clients</p>
+                <p><b>Référence :</b> @Contrat.Paiement?.ref_contrat</p>
+                @* <p><b>Date paiement prévue :</b> @Contrat.Contrat?.datePaiement?.ToString("dd/MM/yyyy")</p> *@
+            }
+            else
+            {
+                <p>Données non disponibles.</p>
+            }
+
+            <!--<button @onclick="Close">Validé</button>-->
+            <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="Close" StartIcon="@Icons.Material.Filled.CheckCircle">
+                Validé
+            </MudButton>
+        </div>
+    </div>
+}
+
+@code {
+    //string url = "http://localhost:5077/api/souscontrat";
+    
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public SousContratDto? Contrat { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private async Task Close()
+    {
+        try
+        {
+            var response = await http.PostAsJsonAsync("souscontrat", Contrat);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Erreur de l'API: " + errorContent);
+            }
+            else
+            { 
+                await OnClose.InvokeAsync();
+                navigationManager.NavigateTo("/SousContrat/liste");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la fermeture du dialogue : {ex.Message}");
+        }
+    }  
+}

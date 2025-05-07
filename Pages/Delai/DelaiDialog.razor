@@ -1,0 +1,138 @@
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient http
+@using LimsFrontEnd.Models
+@inject NavigationManager navigationManager
+
+@if (IsVisible)
+{
+    <div class="popup-overlay">
+        <div class="popup-content">
+            <h3>Délai accordé</h3>           
+            <EditForm Model="@delaiDto" OnValidSubmit="@Close">
+                <h4>Choisissez le mode de paiement :</h4>
+                <InputRadioGroup @bind-Value="delaiDto.modePaiement">
+                    <label>
+                        <InputRadio Value="1" /> Espèce
+                    </label>
+                    <label style="margin-left: 1rem;">
+                        <InputRadio Value="2" /> Mobile
+                    </label>
+                </InputRadioGroup>
+                <MudTable Items="delaiDtos" Dense="true" Hover="true" FixedHeader="true" Height="150px">
+                    <HeaderContent>
+                        <MudTh> Référence de l'état de décompte </MudTh>
+                        <MudTh> Date de paiement </MudTh>
+                        <MudTh> Nombre d'échantillons </MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="row">                       
+                        <MudTd>@row.referenceEtatDecompte</MudTd>
+                        <MudTd>@(row.datePaiement.HasValue ? row.datePaiement.Value.ToString("dd MMM yyyy") : "N/A")</MudTd>
+                        <MudTd>@row.nombreEchantillon</MudTd>                    
+                    </RowTemplate>
+                </MudTable>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" ButtonType="ButtonType.Submit">Accorder</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" @onclick="CloseDialog">Refuser</MudButton>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public ApiResponse? ApiResponse { get; set; }
+
+    //string url = "http://localhost:5077/api/delai";
+    private DelaiDto delaiDto = new DelaiDto();
+
+    public int selectedModePaiement = 0;
+
+    List<DelaiDto> delaiDtos = new List<DelaiDto>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ApiResponse != null && ApiResponse.IsSuccess)
+        {
+            ApiResponse.HandleResponse<List<DelaiDto>>();
+            delaiDtos = ApiResponse.Data as List<DelaiDto> ?? new List<DelaiDto>();
+        }
+    }
+
+    private async Task Close()
+    {             
+        try
+        {
+            Console.WriteLine($"id_etat_decompte: {ApiResponse.ViewBag["id_etat_decompte"]}");
+            Console.WriteLine($"Type réel : {ApiResponse.ViewBag["id_etat_decompte"]?.GetType()}");
+            int Id_etat_decompte = 0;
+            if (ApiResponse.ViewBag.TryGetValue("id_etat_decompte", out var rawValue) == true)
+            {
+                if (rawValue is JsonElement jsonElement && jsonElement.ValueKind == JsonValueKind.Number)
+                {
+                    Id_etat_decompte = jsonElement.GetInt32(); // 👍 safe et direct
+                }
+                else
+                {
+                    Console.WriteLine("Le JsonElement ne contient pas un nombre valide.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("id_etat_decompte non trouvé dans ViewBag.");
+            }
+
+            Console.WriteLine($"selectedModePaiement: {delaiDto.modePaiement}");
+            int etatpaiement = 0;
+            switch (delaiDto.modePaiement)
+            {
+                case 1:
+                    etatpaiement = 31;
+                    break;
+                case 2:
+                    etatpaiement = 32;
+                    break;
+                case 3:
+                    etatpaiement = 33;
+                    break;
+            }
+
+            Console.WriteLine($"etatPaiement: {etatpaiement}");
+
+            // Créez une instance de DelaiDto avec les valeurs appropriées
+            var delai = new DelaiDto
+            {
+                datePaiement = DateTime.Now,
+                EtatPaiement = etatpaiement,
+                id_etat_decompte = Id_etat_decompte,
+                DateFinDelai = DateTime.Now.AddDays(7),
+                modePaiement = delaiDto.modePaiement
+            };
+
+            Console.WriteLine($"information délai: {delai.datePaiement}, {delai.EtatPaiement}, {delai.id_etat_decompte}, {delai.DateFinDelai}, {delai.modePaiement}");
+
+            var response = await http.PostAsJsonAsync("delai", delai);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Erreur de l'API: " + errorContent);
+            }   
+            else
+            {
+                await OnClose.InvokeAsync();
+                navigationManager.NavigateTo("/Delai/liste");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la fermeture du dialogue : {ex.Message}");
+        }        
+    }
+
+    private async void CloseDialog()
+    {
+        IsVisible = false;
+        await OnClose.InvokeAsync();
+    }
+}

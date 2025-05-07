@@ -1,0 +1,92 @@
+@page "/receptionMobile/{operateur}"
+
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient http
+@using LimsFrontEnd.Models
+@inject NavigationManager navigationManager
+
+<MudItem xs="7">
+    <MudText Typo="Typo.h5" GutterBottom="true">Réception de l'argent par mobile</MudText>
+    <MudForm Model="@recue" @ref="form">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Etat de décompte" @bind-Value="recue.referenceEtatDecompte" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="double" Label="Montant à payer" @bind-Value="recue.montantApayer" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Opérateur mobile" @bind-Value="@operateur" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="int" Label="Réference mobile" @bind-Value="recue.referenceMobile" Variant="Variant.Text" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudHidden T="int" @bind-Value="recue.id_paiement" />
+            </MudItem>
+            <MudItem xs="12" Class="d-flex justify-center">
+                <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8" OnClick="RecepetionParMobile">Payé</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+</MudItem>
+
+@code {
+    MudForm? form;
+    RecuDto recue = new RecuDto();
+    [Parameter]
+    public string operateur { get; set; } = string.Empty;
+
+    private ApiResponse? apiResponse;
+    //string url = "http://localhost:5077/api/receptionpaiementmobile";
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>("receptionpaiementmobile/Confirmer", option);
+            apiResponse.HandleResponse<RecuDto>();
+            recue = apiResponse.Data as RecuDto ?? new RecuDto();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception levé ici: " + ex.Message);
+        }
+    }
+
+    private async Task RecepetionParMobile()
+    {
+        try
+        {
+            if (recue == null)
+            {
+                Console.WriteLine("la réception mobile est null");
+                return;
+            }
+
+            var recuPaiementMobile = new RecuDto
+            {
+                referenceMobile = recue.referenceMobile,
+                operateurmobile = operateur,
+                id_paiement = recue.id_paiement
+            };
+
+            var response = await http.PostAsJsonAsync("receptionpaiementmobile", recuPaiementMobile);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Erreur de l'API: " + errorContent);
+            }
+            else
+            {
+                navigationManager.NavigateTo("/demandenotedebit/demande");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+}

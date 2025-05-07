@@ -39,5 +39,31 @@
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="js/chiffre-affaire.js"></script>
     <script src="js/dashboard.js"></script>
+    <script src="js/Pdf-generation.js"></script>
+
+    <!--firebase-->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+          apiKey: "AIzaSyBtIDdVB2bgwL9pcmbz15aqO5Ibef--2j8",
+          authDomain: "messagerielims.firebaseapp.com",
+          projectId: "messagerielims",
+          storageBucket: "messagerielims.firebasestorage.app",
+          messagingSenderId: "884616988554",
+          appId: "1:884616988554:web:bb5561c4dfa35470bf2a73",
+          measurementId: "G-7LPSRGT4N0"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+    </script>
 </body>
 </html>
