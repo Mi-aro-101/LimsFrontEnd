@@ -1,0 +1,166 @@
+@page "/formulaireVirement/{id_etat_decompte:int}"
+
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient http
+@using LimsFrontEnd.Models
+@inject NavigationManager navigationManager
+
+<MudItem Class="pa-6">
+    <MudPaper Elevation="1" Class="p-6 rounded-xl">
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6 text-primary font-semibold">
+            Formulaire de paiement par virement
+        </MudText>
+
+        <MudForm Model="@virement" @ref="reference">
+            <MudGrid Gutter="true">
+
+                <!-- Bouton toggle infos client -->
+                <MudItem xs="12" class="d-flex justify-end mb-4">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ToggleAfficherClient">
+                        @((AfficherClient ? "Masquer" : "Afficher") + " infos client")
+                    </MudButton>
+                </MudItem>
+
+                @if (AfficherClient)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudTextField T="string" Label="Titre" @bind-Value="virement.titre" Required="true" Margin="Margin.Dense" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField T="string" Label="Clients" @bind-Value="virement.clients" Required="true" Margin="Margin.Dense" Disabled="true" HelperText="Particulier ou Entreprise" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField T="string" Label="Identité" @bind-Value="virement.identite" Required="true" Margin="Margin.Dense" Disabled="true" HelperText="CIN / NIF / STAT / Passeport" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField T="string" Label="Adresse" @bind-Value="virement.adresse" Required="true" Margin="Margin.Dense" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField T="string" Label="Contact" @bind-Value="virement.contact" Required="true" Margin="Margin.Dense" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField T="string" Label="Email" @bind-Value="virement.email" Margin="Margin.Dense" Disabled="true" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField T="string" Label="État de décompte" @bind-Value="virement.etatDecompte" Required="true" Margin="Margin.Dense" Disabled="true" />
+                    </MudItem>
+                }
+
+                @if (!AfficherClient)
+                {
+                    <MudItem xs="12" sm="6">
+                        <MudTextField T="string" Label="Nom du Payant" @bind-Value="virement.nomPayant" Required="true" Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField T="string" Label="Prénom du Payant" @bind-Value="virement.prenomPayant" Required="true" Margin="Margin.Dense" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField T="int" Label="Contact du Payant" @bind-Value="virement.contactdupayant" Required="true" Margin="Margin.Dense" />
+                    </MudItem>
+                }
+
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker Label="Date de paiement" Date="@SelectedDate" DateChanged="OnDateChanged" Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="double" Label="Montant" @bind-Value="virement.montant" Required="true" Margin="Margin.Dense" Disabled="true" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudHidden T="int" @bind-Value="virement.id_etat_decompte" />
+                </MudItem>
+
+                <MudItem xs="12" class="d-flex justify-center">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" Class="mt-6 px-6" OnClick="SubmitPaiementMobile">
+                        Continuer vers le paiement
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </MudPaper>
+</MudItem>
+
+@code {
+    private bool AfficherClient = false;
+
+    [Parameter] public int id_etat_decompte { get; set; }
+    private DateTime SelectedDate { get; set; } = DateTime.Now;
+
+    MudForm? reference;
+    private PaiementDto virement = new PaiementDto();
+    private List<PaiementDto>? virements;
+
+    private ApiResponse? apiResponse;
+    //string url = "http://localhost:5077/api/paiementparvirement";
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"paiementparvirement/{id_etat_decompte}", option);
+            apiResponse.HandleResponse<List<PaiementDto>>();
+            virements = apiResponse.Data as List<PaiementDto> ?? new List<PaiementDto>();
+
+            // Initialisez demandeNote
+            virement = virements?.FirstOrDefault() ?? new PaiementDto
+                {
+                    id_etat_decompte = id_etat_decompte
+                };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception levé ici: " + ex.Message);
+        }
+    }
+
+    private void OnDateChanged(DateTime? newDate)
+   {
+    	if (newDate.HasValue)
+    	{
+            SelectedDate = newDate.Value;
+    	}
+   }
+
+    private async Task SubmitPaiementMobile()
+    {
+        try
+        {
+            if (virement == null)
+            {
+                Console.WriteLine("demandeNote est null");
+                return;
+            }
+
+            var nouvellePaiementVirement = new PaiementDto
+                {
+                    DatePaiement = SelectedDate,
+                    ModePaiement = 3,
+                    EtatPaiement = 13,
+                    id_etat_decompte = virement.id_etat_decompte
+                };
+
+            var response = await http.PostAsJsonAsync("paiementparvirement", nouvellePaiementVirement);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Erreur de l'API: " + errorContent);
+            }
+            else
+            {
+                navigationManager.NavigateTo("/VirementBancaire/Liste");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+
+    private void ToggleAfficherClient()
+    {
+        AfficherClient = !AfficherClient;
+        StateHasChanged();
+    }
+}

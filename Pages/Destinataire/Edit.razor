@@ -1,0 +1,70 @@
+@page "/destinataire/{Id_destinataire:int}"
+
+@using LimsUtils.Api
+@inject HttpClient Http
+@using System.Text.Json
+@using LimsFrontEnd.Models
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.ExtraSmall" Class="mt-6">
+    <MudPaper Elevation="4" Class="p-6 rounded-2xl">
+        <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">
+            📝 Modifier un destinataire
+        </MudText>
+
+        @if (!string.IsNullOrEmpty(exception))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true">@exception</MudAlert>
+        }
+
+        <MudForm Model="@destinataire" @ref="form">
+            <MudStack Spacing="3">
+                <MudTextField Label="Nom de l'entreprise" @bind-Value="destinataire.designation" Required="true" FullWidth="true" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="HandleOnSubmit" FullWidth="true">
+                    💾 Mettre à jour
+                </MudButton>
+            </MudStack>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private MudForm form;
+    private DestinataireDto destinataire = new();
+    //private string url = "http://localhost:5077/api/destinataire";
+    private string? exception;
+    [Parameter] public int Id_destinataire { get; set; }
+
+    protected override async Task OnInitializedAsync() => await FetchDetails(Id_destinataire);
+
+    private async Task FetchDetails(int id)
+    {
+        try
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"destinataire/{Id_destinataire}", options);
+            if (apiResponse?.Data != null)
+            {
+                apiResponse.HandleResponse<DestinataireDto>();
+                destinataire = (DestinataireDto)apiResponse.Data;
+            }
+        }
+        catch (Exception ex)
+        {
+            exception = $"Erreur : {ex.Message}";
+        }
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"destinataire/{Id_destinataire}", destinataire);
+            NavigationManager.NavigateTo("/destinataire");
+        }
+        catch (Exception ex)
+        {
+            exception = ex.Message;
+        }
+    }
+}

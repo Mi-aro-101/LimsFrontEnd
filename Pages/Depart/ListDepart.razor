@@ -1,0 +1,68 @@
+@page "/depart/liste"
+
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient http
+@using LimsFrontEnd.Models
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h2" Class="mb-4">Liste des départs</MudText>
+
+    <MudTextField @bind-Value="searchText" Label="Recherche" Placeholder="Objet ou département ou référence de départ" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
+
+    <MudTable Items="FilteredData" Dense="true" Hover="true" FixedHeader="true" Height="300px">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Départ vers les autres départements</MudText>
+        </ToolBarContent>
+
+        <HeaderContent>
+            <MudTh> Référence de départ </MudTh>
+            <MudTh> Objet </MudTh>
+            <MudTh> Date de la demande </MudTh>
+            <MudTh> Destinataire </MudTh>               
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd> @context.reference </MudTd>
+            <MudTd> @context.objet </MudTd>
+            <MudTd> @(context.DateDepart.HasValue ? context.DateDepart.Value.ToString("dd MMM yyyy") : "N/A") </MudTd> 
+            <MudTd> @context.designationDestinataire </MudTd>                
+        </RowTemplate>
+    </MudTable>
+
+</MudPaper>
+
+@code {
+    private string searchText = "";
+
+    private List<DepartDto> departs = new List<DepartDto>();
+    private ApiResponse? apiResponse;
+    //string url = "http://localhost:5077/api/depart";
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>("depart/ListeDepart", option);
+            apiResponse.HandleResponse<List<DepartDto>>();
+            departs = apiResponse.Data as List<DepartDto> ?? new List<DepartDto>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+
+    private List<DepartDto> FilteredData
+    {
+        get
+        {
+            return departs
+            .Where(x => string.IsNullOrWhiteSpace(searchText) ||
+                    x.objet.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                    x.reference.ToString().Contains(searchText, StringComparison.OrdinalIgnoreCase) || 
+                    x.designationDestinataire.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        }
+    }    
+}

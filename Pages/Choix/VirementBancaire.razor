@@ -1,0 +1,40 @@
+@page "/virementBancaire/{id_etat_decompte:int}"
+
+<MudItem Class="pa-6">
+    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6 font-semibold text-primary">
+        Virement bancaire
+    </MudText>
+
+    <MudGrid Gutter="true" Justify="Justify.Center">
+
+        <!-- Client Contractuel -->
+        <MudItem xs="12" sm="6" md="6">
+            <MudCard Class="hover:scale-105 transition-transform duration-300 cursor-pointer" Style="text-align: center;">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Class="mb-2">Contractuel</MudText>
+                    <MudLink href="souscontrat" Style="text-decoration: none;">
+                        <MudImage Src="img/contrat.jpg" Alt="Contrat" Style="width: 130px; height: 130px; margin: auto;" />
+                    </MudLink>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Client Non Contractuel -->
+        <MudItem xs="12" sm="6" md="6">
+            <MudCard Class="hover:scale-105 transition-transform duration-300 cursor-pointer" Style="text-align: center;">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Class="mb-2">Non contractuel</MudText>
+                    <MudLink href="@($"formulaireVirement/{id_etat_decompte}")" Style="text-decoration: none;">
+                        <MudImage Src="img/noncontrat.jpg" Alt="Non Contrat" Style="width: 130px; height: 130px; margin: auto;" />
+                    </MudLink>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+    </MudGrid>
+</MudItem>
+
+@code {
+    [Parameter] 
+    public int id_etat_decompte {get; set;}
+}

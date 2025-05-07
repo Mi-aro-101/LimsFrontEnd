@@ -1,0 +1,95 @@
+@page "/versementhebdomadaire"
+
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient http
+@using LimsFrontEnd.Models
+@inject NavigationManager navigation
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">Tableau des versements hebdomadaires</MudText>
+
+    <!-- Menu déroulant pour sélectionner une semaine -->
+    <MudSelect T="SemaineDto" @bind-Value="SelectedSemaine" Label="Sélectionnez une semaine" Class="mb-4">
+        @foreach (var semaine in ListeSemaines)
+        {
+            <MudSelectItem Value="@(semaine)">
+                Du @(semaine.debutSemaine.HasValue ? semaine.debutSemaine.Value.ToString("dd MMM yyyy") : "N/A") au @(semaine.finSemaine.HasValue ? semaine.finSemaine.Value.ToString("dd MMM yyyy") : "N/A")
+            </MudSelectItem>
+        }
+    </MudSelect>
+
+    <!-- Tableau filtré -->
+    @if (SelectedSemaine != null)
+    {
+        <MudTable Items="FilteredData" Dense="true" Hover="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Versement Hebdomadaire</MudText>
+            </ToolBarContent>
+
+            <HeaderContent>
+                <MudTh> Date d'encaissement </MudTh>
+                <MudTh> État de décompte </MudTh>
+                <MudTh> Clients </MudTh>
+                <MudTh> Montant (Ar) </MudTh>
+                <MudTh> Observation </MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd> @(context.dateEncaissement?.ToString("dd/MM/yyyy") ?? "N/A") </MudTd>
+                <MudTd> @context.EtatDecompte </MudTd>
+                <MudTd> @context.clients </MudTd>
+                <MudTd> @context.montant </MudTd>
+                <MudTd> @(context.observation == 2 ? "interne" : (context.observation == 1 ? "externe" : "")) </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        <MudPaper Class="pa-3 mt-4" Elevation="4">
+            <MudText Typo="Typo.h6">Arrêté à la somme de : <b>@FilteredData.Sum(x => x.montant).ToString("F2") Ar</b></MudText>
+        </MudPaper>
+    }
+</MudPaper>
+
+@code {
+    // Semaine sélectionnée dans le menu déroulant
+    private SemaineDto? SelectedSemaine;
+
+    private List<VersementHebdomadaireDto> data = new List<VersementHebdomadaireDto>();
+    private List<SemaineDto> ListeSemaines = new List<SemaineDto>();
+
+    private ApiResponse? apiResponse1;
+    private ApiResponse? apiResponse2;
+    string url = "http://localhost:5077/api/versement";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            apiResponse1 = await http.GetFromJsonAsync<ApiResponse>("versement/semaine", option);
+            apiResponse1.HandleResponse<List<SemaineDto>>();
+            ListeSemaines = apiResponse1.Data as List<SemaineDto> ?? new List<SemaineDto>();
+
+            apiResponse2 = await http.GetFromJsonAsync<ApiResponse>("versement/transfert", option);
+            apiResponse2.HandleResponse<List<VersementHebdomadaireDto>>();
+            if(apiResponse2.StatusCode == 200)
+            {
+                data = apiResponse2.Data as List<VersementHebdomadaireDto> ?? new List<VersementHebdomadaireDto>();
+            }
+            else if (apiResponse2.StatusCode == 404)
+            {
+                navigation.NavigateTo("/Semaine");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception versement: " + ex.Message);
+        }
+    }
+
+    private List<VersementHebdomadaireDto> FilteredData => SelectedSemaine == null
+            ? new List<VersementHebdomadaireDto>()
+            : data.Where(x => x.dateEncaissement >= SelectedSemaine.debutSemaine && x.dateEncaissement <= SelectedSemaine.finSemaine).ToList();
+
+}

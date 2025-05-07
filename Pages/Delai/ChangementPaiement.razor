@@ -1,0 +1,88 @@
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient http 
+@inject NavigationManager navigationManager
+
+@if (IsVisible)
+{
+    <div class="popup-overlay">
+        <div class="popup-content">
+            <h3>Changer le mode de paiement</h3>
+
+            <!--MudSelect @bind-Value="selectedMode" Label="Mode de paiement">
+                <MudSelectItem Value="1">Espèce</MudSelectItem>
+                <MudSelectItem Value="2">Mobile Money</MudSelectItem>
+                <MudSelectItem Value="3">Banque</MudSelectItem>
+            <MudSelect>
+            <MudButton Color="Color.Primary" OnClick="@ValiderChangement">Valider<MudButton>
+            <MudButton Color="Color.Error" OnClick="@OnClose">Annuler<MudButton-->
+
+            <select @bind="selectedMode" class="form-select">
+                <option value="1">Espèce</option>
+                <option value="2">Mobile Money</option>
+                <!--option value="3">Banque<option-->
+            </select>
+
+            <button class="btn btn-primary mt-2" @onclick="ValiderChangement">Valider</button>
+            <button class="btn btn-danger mt-2" @onclick="OnClose">Annuler</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public int IdEtatDecompte { get; set; }
+    //string url = "http://localhost:5077/api/delai";
+    private int selectedMode;
+
+    private void ValiderChangement()
+    {
+        // Redirection vers la bonne page selon le mode choisi
+        GoToPaiement(IdEtatDecompte, selectedMode);
+
+        // Fermer le popup
+        OnClose.InvokeAsync();
+    }
+
+    private async void GoToPaiement(int id_etat_decompte, int modePaiement)
+    {
+        var requestUri = $"delai/PaiementParChangement/{id_etat_decompte}/{modePaiement}";
+
+        var response = await http.PutAsJsonAsync<ApiResponse>(requestUri, null);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            // Affiche un message d'erreur à l'utilisateur
+            Console.WriteLine("Erreur lors de l'appel de l'API externe.");
+            return;
+        }
+
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        var apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
+
+        if (apiResponse?.IsSuccess == true)
+        {
+            // ✅ Paiement validé, on redirige selon le mode
+            switch (modePaiement)
+            {
+                case 1:
+                    navigationManager.NavigateTo($"/receptionEspece");
+                    break;
+                case 2:
+                    navigationManager.NavigateTo($"/choixoperateur/{id_etat_decompte}");
+                    break;
+                /*case 3:
+                    navigationManager.NavigateTo($"/formulaireVirement/{id_etat_decompte}");
+                    break;*/
+                default:
+                    Console.WriteLine("Mode de paiement non reconnu.");
+                    break;
+            }
+        }
+        else
+        {
+            Console.WriteLine("Ohatran'ny nisy olana tao a");
+        }
+    }
+}

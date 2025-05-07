@@ -1,0 +1,98 @@
+@page "/choixpaiement/{id_etat_decompte:int}"
+
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient http
+@using LimsFrontEnd.Models
+
+<MudPaper Class="p-6 mx-auto mt-10 max-w-5xl rounded-2xl shadow-lg">
+    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6 text-primary font-bold">
+        Choisissez un mode de paiement
+    </MudText>
+
+    <MudGrid Gutter="true" Justify="Justify.Center">
+        <!-- Paiement en espèce -->
+        <MudItem xs="12" sm="4" Class="flex flex-col items-center">
+            <MudLink href="@($"formulaireEspece/{id_etat_decompte}")" Style="text-decoration: none;">
+                <MudCard Class="hover:shadow-xl transition duration-300 ease-in-out cursor-pointer p-4">
+                    <MudCardContent Class="flex flex-col items-center">
+                        <MudImage Src="img/espece.png" Alt="Paiement en espèce" Class="mb-4" Style="width: 120px; height: 120px;" />
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center">Espèce</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudLink>
+        </MudItem>
+
+        <!-- Paiement mobile -->
+        <MudItem xs="12" sm="4" Class="flex flex-col items-center">
+            <MudLink href="@($"choixoperateur/{id_etat_decompte}")" Style="text-decoration: none;">
+                <MudCard Class="hover:shadow-xl transition duration-300 ease-in-out cursor-pointer p-4">
+                    <MudCardContent Class="flex flex-col items-center">
+                        <MudImage Src="img/mobile.png" Alt="Paiement mobile" Class="mb-4" Style="width: 120px; height: 120px;" />
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center">Mobile</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudLink>
+        </MudItem>
+
+        <!-- Paiement par virement -->
+        <MudItem xs="12" sm="4" Class="flex flex-col items-center">
+            <MudLink href="@($"virementBancaire/{id_etat_decompte}")" Style="text-decoration: none;">
+                <MudCard Class="hover:shadow-xl transition duration-300 ease-in-out cursor-pointer p-4">
+                    <MudCardContent Class="flex flex-col items-center">
+                        <MudImage Src="img/virement.png" Alt="Paiement par virement" Class="mb-4" Style="width: 120px; height: 120px;" />
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center">Virement</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudLink>
+        </MudItem>        
+    </MudGrid>
+
+    <SousContratDialog IsVisible="@showSousContrat" Contrat="@contratDto" OnClose="@(() => showSousContrat = false)" />
+    <DelaiDialog IsVisible="@showDelai" ApiResponse="@apiResponse" OnClose="@(() => showDelai = false)" />
+
+</MudPaper>
+
+@code {
+    //string url = "http://localhost:5077/api/delai";
+    public bool showSousContrat = false;
+    public bool showDelai = false;
+    public SousContratDto? contratDto = null;
+
+    [Parameter] public int id_etat_decompte { get; set; }
+    private ApiResponse? apiResponseRecu;
+    private ApiResponse? apiResponse;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVerification(id_etat_decompte);
+    }
+
+    public async Task LoadVerification(int id_etat_decompte)
+    {
+        try
+        {
+            string urli = $"delai/VerificationDelai/{id_etat_decompte}";
+            //Console.WriteLine($"URL: {urli}");  
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponseRecu = await http.GetFromJsonAsync<ApiResponse>(urli, option);
+
+            if(apiResponseRecu.Message == "Délai accordé pour le test de période de 6 mois" || apiResponseRecu.Message == "Délai accordé pour le test de période de 1 an")
+            {
+                Console.WriteLine($"viewbag: {apiResponseRecu.ViewBag["id_etat_decompte"]}");
+                apiResponse = apiResponseRecu;
+                showDelai = true;                
+            }
+            else if (apiResponseRecu.Message == "Client sous contrat")
+            {
+                apiResponseRecu.HandleResponse<SousContratDto>();
+                contratDto = (SousContratDto?)apiResponseRecu.Data;
+                showSousContrat = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement: {ex.Message}");
+        }
+    }
+}
