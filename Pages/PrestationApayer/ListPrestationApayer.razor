@@ -1,53 +1,36 @@
-@page "/demandenotedebit/nonpaye"
+@page "/prestation/apayer"
 
 @using LimsUtils.Api
-@using System.Text.Json
 @inject HttpClient http
+@using System.Text.Json
 @using LimsFrontEnd.Models
 @inject NavigationManager navigationManager
 
 <MudPaper Class="pa-4">
-    <MudText Typo="Typo.h5" Class="mb-4">Demande de note de débit oublié</MudText>
+    <MudText Typo="Typo.h5" Class="mb-4"> Prestaions à payer </MudText>
 
-    <MudTextField @bind-Value="searchText" Label="Recherche" Placeholder="Etat de décompte" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
+    <MudTextField @bind-Value="searchText" Label="Recherche" Placeholder="Client ou Etat de décompte" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
 
     <MudTable Items="FilteredData" Dense="true" RowsPerPage="10" Hover="true" FixedHeader="true" Height="300px">
+
         <ToolBarContent>
-            <MudText Typo="Typo.h6">Note de débit</MudText>
+            <MudText Typo="Typo.h6">Liste des prestaions</MudText>
         </ToolBarContent>
 
-        <HeaderContent>
-            <MudTh> N°</MudTh>
+        <HeaderContent> 
+            <MudTh> Nom du client </MudTh>
             <MudTh> Réference de l'état de décompte </MudTh>
-            <MudTh> Date d'état de décompte </MudTh>
+            <MudTh> Date du prestation </MudTh>
             <MudTh> Montant (Ar) </MudTh>
         </HeaderContent>
 
         <RowTemplate>
-            <MudTd> @context.reference </MudTd>
-            <MudTd> @context.referenceEtatDecompte </MudTd>
-            <MudTd> 
-                @if (context.dateEtatDecompte is DateTime date)
-                {
-                    Console.WriteLine(date.ToString("dd/MM/yyyy", new System.Globalization.CultureInfo("fr-FR")));
-                }
-                else
-                {
-                    Console.WriteLine("La valeur n'est pas un DateTime ou est null");
-                }
-                @(context.dateEtatDecompte.HasValue ? context.dateEtatDecompte.Value.ToString("dd MMM yyyy") : "N/A") 
-            </MudTd>
+            <MudTd> @context.clients </MudTd>
+            <MudTd> @context.etatDecompte </MudTd>
+            <MudTd> @(context.DatePaiement.ToString("dd MMM yyyy") ?? "N/A") </MudTd>
             <MudTd> @context.montant </MudTd>
             <MudTd>
-                @if (demandeNote == context)
-                {
-                    <MudButton Color="Color.Success" OnClick="() => SaveRow(context.idEtatDecompte)">Faire la demande</MudButton>
-                    <MudButton Color="Color.Error" OnClick="CancelEdit">Cancel</MudButton>
-                }
-                else
-                {
-                    <MudButton Color="Color.Primary" OnClick="@(() => EditRow(context))">Action</MudButton>
-                }
+                <MudButton Color="Color.Primary" OnClick="@(() => EditRow(context.id_etat_decompte))">Payé</MudButton>
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -55,23 +38,27 @@
     <MudPaper Class="pa-3 mt-4" Elevation="4">
         <MudText Typo="Typo.h6">Arrêté à la somme de : <b>@FilteredData.Sum(x => x.montant).ToString("F2") Ar</b></MudText>
     </MudPaper>
+        
 </MudPaper>
 
-@code {
+@code{
     private string searchText = "";
 
-    private DemandeDto? demandeNote;
-    private List<DemandeDto> demandeNotes = new List<DemandeDto>();
+    private PaiementDto? prestationListe;
+    private List<PaiementDto> prestationListes = new List<PaiementDto>();
     private ApiResponse? apiResponse;
-    //string url = "http://localhost:5077/api/notedebit";
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await http.GetFromJsonAsync<ApiResponse>("notedebit/demandeoublie", option);
-            apiResponse.HandleResponse<List<DemandeDto>>();
-            demandeNotes = apiResponse.Data as List<DemandeDto> ?? new List<DemandeDto>();
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>("delai/prestations", option);
+            if (apiResponse != null)
+            {
+                apiResponse.HandleResponse<List<PaiementDto>>();
+            }
+            prestationListes = apiResponse?.Data as List<PaiementDto> ?? new List<PaiementDto>();
         }
         catch (Exception ex)
         {
@@ -79,30 +66,21 @@
         }
     }
 
-    private List<DemandeDto> FilteredData
+    private List<PaiementDto> FilteredData
     {
         get
         {
-            var result = demandeNotes
-             .Where(x => string.IsNullOrWhiteSpace(searchText)
-                      || x.referenceEtatDecompte.Contains(searchText, StringComparison.OrdinalIgnoreCase))
-             .ToList();
+            var result = prestationListes
+            .Where(x => string.IsNullOrWhiteSpace(searchText)
+                || x.etatDecompte.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                || x.clients.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
             return result;
         }
     }
 
-    private void EditRow(DemandeDto demande)
+     private void EditRow(int id_etat_decompte)
     {
-        demandeNote = demande;
-    }
-
-    private async Task SaveRow(int id)
-    {
-        navigationManager.NavigateTo($"/demandenotedebit/{id}");
-    }
-
-    private void CancelEdit()
-    {
-        demandeNote = null; // Annuler l'édition
+        navigationManager.NavigateTo($"/choixpaiement/{id_etat_decompte}");   
     }
 }
