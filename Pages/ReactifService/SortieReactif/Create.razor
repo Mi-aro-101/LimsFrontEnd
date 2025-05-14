@@ -1,4 +1,4 @@
-﻿@* @page "/sortie-reactif/create"
+﻿@page "/sortie-reactif/create"
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
@@ -6,259 +6,23 @@
 @using System.Collections.Generic
 @using System.Threading.Tasks
 @using LimsFrontEnd.Models.Reactif
+@using LimsFrontEnd.Models
 @using LimsUtils.Api
 @using System.Text.Json
 
-<div class="card border-dark mb-3">
-    <div class="card-header">Créer une Sortie Réactif</div>
-    <div class="card-body text-dark">
-        <EditForm Model="@sortieReactif" OnValidSubmit="@HandleOnSubmit">
-            <DataAnnotationsValidator />
-            <div class="form-group">
-                <label>Réactif</label>
-                <InputText class="form-control"
-                           Value="@searchTerm"
-                           ValueChanged="@((string val) => OnSearchChanged(val))"
-                           ValueExpression="@(() => searchTerm)"
-                           placeholder="Rechercher un réactif"
-                           @oninput="@(async (ChangeEventArgs e) => await OnSearchChanged(e.Value.ToString()))" />
-                @if (!string.IsNullOrEmpty(searchTerm))
-                {
-                    <ul class="list-group">
-                        @if (filteredReactifs.Any())
-                        {
-                            @foreach (var reactif in filteredReactifs)
-                            {
-                                <li class="list-group-item" @onclick="() => SelectReactif(reactif)">
-                                    @reactif.Designation
-                                </li>
-                            }
-                        }
-                    </ul>
-                }
-                @if (isReactifInvalid)
-                {
-                    <div class="text-danger">Veuillez sélectionner un réactif.</div>
-                }
-            </div>
-            <br />
-            <div class="form-group">
-                <label>Quantité</label>
-                <InputNumber class="form-control" @bind-Value="sortieReactif.Quantite" />
-                @if (isQuantiteInvalid)
-                {
-                    <div class="text-danger">La quantité doit être supérieure à zéro.</div>
-                }
-            </div>
-            <br />
-            <div class="form-group">
-                <label>Département</label>
-                <InputSelect class="form-control" @bind-Value="sortieReactif.IdDepartement">
-                    <option value="">-- Sélectionner --</option>
-                    @foreach (var departement in departements)
-                    {
-                        <option value="@departement.IdDepartement">@departement.Designation</option>
-                    }
-                </InputSelect>
-                @if (isDepartementInvalid)
-                {
-                    <div class="text-danger">Veuillez sélectionner un département.</div>
-                }
-            </div>
-            <br />
-            <div class="form-group">
-                <label>Objet Sortie Réactif</label>
-                <InputSelect class="form-control" @bind-Value="sortieReactif.IdObjetSortieReactif">
-                    <option value="">-- Sélectionner --</option>
-                    @foreach (var objetSortie in objetsSortieReactif)
-                    {
-                        <option value="@objetSortie.IdObjetSortieReactif">@objetSortie.Designation</option>
-                    }
-                </InputSelect>
-                @if (isObjetSortieReactifInvalid)
-                {
-                    <div class="text-danger">Veuillez sélectionner un objet sortie réactif.</div>
-                }
-            </div>
-            <br />
-            <div class="form-group">
-                <label>Date de Sortie</label>
-                <InputDate class="form-control" @bind-Value="sortieReactif.DateSortie" disabled />
-            </div>
-            <br />
-            <center>
-                <button type="submit" class="btn btn-primary">Créer</button>
-            </center>
-        </EditForm>
-    </div>
-</div>
+ 
+<MudItem xs="12" sm="6" md="4">
+    <MudPaper Elevation="2" Class="pa-4" Style="min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
+        <MudText Typo="Typo.h6" Align="Align.Center" GutterBottom="true">
+            Reste en stock
+        </MudText>
+        <MudText Typo="Typo.h5" Align="Align.Center" Style="color: rgb(49,130,189);">
+            @resteStock.Quantite @resteStock.Unite
+        </MudText>
+    </MudPaper>
+</MudItem>
 
-@code {
-    private SortieReactifDto sortieReactif = new() { DateSortie = DateTime.Today };
-    private List<ReactifDto> reactifs = new();
-    private List<DepartementSortieReactifDto> departements = new();
-    private List<ObjetSortieReactifDto> objetsSortieReactif = new();
-    private bool isQuantiteInvalid = false;
-    private bool isReactifInvalid = false;
-    private bool isDepartementInvalid = false;
-    private bool isObjetSortieReactifInvalid = false;
-    private string searchTerm = string.Empty;
-
-    private string sortieReactifUrl = "http://localhost:5077/api/sortie-reactifs";
-    private string reactifUrl = "http://localhost:5077/api/reactifs";
-    private string departementUrl = "http://localhost:5077/api/departements-reactif";
-    private string objetSortieReactifUrl = "http://localhost:5077/api/objetSortieReactif";
-
-    [Parameter]
-    public EventCallback OnSortieReactifCreated { get; set; }
-
-    private List<ReactifDto> filteredReactifs => reactifs
-        .Where(r => !string.IsNullOrEmpty(r.Designation) &&
-                    r.Designation.StartsWith(searchTerm ?? string.Empty, StringComparison.OrdinalIgnoreCase))
-        .ToList();
-
-    protected override async Task OnInitializedAsync()
-    {
-        sortieReactif.DateSortie = DateTime.Today;
-        departements = await LoadDepartements();
-        objetsSortieReactif = await LoadObjetsSortieReactif();
-    }
-
-    private async Task<List<ReactifDto>> LoadReactifs()
-    {
-        try
-        {
-            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{reactifUrl}/search?searchTerm={searchTerm}");
-            if (apiResponse is { IsSuccess: true, Data: not null })
-            {
-                var jsonData = apiResponse.Data.ToString();
-                return JsonSerializer.Deserialize<List<ReactifDto>>(jsonData,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                    ?? new List<ReactifDto>();
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors du chargement des réactifs : {ex.Message}");
-        }
-        return new List<ReactifDto>();
-    }
-
-    private async Task<List<DepartementSortieReactifDto>> LoadDepartements()
-    {
-        try
-        {
-            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>(departementUrl);
-            if (apiResponse is { IsSuccess: true, Data: not null })
-            {
-                var jsonData = apiResponse.Data.ToString();
-                return JsonSerializer.Deserialize<List<DepartementSortieReactifDto>>(jsonData,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                    ?? new List<DepartementSortieReactifDto>();
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors du chargement des départements : {ex.Message}");
-        }
-        return new List<DepartementSortieReactifDto>();
-    }
-
-    private async Task<List<ObjetSortieReactifDto>> LoadObjetsSortieReactif()
-    {
-        try
-        {
-            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>(objetSortieReactifUrl);
-            if (apiResponse is { IsSuccess: true, Data: not null })
-            {
-                var jsonData = apiResponse.Data.ToString();
-                return JsonSerializer.Deserialize<List<ObjetSortieReactifDto>>(jsonData,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                    ?? new List<ObjetSortieReactifDto>();
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors du chargement des objets sortie réactif : {ex.Message}");
-        }
-        return new List<ObjetSortieReactifDto>();
-    }
-
-    private async Task OnSearchChanged(string val)
-    {
-        searchTerm = val;
-        reactifs = await LoadReactifs();
-        StateHasChanged();
-    }
-
-    private void SelectReactif(ReactifDto reactif)
-    {
-        sortieReactif.IdReactif = reactif.IdReactif;
-        searchTerm = reactif.Designation;
-        isReactifInvalid = false;
-    }
-
-    private async Task HandleOnSubmit()
-    {
-        isQuantiteInvalid = sortieReactif.Quantite <= 0;
-        isReactifInvalid = sortieReactif.IdReactif == 0;
-        isDepartementInvalid = sortieReactif.IdDepartement == null;
-        isObjetSortieReactifInvalid = sortieReactif.IdObjetSortieReactif == 0;
-
-        if (isQuantiteInvalid || isReactifInvalid || isDepartementInvalid || isObjetSortieReactifInvalid)
-        {
-            return;
-        }
-
-        string reactifDesignation = reactifs.FirstOrDefault(r => r.IdReactif == sortieReactif.IdReactif)?.Designation ?? "Non sélectionné";
-        string quantite = sortieReactif.Quantite.ToString();
-        string departementDesignation = departements.FirstOrDefault(d => d.IdDepartement == sortieReactif.IdDepartement)?.Designation ?? "Non sélectionné";
-        string objetSortieDesignation = objetsSortieReactif.FirstOrDefault(o => o.IdObjetSortieReactif == sortieReactif.IdObjetSortieReactif)?.Designation ?? "Non sélectionné";
-
-        string message = $"Veuillez vérifier les informations suivantes avant de créer la sortie de réactif :\n\n" +
-                         $"Réactif : {reactifDesignation}\n" +
-                         $"Quantité : {quantite}\n" +
-                         $"Département : {departementDesignation}\n" +
-                         $"Objet Sortie : {objetSortieDesignation}\n\n" +
-                         "Êtes-vous vraiment sûr de la véracité de toutes ces informations ? Une fois créée, la sortie ne pourra plus être modifiée ou supprimée.";
-
-        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", message);
-        if (!confirmed)
-        {
-            return;
-        }
-
-        try
-        {
-            var response = await Http.PostAsJsonAsync(sortieReactifUrl, sortieReactif);
-            response.EnsureSuccessStatusCode();
-            if (OnSortieReactifCreated.HasDelegate)
-                await OnSortieReactifCreated.InvokeAsync();
-            sortieReactif = new SortieReactifDto() { DateSortie = DateTime.Today };
-            searchTerm = string.Empty;
-            isQuantiteInvalid = false;
-            isReactifInvalid = false;
-            isDepartementInvalid = false;
-            isObjetSortieReactifInvalid = false;
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors de la création de la sortie : {ex.Message}");
-        }
-    }
-} *@
-
-@page "/sortie-reactif/create"
-@inject HttpClient Http
-@inject NavigationManager NavigationManager
-@inject IJSRuntime JSRuntime
-@using System.Net.Http.Json
-@using System.Collections.Generic
-@using System.Threading.Tasks
-@using LimsFrontEnd.Models.Reactif
-@using LimsUtils.Api
-@using System.Text.Json
+<br />
 
 <div class="card border-dark mb-3">
     <div class="card-header">Créer une Sortie Réactif</div>
@@ -365,8 +129,13 @@
     private string departementUrl = "http://localhost:5077/api/departements-reactif";
     private string objetSortieReactifUrl = "http://localhost:5077/api/objetSortieReactif";
 
+    private ResteStockDto resteStock = new();
+
+
     [Parameter]
     public EventCallback OnSortieReactifCreated { get; set; }
+    [Parameter]
+    public EventCallback<string> OnError { get; set; }
 
     private List<ReactifDto> filteredReactifs => reactifs
         .Where(r => !string.IsNullOrEmpty(r.Designation) &&
@@ -447,12 +216,39 @@
         StateHasChanged();
     }
 
+    private async void LoadResteStock(int idReactif, DateTime dateSortie)
+    {
+
+        resteStock.IdReactif = idReactif;
+        if(sortieReactif.DateSortie == null)
+        {
+            resteStock.DateParam = DateTime.Now;
+        }
+        resteStock.DateParam = dateSortie;
+
+        var response = await Http.PostAsJsonAsync("reactifs/reste-stock", resteStock);
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        ApiResponse? apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
+        
+        if(apiResponse?.IsSuccess == true || apiResponse != null)
+        {
+            apiResponse.HandleResponse<ResteStockDto>();
+            resteStock = (ResteStockDto)apiResponse.Data;
+            StateHasChanged();
+        }
+        else{
+            StateHasChanged();
+        }
+    }
+
     private void SelectReactif(ReactifDto reactif)
     {
         sortieReactif.IdReactif = reactif.IdReactif;
         searchTerm = reactif.Designation;
         selectedUnite = reactif.Unite?.Designation ?? "N/A";
         isReactifInvalid = false;
+        LoadResteStock(reactif.IdReactif, sortieReactif.DateSortie);
+        StateHasChanged();
     }
 
     private async Task HandleOnSubmit()
@@ -488,7 +284,22 @@
         try
         {
             var response = await Http.PostAsJsonAsync(sortieReactifUrl, sortieReactif);
-            response.EnsureSuccessStatusCode();
+            using var responseStream = await response.Content.ReadAsStreamAsync();
+            ApiResponse? apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
+            
+            if(apiResponse?.IsSuccess == true)
+            {
+                apiResponse.HandleResponse<ResteStockDto>();
+                resteStock = (ResteStockDto)apiResponse.Data;
+                StateHasChanged();
+                Console.WriteLine("Success : "+JsonSerializer.Serialize(apiResponse));
+            }
+            else{
+                if (OnError.HasDelegate)
+                await OnError.InvokeAsync(apiResponse?.Message);
+                StateHasChanged();
+                Console.WriteLine("Failed : "+JsonSerializer.Serialize(apiResponse));
+            }
             if (OnSortieReactifCreated.HasDelegate)
                 await OnSortieReactifCreated.InvokeAsync();
             sortieReactif = new SortieReactifDto() { DateSortie = DateTime.Today };

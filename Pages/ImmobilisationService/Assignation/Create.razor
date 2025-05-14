@@ -167,7 +167,7 @@
 
     private async Task<List<LocalisationDto>> LoadLocalisations()
     {
-        try
+        try 
         {
             var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/assignation/localisations");
             if (apiResponse is { IsSuccess: true, Data: not null })
