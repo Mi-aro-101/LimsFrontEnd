@@ -1,0 +1,109 @@
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient http
+@using LimsFrontEnd.Models
+@* @inject NavigationManager navigationManager *@
+
+@if(IsVisible)
+{
+     <div class="popup-overlay">
+        <div class="popup-content">
+            <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
+                Détail des montants par opérateur mobile
+            </MudText>
+
+            <MudSelect T="SemaineDto" Label="Filtrer par semaine" @bind-Value="selectedSemaine">
+                <MudSelectItem Value="@(default(SemaineDto))">Toutes les semaines</MudSelectItem>
+                @foreach (var s in semainesDisponibles)
+                {
+                    <MudSelectItem Value="@s">
+                        @($"{s.debutSemaine:dd MMM} - {s.finSemaine:dd MMM}")
+                    </MudSelectItem>
+                }
+            </MudSelect>
+            
+            <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="FiltrerParSemaine" StartIcon="@Icons.Material.Filled.FilterList">
+                Filtrer par semaine
+            </MudButton>
+
+            <MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
+                <MudGrid>  
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudPaper Elevation="2" Class="pa-4" Style="min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                            <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
+                                Montant par Yas
+                            </MudText>
+                            <MudText Typo="Typo.h6" Align="Align.Center" Style="color: blue;">
+                                @montantYas Ariary
+                            </MudText>
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudPaper Elevation="2" Class="pa-4 montant-mobile-card" Style="min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                            <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
+                                Montant par Airtel
+                            </MudText>
+                            <MudText Typo="Typo.h6" Align="Align.Center" Style="color: red;">
+                                @montantAirtel Ariary
+                            </MudText>                           
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="12" md="4">
+                        <MudPaper Elevation="2" Class="pa-4" Style="min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                            <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
+                                Montant par Orange
+                            </MudText>
+                            <MudText Typo="Typo.h6" Align="Align.Center" Style="color: green;">
+                                @montantOrange Ariary
+                            </MudText>
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudGrid Class="mt-4" GutterSize="3">
+                        <!-- Graphique Linéaire -->
+                        <MudItem xs="12" md="6">
+                            <div id="BarChartMobile"></div>
+                        </MudItem>
+                        <!-- Donut Chart -->
+                        <MudItem xs="12" md="6">
+                            <div id="PieChartMobile"></div>
+                        </MudItem>
+                    </MudGrid>
+                </MudGrid>              
+            </MudContainer>
+
+            <MudButton Color="Color.Error" Variant="Variant.Text" OnClick="Close" Class="mt-4">
+                Fermer
+            </MudButton>
+        </div>
+    </div> 
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    // Valeurs à passer depuis le parent
+    public decimal montantYas { get; set; }
+    public decimal montantAirtel { get; set; }
+    public decimal montantOrange { get; set; }
+
+    private SemaineDto? selectedSemaine = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Ici, mets les valeurs réelles à partir de ta logique de calcul
+        montantYas = 120000;
+        montantAirtel = 85000;
+        montantOrange = 150000;
+    }
+
+    private async Task Close()
+    {
+        Console.WriteLine("Fermeture du dialog");
+        IsVisible = false;
+        await OnClose.InvokeAsync();
+    }
+}
