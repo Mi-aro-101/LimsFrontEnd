@@ -230,3 +230,51 @@ export function PaiementPieSubdivision(donnee){
 
     Plotly.newPlot('PieChart', data, layout);
 }
+
+export function MobilePaiementSubdivisionPie(){
+
+    var totalPaiements = donnee.reduce((a, b) => a + b, 0);
+
+    var data = [{
+        values: donnee,
+        labels: ['Yas', 'Airtel', 'Orange'],
+        name : 'division du paiement',
+        hole: .4,
+        type: 'pie',
+        marker: {
+            colors: ['blue', 'red', 'green']  // Spécifie les couleurs ici
+        },
+        hovertemplate: 
+            '%{label}<br>' +
+            '%{percent}<br>' +
+            '%{customdata} paiements<extra></extra>',
+        customdata: donnee
+    }];
+
+    var layout = {
+        title: {
+            text: 'Paiement par catégorie opérateur'
+        },
+        annotations: [
+            {
+                font: {
+                    size: 18
+                },
+                showarrow: false,
+                text: totalPaiements + " prs",
+                x: 0.5,   // Centré horizontalement
+                y: 0.5,   // Centré verticalement
+                align: 'center'
+            }
+        ],
+        height: 400,
+        width: 600,
+        showlegend: false
+    };
+    Plotly.newPlot('BarChartMobile', data, layout);
+}
+
+export function MobilePaiementSubdivisionBar(){ 
+
+    Plotly.newPlot('PieChartMobile', data, layout);
+}

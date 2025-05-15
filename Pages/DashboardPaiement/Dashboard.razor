@@ -32,16 +32,27 @@
                 </MudText>
             </MudPaper>
         </MudItem>
+        
         <MudItem xs="12" sm="6" md="4">
-            <MudPaper Elevation="2" Class="pa-4" Style="min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
+            <MudPaper Elevation="2" Class="pa-4 montant-mobile-card" Style="min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
                 <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
                     Montant par mobile
                 </MudText>
                 <MudText Typo="Typo.h6" Align="Align.Center" Style="color: red;">
                     @totalMontantFilteredMobile Ariary
                 </MudText>
+
+                <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"                   
+                   Class="detail-button mt-2"
+                   OnClick="AfficherDetail">
+                    Détail
+                </MudButton>
             </MudPaper>
         </MudItem>
+
+        <MobileDash IsVisible ="@dashboardMobile" OnClose="@(() => dashboardMobile = false)"/>
+
         <MudItem xs="12" sm="12" md="4">
             <MudPaper Elevation="2" Class="pa-4" Style="min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
                 <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
@@ -52,6 +63,7 @@
                 </MudText>
             </MudPaper>
         </MudItem>
+
         <MudGrid Class="mt-4" GutterSize="3">
             <!-- Graphique Linéaire -->
             <MudItem xs="12" md="6">
@@ -64,6 +76,8 @@
         </MudGrid>
     </MudGrid>
 </MudContainer>
+
+
 @code {
 
     //string url = "http://localhost:5077/api/";
@@ -80,6 +94,8 @@
                 $"{DonutSeries[hoveredIndex]:N0} ({((DonutSeries[hoveredIndex] / DonutSeries.Sum()) * 100):0.0}%)"
                 : DonutSeries.Sum().ToString("N0");
     */
+
+    public bool dashboardMobile = false;
 
     private IJSObjectReference? jsModule;
     private List<SemaineDto> semainesDisponibles = new();
@@ -109,6 +125,7 @@
     private string[] semaine = ["Lun", "Mar", "Mer", "Jeu", "Ven"];
     private double[] DonutSeries { get; set; } = Array.Empty<double>();
     //private int[] DonutLabels { get; set; } = Array.Empty<int>();
+
     protected override async Task OnInitializedAsync()
     {
         //string urli1 = url + "receptionpaiementespece";
@@ -132,6 +149,12 @@
 
             await FiltrerParSemaine();
         }
+    }
+
+    private void AfficherDetail()
+    {
+        dashboardMobile = true;
+        StateHasChanged(); // Force le rafraîchissement de la vue
     }
 
     //private void FiltrerParSemaine()

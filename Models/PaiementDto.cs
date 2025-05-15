@@ -36,7 +36,7 @@ namespace LimsFrontEnd.Models
         [JsonPropertyName("prenomPayant")]
         public string? prenomPayant { get; set; }
         [JsonPropertyName("contactdupayant")]
-        public int contactdupayant { get; set; }
+        public string? contactdupayant { get; set; }
 
         //attribut commun
         [JsonPropertyName("id_etat_decompte")]
