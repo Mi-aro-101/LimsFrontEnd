@@ -36,12 +36,20 @@
             </div>
         </div>
         <br>
-        <div class="form-group row">
-            <label for="inputPassword" class="col-sm-2 col-form-label">Tarif</label>
-            <div class="col-sm-8">
-            <InputNumber class="form-control" disabled="@(typetravaux.HaveFormule == 0)" @bind-Value="typetravaux.Tarif" placeholder="0000.00" />
-            </div>
-        </div>
+            @if (typetravaux.HaveFormule == 0)
+            {
+                <div class="form-group">
+                    <label class="col-sm-2 col-form-label">Fichier Formule</label>
+                    <InputFile class="form-control"  OnChange="HandleFileSelected" />
+                </div>
+            }
+            else if (typetravaux.HaveFormule == 1)
+            {
+                <div class="form-group">
+                    <label class="col-sm-2 col-form-label">Tarif</label>
+                    <InputNumber class="form-control" @bind-Value="typetravaux.Tarif" />
+                </div>
+            }
         <br>
         <div class="form-group row">
             <label for="inputPassword" class="col-sm-2 col-form-label">Date de creation</label>
@@ -125,6 +133,19 @@
         catch(Exception ex)
         {
             Console.WriteLine("Exception : " +ex.Message);
+        }
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        Console.WriteLine("File selected");
+        var file = e.File;
+        if (file != null)
+        {
+            using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 10 MB limit, adjust as needed
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            typetravaux.FormuleBytes = ms.ToArray();
         }
     }
 }
