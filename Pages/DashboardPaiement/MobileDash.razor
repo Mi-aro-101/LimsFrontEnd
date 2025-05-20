@@ -12,7 +12,7 @@
                 Détail des montants par opérateur mobile
             </MudText>
 
-            <MudSelect T="SemaineDto" Label="Filtrer par semaine" @bind-Value="selectedSemaine">
+            @* <MudSelect T="SemaineDto" Label="Filtrer par semaine" @bind-Value="selectedSemaine">
                 <MudSelectItem Value="@(default(SemaineDto))">Toutes les semaines</MudSelectItem>
                 @foreach (var s in semainesDisponibles)
                 {
@@ -20,11 +20,11 @@
                         @($"{s.debutSemaine:dd MMM} - {s.finSemaine:dd MMM}")
                     </MudSelectItem>
                 }
-            </MudSelect>
+            </MudSelect> *@
             
-            <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="FiltrerParSemaine" StartIcon="@Icons.Material.Filled.FilterList">
+            @* <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="FiltrerParSemaine" StartIcon="@Icons.Material.Filled.FilterList">
                 Filtrer par semaine
-            </MudButton>
+            </MudButton> *@
 
             <MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
                 <MudGrid>  

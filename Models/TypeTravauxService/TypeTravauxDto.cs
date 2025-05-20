@@ -37,6 +37,8 @@ public class TypeTravauxDto
     public int HaveFormule { get; set; } = 1;
     [JsonPropertyName("formuleString")]
     public string? FormuleString { get; set; }
+    [JsonPropertyName("formuleBytes")]
+    public byte[]? FormuleBytes { get; set; }
     [JsonPropertyName("idTypeEchantillons")]
     public IEnumerable<int>? IdTypeEchantillons { get; set; } = new HashSet<int>();
     [JsonPropertyName("typeTravauxTypeEchantillons")]
