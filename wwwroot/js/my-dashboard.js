@@ -231,7 +231,7 @@ export function PaiementPieSubdivision(donnee){
     Plotly.newPlot('PieChart', data, layout);
 }
 
-export function MobilePaiementSubdivisionPie(){
+export function MobilePaiementSubdivisionPie(donnee){
 
     var totalPaiements = donnee.reduce((a, b) => a + b, 0);
 
@@ -242,7 +242,7 @@ export function MobilePaiementSubdivisionPie(){
         hole: .4,
         type: 'pie',
         marker: {
-            colors: ['blue', 'red', 'green']  // Spécifie les couleurs ici
+            colors: ['yellow', 'red', 'orange']  // Spécifie les couleurs ici
         },
         hovertemplate: 
             '%{label}<br>' +
@@ -271,10 +271,92 @@ export function MobilePaiementSubdivisionPie(){
         width: 600,
         showlegend: false
     };
-    Plotly.newPlot('BarChartMobile', data, layout);
+    
+    Plotly.newPlot('PieChartMobile', data, layout);
 }
 
-export function MobilePaiementSubdivisionBar(){ 
+export function MobilePaiementSubdivisionLine(xs, ysT, ysA, ysO){ 
 
-    Plotly.newPlot('PieChartMobile', data, layout);
+    var Yas = {
+        x: xs,
+        y: ysT,
+        mode: 'lines+markers',
+        name: 'Yas',
+        line: {
+            color: 'yellow',
+            width: 3
+        },
+        marker: {
+            color: 'yellow',
+            size: 8
+        },
+        connectgaps: true
+    };
+
+    var Airtel = {
+        x: xs,
+        y: ysA,
+        mode: 'lines+markers',
+        name: 'Airtel',
+        line: {
+            color: 'red',
+            width: 3
+        },
+        marker: {
+            color: 'red',
+            size: 8
+        },
+        connectgaps: true
+    };
+
+    var Orange = {
+        x: xs,
+        y: ysO,
+        mode: 'lines+markers',
+        name: 'Orange',
+        line: {
+            color: 'orange',
+            width: 3
+        },
+        marker: {
+            color: 'orange',
+            size: 8
+        },
+        connectgaps: true
+    };
+
+    var data = [Yas, Airtel, Orange];
+
+    var layout = {
+        title: {
+            text: '📊 Paiement par catégorie mobile',
+            font: {
+                size: 20
+            }
+        },
+        legend: {
+            orientation: 'h',
+            x: 0.5,
+            xanchor: 'center',
+            y: -0.2
+        },
+        xaxis: {
+            title: 'Période',
+            showgrid: true,
+            zeroline: false
+        },
+        yaxis: {
+            title: 'Nombre de paiements',
+            showgrid: true,
+            zeroline: false
+        },
+        margin: {
+            t: 60,
+            b: 80
+        },
+        height: 400,
+        width: 600
+    };
+
+    Plotly.newPlot('LineChartMobile', data, layout);
 }
