@@ -92,9 +92,9 @@
                 case 2:
                     etatpaiement = 32;
                     break;
-                case 3:
+                 /*case 3:
                     etatpaiement = 33;
-                    break;
+                    break; */
             }
 
             Console.WriteLine($"etatPaiement: {etatpaiement}");
@@ -103,7 +103,7 @@
             var delai = new DelaiDto
             {
                 datePaiement = DateTime.Now,
-                EtatPaiement = etatpaiement,
+                @* EtatPaiement = etatpaiement, *@
                 id_etat_decompte = Id_etat_decompte,
                 DateFinDelai = DateTime.Now.AddDays(7),
                 modePaiement = delaiDto.modePaiement

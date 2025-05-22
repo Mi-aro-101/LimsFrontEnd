@@ -2,6 +2,7 @@
 @using System.Text.Json
 @inject HttpClient http
 @using LimsFrontEnd.Models
+@inject IJSRuntime JSRuntime
 @* @inject NavigationManager navigationManager *@
 
 @if(IsVisible)
@@ -12,11 +13,12 @@
                 Détail des montants par opérateur mobile
             </MudText>
 
-            @* <MudSelect T="SemaineDto" Label="Filtrer par semaine" @bind-Value="selectedSemaine">
-                <MudSelectItem Value="@(default(SemaineDto))">Toutes les semaines</MudSelectItem>
+            @* <MudSelect T="string" Label="Filtrer par semaine" @bind-Value="selectedSemaine">
+                <MudSelectItem Value="">Toutes les semaines</MudSelectItem>
                 @foreach (var s in semainesDisponibles)
                 {
-                    <MudSelectItem Value="@s">
+                    var key = $"{s.debutSemaine:yyyyMMdd}-{s.finSemaine:yyyyMMdd}";
+                    <MudSelectItem Value="@key">
                         @($"{s.debutSemaine:dd MMM} - {s.finSemaine:dd MMM}")
                     </MudSelectItem>
                 }
@@ -64,7 +66,7 @@
                     <MudGrid Class="mt-4" GutterSize="3">
                         <!-- Graphique Linéaire -->
                         <MudItem xs="12" md="6">
-                            <div id="BarChartMobile"></div>
+                            <div id="LineChartMobile"></div>
                         </MudItem>
                         <!-- Donut Chart -->
                         <MudItem xs="12" md="6">
@@ -86,18 +88,140 @@
     [Parameter] public EventCallback OnClose { get; set; }
 
     // Valeurs à passer depuis le parent
-    public decimal montantYas { get; set; }
-    public decimal montantAirtel { get; set; }
-    public decimal montantOrange { get; set; }
+    private decimal montantYas { get; set; }
+    private decimal montantAirtel { get; set; }
+    private decimal montantOrange { get; set; }
+
+    private int nombreYas { get; set; }
+    private int nombreAirtel { get; set; }
+    private int nombreOrange { get; set; }
+
+    private IJSObjectReference? jsModule;
+    private ApiResponse? response;
+    private List<SemaineDto> semainesDisponibles = new();
+
+    private List<DetailMobileDto> details = new();
+    private List<DetailMobileDto> detailsFiltrés = new();
+    private bool chartsReady = false;
 
     private SemaineDto? selectedSemaine = null;
 
-    protected override async Task OnInitializedAsync()
+    private string[] semaine = ["Lun", "Mar", "Mer", "Jeu", "Ven"];
+    private double[] DonutSeries { get; set; } = Array.Empty<double>();
+
+    protected override async Task OnParametersSetAsync()
     {
-        // Ici, mets les valeurs réelles à partir de ta logique de calcul
-        montantYas = 120000;
-        montantAirtel = 85000;
-        montantOrange = 150000;
+        if (IsVisible)
+        {
+            await ChargerDonnees();
+            chartsReady = true;
+            StateHasChanged(); // Forcer le re-render si nécessaire
+        }
+    }
+
+    private async Task ChargerDonnees()
+    {       
+        var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        response = await http.GetFromJsonAsync<ApiResponse>("receptionpaiementmobile/operateurmobile", option);
+        Console.WriteLine($"Data brut: {response.Data}");
+
+        if (response.IsSuccess)
+        {
+            var data = JsonSerializer.Deserialize<DashboardDelaiMobileDto>(response.Data.ToString(), option);
+
+            semainesDisponibles = data?.Semaines ?? new List<SemaineDto>();
+            details = data?.Details ?? new List<DetailMobileDto>();
+
+            // Sérialisation en JSON pour affichage dans la console JS
+            var jsonSemaines = JsonSerializer.Serialize(semainesDisponibles, new JsonSerializerOptions { WriteIndented = true });
+            var jsonDetails = JsonSerializer.Serialize(data?.Details, new JsonSerializerOptions { WriteIndented = true });
+
+            await JSRuntime.InvokeVoidAsync("console.log", $"Semaines disponibles : {jsonSemaines}");
+            await JSRuntime.InvokeVoidAsync("console.log", $"Détails : {jsonDetails}");
+
+            await FiltrerParSemaine();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && chartsReady)
+        {
+            await UpdateChart();
+        }
+    }
+
+    public async Task FiltrerParSemaine()
+    {
+        if (selectedSemaine == null)
+        {
+            // par défaut, on affiche les 4 dernières semaines
+            var dateLimite = DateTime.Today.AddDays(-28);
+
+            detailsFiltrés = details
+                .Where(d => d.Date >= dateLimite)
+                .ToList();
+            
+            montantYas = (decimal)detailsFiltrés
+                .Where(d => d.Operateur == "Yas")
+                .Sum(d => (double)d.MontantTotal);
+
+            montantAirtel = (decimal)detailsFiltrés
+                .Where(d => d.Operateur == "Airtel")
+                .Sum(d => (double)d.MontantTotal);
+
+            montantOrange = (decimal)detailsFiltrés
+                .Where(d => d.Operateur == "Orange")
+                .Sum(d => (double)d.MontantTotal);
+
+            nombreYas = detailsFiltrés.Count(d => d.Operateur == "Yas");
+            nombreAirtel = detailsFiltrés.Count(d => d.Operateur == "Airtel");
+            nombreOrange = detailsFiltrés.Count(d => d.Operateur == "Orange");
+
+        }
+        else 
+        {
+            detailsFiltrés = details
+                .Where(d => d.Date >= selectedSemaine.debutSemaine && d.Date <= selectedSemaine.finSemaine)
+                .ToList();
+            
+            montantYas = (decimal)detailsFiltrés
+                .Where(d => d.Operateur == "Yas")
+                .Sum(d => (double)d.MontantTotal);
+            
+            montantAirtel = (decimal)detailsFiltrés
+                .Where(d => d.Operateur == "Airtel")
+                .Sum(d => (double)d.MontantTotal);
+
+            montantOrange = (decimal)detailsFiltrés
+                .Where(d => d.Operateur == "Orange")
+                .Sum(d => (double)d.MontantTotal);
+
+            nombreYas = detailsFiltrés.Count(d => d.Operateur == "Yas");
+            nombreAirtel = detailsFiltrés.Count(d => d.Operateur == "Airtel"); 
+            nombreOrange = detailsFiltrés.Count(d => d.Operateur == "Orange");
+        }
+
+    }
+
+    private async Task UpdateChart()
+    {   
+        var Yas = details.Where(d => d.Operateur == "Yas").Select(d => d.MontantTotal).ToArray();
+        var Airtel = details.Where(d => d.Operateur == "Airtel").Select(d => d.MontantTotal).ToArray();
+        var Orange = details.Where(d => d.Operateur == "Orange").Select(d => d.MontantTotal).ToArray();
+
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/my-dashboard.js");
+        await jsModule.InvokeVoidAsync("MobilePaiementSubdivisionLine", semaine, Yas, Airtel, Orange);
+
+        DonutSeries = new double[]
+        {
+            nombreYas,
+            nombreAirtel,
+            nombreOrange
+        };
+
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/my-dashboard.js");
+        await jsModule.InvokeVoidAsync("MobilePaiementSubdivisionPie", DonutSeries);
     }
 
     private async Task Close()
