@@ -27,8 +27,8 @@ namespace LimsFrontEnd.Models
         //attribut paiement espece post
         [JsonPropertyName("datePaiement")]
         public DateTime DatePaiement { get; set; }
-        [JsonPropertyName("modePaiement")]
-        public int ModePaiement { get; set; }
+        [JsonPropertyName("id_modePaiement")]
+        public int id_modePaiement { get; set; }
         [JsonPropertyName("etatPaiement")]
         public bool EtatPaiement { get; set; }
         [JsonPropertyName("nomPayant")]
