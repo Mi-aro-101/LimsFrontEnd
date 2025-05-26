@@ -1,4 +1,4 @@
-﻿
+﻿@* 
 @inject HttpClient Http
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
@@ -174,6 +174,187 @@
         else
         {
             immobilisationImmatriculation.IdEntreeImmobilisation = null; // Mettre à null si "-- Sélectionner --" est choisi
+        }
+        StateHasChanged();
+    }
+} *@
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using System.Net.Http.Json
+@using System.Text.Json
+@using LimsFrontEnd.Models.Immobilisation
+@using LimsUtils.Api
+
+<div class="d-flex justify-content-center">
+    <div class="card border-dark mb-3" style="max-width: 60rem;">
+        <div class="card-header">Créer une Immatriculation d'Immobilisation</div>
+        <div class="card-body text-dark">
+            <EditForm Model="@immobilisationImmatriculation" OnValidSubmit="@HandleOnSubmit" FormName="immobilisationImmatriculationForm">
+                <DataAnnotationsValidator />
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Entrée Immobilisation (Désignation - Bon de Réception)</label>
+                            <InputSelect class="form-control" @bind-Value="immobilisationImmatriculation.IdEntreeImmobilisation" @oninput="@((e) => OnEntreeImmobilisationChanged(e.Value))">
+                                <option value="">-- Sélectionner --</option>
+                                @foreach (var entree in entreeImmobilisationsNonImmatriculees)
+                                {
+                                    <option value="@entree.IdEntreeImmobilisation">@entree.Immobilisation?.Designation - @entree.BonReception</option>
+                                }
+                            </InputSelect>
+                            @if (isEntreeImmobilisationInvalid)
+                            {
+                                <div class="text-danger">Veuillez sélectionner une entrée d'immobilisation.</div>
+                            }
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Immobilisations non immatriculées</label>
+                            <InputNumber class="form-control" @bind-Value="resteImmatriculations" disabled />
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Code (Immobilisation)</label>
+                            <InputText class="form-control" @bind-Value="referenceImmobilisation" disabled />
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>Matricule</label>
+                            <InputText class="form-control" @bind-Value="immobilisationImmatriculation.Matricule" />
+                            @if (isMatriculeInvalid)
+                            {
+                                <div class="text-danger">Le matricule est obligatoire.</div>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Remarque</label>
+                            <InputTextArea class="form-control" @bind-Value="immobilisationImmatriculation.Remarque" />
+                        </div>
+                        <br />
+                        <div class="form-group">
+                            <label>État Initial</label>
+                            <InputTextArea class="form-control" @bind-Value="immobilisationImmatriculation.EtatInitiale" />
+                            @if (isEtatInitialeInvalid)
+                            {
+                                <div class="text-danger">L'état initial est obligatoire.</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <center>
+                    <button type="submit" class="btn btn-primary">Créer</button>
+                </center>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private ImmobilisationImmatriculationDto immobilisationImmatriculation = new();
+    private List<EntreeImmobilisationAvecResteDto> entreeImmobilisationsNonImmatriculees = new();
+    private string referenceImmobilisation = string.Empty;
+    private int resteImmatriculations = 0;
+    private string immobilisationImmatriculationUrl = "http://localhost:5077/api/immobilisation-immatriculations";
+    private string entreeImmobilisationUrl = "http://localhost:5077/api/entree-immobilisations/avec-reste";
+
+    private bool isEntreeImmobilisationInvalid = false;
+    private bool isMatriculeInvalid = false;
+    private bool isEtatInitialeInvalid = false;
+
+    [Parameter]
+    public EventCallback OnImmatriculationCreated { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        entreeImmobilisationsNonImmatriculees = await LoadEntreeImmobilisationsNonImmatriculees();
+    }
+
+    private async Task<List<EntreeImmobilisationAvecResteDto>> LoadEntreeImmobilisationsNonImmatriculees()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>(entreeImmobilisationUrl);
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<List<EntreeImmobilisationAvecResteDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<EntreeImmobilisationAvecResteDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des entrées non immatriculées : {ex.Message}");
+        }
+        return new List<EntreeImmobilisationAvecResteDto>();
+    }
+
+    private async Task HandleOnSubmit()
+    {
+        ResetValidationFlags();
+
+        isEntreeImmobilisationInvalid = immobilisationImmatriculation.IdEntreeImmobilisation == null || immobilisationImmatriculation.IdEntreeImmobilisation == 0;
+        isMatriculeInvalid = string.IsNullOrWhiteSpace(immobilisationImmatriculation.Matricule);
+        isEtatInitialeInvalid = string.IsNullOrWhiteSpace(immobilisationImmatriculation.EtatInitiale);
+
+        if (!isEntreeImmobilisationInvalid && !isMatriculeInvalid && !isEtatInitialeInvalid)
+        {
+            try
+            {
+                var response = await Http.PostAsJsonAsync(immobilisationImmatriculationUrl, immobilisationImmatriculation);
+                response.EnsureSuccessStatusCode();
+
+                if (OnImmatriculationCreated.HasDelegate)
+                {
+                    await OnImmatriculationCreated.InvokeAsync();
+                }
+
+                immobilisationImmatriculation = new();
+                referenceImmobilisation = string.Empty;
+                resteImmatriculations = 0;
+                entreeImmobilisationsNonImmatriculees = await LoadEntreeImmobilisationsNonImmatriculees();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la création : {ex.Message}");
+            }
+        }
+        else
+        {
+            StateHasChanged();
+        }
+    }
+
+    private void ResetValidationFlags()
+    {
+        isEntreeImmobilisationInvalid = false;
+        isMatriculeInvalid = false;
+        isEtatInitialeInvalid = false;
+    }
+
+    private void OnEntreeImmobilisationChanged(object value)
+    {
+        referenceImmobilisation = string.Empty;
+        resteImmatriculations = 0;
+        if (int.TryParse(value?.ToString(), out int idEntree) && idEntree != 0)
+        {
+            immobilisationImmatriculation.IdEntreeImmobilisation = idEntree;
+            var selectedEntree = entreeImmobilisationsNonImmatriculees.FirstOrDefault(e => e.IdEntreeImmobilisation == idEntree);
+            if (selectedEntree != null)
+            {
+                referenceImmobilisation = selectedEntree.Immobilisation?.Reference ?? string.Empty;
+                resteImmatriculations = selectedEntree.ResteImmatriculations;
+            }
+        }
+        else
+        {
+            immobilisationImmatriculation.IdEntreeImmobilisation = null;
         }
         StateHasChanged();
     }

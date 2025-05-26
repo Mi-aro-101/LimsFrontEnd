@@ -18,11 +18,10 @@
                     <!-- Première colonne -->
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label>Immatriculation à réassigner</label>
-                            @* <InputSelect class="form-control" @bind-Value="selectedImmatriculationId" @onchange="LoadCurrentAssignationData"> *@
-                            <InputSelect class="form-control"   Value="@selectedImmatriculationId"
-                                    ValueChanged="@( (int value) => LoadCurrentAssignationData(value) )"
-                                    ValueExpression="@(() => selectedImmatriculationId)">
+                            <label>Immobilisation à réassigner</label>
+                            <InputSelect class="form-control" Value="@selectedImmatriculationId"
+                                         ValueChanged="@((int value) => LoadCurrentAssignationData(value))"
+                                         ValueExpression="@(() => selectedImmatriculationId)">
                                 <option value="0">-- Sélectionner --</option>
                                 @foreach (var immatriculation in assignedImmatriculations)
                                 {
@@ -33,7 +32,7 @@
                             </InputSelect>
                             @if (isImmatriculationInvalid)
                             {
-                                <div class="text-danger">Veuillez sélectionner une immatriculation.</div>
+                                <div class="text-danger">Veuillez sélectionner une immobilisation.</div>
                             }
                         </div>
                         <br />
@@ -70,7 +69,7 @@
                             </InputSelect>
                             @if (isLocalisationInvalid)
                             {
-                                <div class="text-danger">Veuillez sélectionner une localisation.</div>
+                                <div class="text-danger">Veuillez sélectionner une localisation valide.</div>
                             }
                         </div>
                         <br />
@@ -97,7 +96,7 @@
     private List<LocalisationDto> localisations = new();
     private string currentEmployeNomPrenom = string.Empty;
     private int selectedImmatriculationId = 0;
-    private string assignationUrl = "http://localhost:5077/api/assignation";
+    private string assignationUrl = "http://localhost:5077/api/assignation"; // Correction pour correspondre au BFF
 
     // Flags de validation
     private bool isImmatriculationInvalid = false;
@@ -116,15 +115,19 @@
         try
         {
             var response = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/employes");
-            return response?.IsSuccess == true 
-                ? JsonSerializer.Deserialize<List<EmployeImmobilisationDto>>(
-                    JsonSerializer.Serialize(response.Data),
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) 
-                : new List<EmployeImmobilisationDto>();
+            if (response?.IsSuccess != true)
+            {
+                await JSRuntime.InvokeVoidAsync("console.error", "Erreur serveur lors du chargement des employés.");
+                return new List<EmployeImmobilisationDto>();
+            }
+            return JsonSerializer.Deserialize<List<EmployeImmobilisationDto>>(
+                JsonSerializer.Serialize(response.Data),
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) 
+                ?? new List<EmployeImmobilisationDto>();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erreur chargement employés: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("console.error", $"Erreur chargement employés: {ex.Message}");
             return new List<EmployeImmobilisationDto>();
         }
     }
@@ -134,15 +137,19 @@
         try
         {
             var response = await Http.GetFromJsonAsync<ApiResponse>($"{assignationUrl}/assigned-immobilisations");
-            return response?.IsSuccess == true
-                ? JsonSerializer.Deserialize<List<ImmobilisationImmatriculationDto>>(
-                    JsonSerializer.Serialize(response.Data),
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                : new List<ImmobilisationImmatriculationDto>();
+            if (response?.IsSuccess != true)
+            {
+                await JSRuntime.InvokeVoidAsync("console.error", $"Erreur serveur lors du chargement des immobilisations assignées: {response?.Message}");
+                return new List<ImmobilisationImmatriculationDto>();
+            }
+            return JsonSerializer.Deserialize<List<ImmobilisationImmatriculationDto>>(
+                JsonSerializer.Serialize(response.Data),
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) 
+                ?? new List<ImmobilisationImmatriculationDto>();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erreur chargement immatriculations: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("console.error", $"Erreur chargement immatriculations: {ex.Message}");
             return new List<ImmobilisationImmatriculationDto>();
         }
     }
@@ -152,15 +159,19 @@
         try
         {
             var response = await Http.GetFromJsonAsync<ApiResponse>($"{assignationUrl}/localisations");
-            return response?.IsSuccess == true
-                ? JsonSerializer.Deserialize<List<LocalisationDto>>(
-                    JsonSerializer.Serialize(response.Data),
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                : new List<LocalisationDto>();
+            if (response?.IsSuccess != true)
+            {
+                await JSRuntime.InvokeVoidAsync("console.error", $"Erreur serveur lors du chargement des localisations: {response?.Message}");
+                return new List<LocalisationDto>();
+            }
+            return JsonSerializer.Deserialize<List<LocalisationDto>>(
+                JsonSerializer.Serialize(response.Data),
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) 
+                ?? new List<LocalisationDto>();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erreur chargement localisations: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("console.error", $"Erreur chargement localisations: {ex.Message}");
             return new List<LocalisationDto>();
         }
     }
@@ -168,43 +179,46 @@
     private async Task LoadCurrentAssignationData(int val)
     {   
         selectedImmatriculationId = val;
+        reassignation.IdImmobilisationPropre = selectedImmatriculationId;
         var currentAssignation = await GetCurrentAssignation(selectedImmatriculationId);
 
         if (currentAssignation != null && currentAssignation.Employe != null)
         {
             currentEmployeNomPrenom = $"{currentAssignation.Employe.Nom} {currentAssignation.Employe.Prenom}";
-            reassignation.IdImmobilisationPropre = selectedImmatriculationId;
+            reassignation.IdLocalisation = currentAssignation.IdLocalisation ?? 0;
         }
         else
         {
-            currentEmployeNomPrenom = "Aucun employé assigné";
+            currentEmployeNomPrenom = "Aucune assignation active";
+            reassignation.IdLocalisation = 0;
         }
         StateHasChanged();
     }
 
     private async Task<AssignationDto> GetCurrentAssignation(int idImmobilisationPropre)
-{
-    try
     {
-        var response = await Http.GetFromJsonAsync<ApiResponse>($"{assignationUrl}/current/{idImmobilisationPropre}");
-        if (response?.IsSuccess == true && response.Data != null)
+        try
         {
-            return JsonSerializer.Deserialize<AssignationDto>(
-                JsonSerializer.Serialize(response.Data),
-                new JsonSerializerOptions 
-                { 
-                    PropertyNameCaseInsensitive = true,
-                    // Retirer ReferenceHandler si non nécessaire
-                });
+            var response = await Http.GetFromJsonAsync<ApiResponse>($"{assignationUrl}/current/{idImmobilisationPropre}");
+            if (response?.IsSuccess == true)
+            {
+                if (response.Data == null)
+                {
+                    return null;
+                }
+                return JsonSerializer.Deserialize<AssignationDto>(
+                    JsonSerializer.Serialize(response.Data),
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            await JSRuntime.InvokeVoidAsync("console.error", $"Erreur serveur lors de la récupération de l'assignation actuelle: {response?.Message}");
+            return null;
         }
-        return null;
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("console.error", $"Erreur récupération assignation: {ex.Message}");
+            return null;
+        }
     }
-    catch (Exception ex)
-    {
-        await JSRuntime.InvokeVoidAsync("console.error", $"Erreur récupération assignation: {ex.Message}");
-        return null;
-    }
-}
 
     private async Task HandleOnSubmit()
     {
@@ -223,10 +237,15 @@
                 {
                     NavigationManager.NavigateTo("/assignations");
                 }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    await JSRuntime.InvokeVoidAsync("console.error", $"Erreur serveur lors de la réassignation: {response.StatusCode} - {errorContent}");
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur réassignation: {ex.Message}");
+                await JSRuntime.InvokeVoidAsync("console.error", $"Erreur réassignation: {ex.Message}");
             }
         }
         else

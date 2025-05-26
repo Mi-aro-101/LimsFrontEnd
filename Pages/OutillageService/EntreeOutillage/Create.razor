@@ -149,7 +149,7 @@
 @code {
     private EntreeOutillageDto entreeOutillage = new()
     {
-        DateEntree = DateTime.Today,
+        DateEntree = DateTime.Now,
         Quantite = 0,
         PrixAchat = 0m
     };
@@ -180,7 +180,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        entreeOutillage.DateEntree = DateTime.Today;
+        entreeOutillage.DateEntree = DateTime.Now;
         outillages = await LoadOutillages();
         fournisseurs = await LoadFournisseurs();
         Marques = await LoadMarques();
@@ -277,62 +277,62 @@
     }
 
     private async Task HandleOnSubmit()
+{
+    ResetValidationFlags();
+
+    isQuantiteInvalid = entreeOutillage.Quantite <= 0;
+    isPrixAchatInvalid = entreeOutillage.PrixAchat <= 0;
+    isFournisseurInvalid = entreeOutillage.IdFournisseur == 0;
+    isOutillageSelectionInvalid = entreeOutillage.IdOutillage == 0;
+
+    if (!isQuantiteInvalid && !isPrixAchatInvalid && !isFournisseurInvalid && !isOutillageSelectionInvalid)
     {
-        ResetValidationFlags();
-
-        isQuantiteInvalid = entreeOutillage.Quantite <= 0;
-        isPrixAchatInvalid = entreeOutillage.PrixAchat <= 0;
-        isFournisseurInvalid = entreeOutillage.IdFournisseur == 0;
-        isOutillageSelectionInvalid = entreeOutillage.IdOutillage == 0;
-
-        if (!isQuantiteInvalid && !isPrixAchatInvalid && !isFournisseurInvalid && !isOutillageSelectionInvalid)
+        if (string.IsNullOrWhiteSpace(entreeOutillage.BonReception))
         {
-            // Si le champ BMPO est vide, définir "Aucun BMPO"
-            if (string.IsNullOrWhiteSpace(entreeOutillage.BonReception))
-            {
-                entreeOutillage.BonReception = "Aucun BMPO";
-            }
-
-            string outillageDesignation = outillages.FirstOrDefault(o => o.IdOutillage == entreeOutillage.IdOutillage)?.Designation ?? "Non sélectionné";
-            string quantite = entreeOutillage.Quantite.ToString();
-            string prixAchat = entreeOutillage.PrixAchat.ToString();
-            string bonReception = entreeOutillage.BonReception;
-            string fournisseurDesignation = fournisseurs.FirstOrDefault(f => f.IdFournisseur == entreeOutillage.IdFournisseur)?.Designation ?? "Non sélectionné";
-
-            string message = $"Veuillez vérifier les informations suivantes avant de créer l'entrée d'outillage :\n\n" +
-                             $"Outillage : {outillageDesignation}\n" +
-                             $"Quantité : {quantite}\n" +
-                             $"Prix d'achat : {prixAchat}\n" +
-                             $"Bon de réception : {bonReception}\n" +
-                             $"Fournisseur : {fournisseurDesignation}\n\n" +
-                             "Êtes-vous vraiment sûr de la véracité de ces informations ? Une fois créée, l'entrée ne pourra plus être modifiée ou supprimée.";
-
-            bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", message);
-            if (!confirmed)
-            {
-                return;
-            }
-
-            try
-            {
-                var response = await Http.PostAsJsonAsync(entreeOutillageUrl, entreeOutillage);
-                response.EnsureSuccessStatusCode();
-                if (OnEntreeOutillageCreated.HasDelegate)
-                    await OnEntreeOutillageCreated.InvokeAsync();
-                entreeOutillage = new EntreeOutillageDto() { DateEntree = DateTime.Today };
-                searchTerm = string.Empty;
-                StateHasChanged();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur lors de la création de l'entrée d'outillage : {ex.Message}");
-            }
+            entreeOutillage.BonReception = "Aucun BMPO";
         }
-        else
+
+        string outillageDesignation = outillages.FirstOrDefault(o => o.IdOutillage == entreeOutillage.IdOutillage)?.Designation ?? "Non sélectionné";
+        string quantite = entreeOutillage.Quantite.ToString();
+        string prixAchat = entreeOutillage.PrixAchat.ToString();
+        string bonReception = entreeOutillage.BonReception;
+        string fournisseurDesignation = fournisseurs.FirstOrDefault(f => f.IdFournisseur == entreeOutillage.IdFournisseur)?.Designation ?? "Non sélectionné";
+
+        string message = $"Veuillez vérifier les informations suivantes avant de créer l'entrée d'outillage :\n\n" +
+                         $"Outillage : {outillageDesignation}\n" +
+                         $"Quantité : {quantite}\n" +
+                         $"Prix d'achat : {prixAchat}\n" +
+                         $"Bon de réception : {bonReception}\n" +
+                         $"Fournisseur : {fournisseurDesignation}\n\n" +
+                         "Êtes-vous vraiment sûr de la véracité de ces informations ? Une fois créée, l'entrée ne pourra plus être modifiée ou supprimée.";
+
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", message);
+        if (!confirmed)
         {
+            return;
+        }
+
+        try
+        {
+            entreeOutillage.DateEntree = DateTime.Now; // Assurer que l’heure est incluse
+            var response = await Http.PostAsJsonAsync(entreeOutillageUrl, entreeOutillage);
+            response.EnsureSuccessStatusCode();
+            if (OnEntreeOutillageCreated.HasDelegate)
+                await OnEntreeOutillageCreated.InvokeAsync();
+            entreeOutillage = new EntreeOutillageDto() { DateEntree = DateTime.Now }; // Changé ici
+            searchTerm = string.Empty;
             StateHasChanged();
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la création de l'entrée d'outillage : {ex.Message}");
+        }
     }
+    else
+    {
+        StateHasChanged();
+    }
+}
 
     private void ResetValidationFlags()
     {

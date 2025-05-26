@@ -54,7 +54,7 @@
 </div>
 
 @code {
-    private ReportOutillageDto reportOutillage = new() { DateReport = DateTime.Today };
+    private ReportOutillageDto reportOutillage = new() { DateReport = DateTime.Now };
     private string searchTerm = string.Empty;
     private List<OutillageDto> suggestions = new();
     private bool isQuantiteInvalid = false;
@@ -113,43 +113,44 @@
     }
 
     private async Task HandleOnSubmit()
+{
+    isQuantiteInvalid = reportOutillage.Quantite <= 0;
+    isOutillageSelectionInvalid = reportOutillage.IdOutillage == 0;
+
+    if (isQuantiteInvalid || isOutillageSelectionInvalid)
     {
-        isQuantiteInvalid = reportOutillage.Quantite <= 0;
-        isOutillageSelectionInvalid = reportOutillage.IdOutillage == 0;
-
-        if (isQuantiteInvalid || isOutillageSelectionInvalid)
-        {
-            StateHasChanged();
-            return;
-        }
-
-        string outillageDesignation = suggestions.FirstOrDefault(o => o.IdOutillage == reportOutillage.IdOutillage)?.Designation ?? searchTerm;
-        string message = $"Veuillez vérifier les informations suivantes avant de créer le report d'outillage :\n\n" +
-                         $"Date du Report : {reportOutillage.DateReport.ToShortDateString()}\n" +
-                         $"Quantité : {reportOutillage.Quantite}\n" +
-                         $"Outillage : {outillageDesignation}\n\n" +
-                         "Êtes-vous sûr de ces informations ? Une fois créé, le report ne pourra plus être modifié ou supprimé.";
-
-        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", message);
-        if (!confirmed)
-        {
-            return;
-        }
-
-        try
-        {
-            var response = await Http.PostAsJsonAsync(reportOutillageUrl, reportOutillage);
-            response.EnsureSuccessStatusCode();
-            if (OnReportOutillageCreated.HasDelegate)
-                await OnReportOutillageCreated.InvokeAsync();
-            reportOutillage = new ReportOutillageDto() { DateReport = DateTime.Today };
-            searchTerm = string.Empty;
-            suggestions.Clear();
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors de la création du report : {ex.Message}");
-        }
+        StateHasChanged();
+        return;
     }
+
+    string outillageDesignation = suggestions.FirstOrDefault(o => o.IdOutillage == reportOutillage.IdOutillage)?.Designation ?? searchTerm;
+    string message = $"Veuillez vérifier les informations suivantes avant de créer le report d'outillage :\n\n" +
+                     $"Date du Report : {reportOutillage.DateReport.ToString("g")}\n" + // Affiche date et heure
+                     $"Quantité : {reportOutillage.Quantite}\n" +
+                     $"Outillage : {outillageDesignation}\n\n" +
+                     "Êtes-vous sûr de ces informations ? Une fois créé, le report ne pourra plus être modifié ou supprimé.";
+
+    bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", message);
+    if (!confirmed)
+    {
+        return;
+    }
+
+    try
+    {
+        reportOutillage.DateReport = DateTime.Now; // Assurer que l’heure est incluse
+        var response = await Http.PostAsJsonAsync(reportOutillageUrl, reportOutillage);
+        response.EnsureSuccessStatusCode();
+        if (OnReportOutillageCreated.HasDelegate)
+            await OnReportOutillageCreated.InvokeAsync();
+        reportOutillage = new ReportOutillageDto() { DateReport = DateTime.Now }; // Changé ici
+        searchTerm = string.Empty;
+        suggestions.Clear();
+        StateHasChanged();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Erreur lors de la création du report : {ex.Message}");
+    }
+}
 }

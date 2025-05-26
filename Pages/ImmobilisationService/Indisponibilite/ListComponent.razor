@@ -58,10 +58,16 @@
                                 <td>@ind.DateDebut.ToShortDateString()</td>
                                 <td>@ind.DateFin.ToShortDateString()</td>
                                 <td>
-                                    @{
-                                        var imm = allImmobilisationsImmatriculees.FirstOrDefault(i => i.IdImmobilisationPropre == ind.IdImmobilisationPropre);
+                                    @if (ind.ImmobilisationImmatriculation != null && 
+                                         ind.ImmobilisationImmatriculation.EntreeImmobilisation != null && 
+                                         ind.ImmobilisationImmatriculation.EntreeImmobilisation.Immobilisation != null)
+                                    {
+                                        @($"{ind.ImmobilisationImmatriculation.EntreeImmobilisation.Immobilisation.Designation} - {ind.ImmobilisationImmatriculation.Matricule}")
                                     }
-                                    @((imm != null) ? $"{imm.EntreeImmobilisation?.Immobilisation?.Designation} - {imm.Matricule}" : "N/A")
+                                    else
+                                    {
+                                        @:N/A
+                                    }
                                 </td>
                                 <td>
                                     @{
@@ -104,13 +110,11 @@
     private int pageSize = 10;
     private string url = "http://localhost:5077/api/indisponibilites";
 
-    private List<ImmobilisationImmatriculationDto> allImmobilisationsImmatriculees = new List<ImmobilisationImmatriculationDto>();
     private List<ObjetIndisponibiliteDto> allObjetsIndisponibilite = new List<ObjetIndisponibiliteDto>();
 
     protected override async Task OnInitializedAsync()
     {
         await LoadIndisponibilites(currentPage);
-        await LoadAllImmobilisationsImmatriculees();
         await LoadAllObjetsIndisponibilite();
     }
 
@@ -132,23 +136,6 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Erreur lors du chargement des indisponibilités : {ex.Message}");
-        }
-    }
-
-    private async Task LoadAllImmobilisationsImmatriculees()
-    {
-        try
-        {
-            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>("http://localhost:5077/api/immobilisation-immatriculations");
-            if (apiResponse != null && apiResponse.IsSuccess && apiResponse.Data != null)
-            {
-                var jsonData = apiResponse.Data.ToString();
-                allImmobilisationsImmatriculees = JsonSerializer.Deserialize<List<ImmobilisationImmatriculationDto>>(jsonData, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<ImmobilisationImmatriculationDto>();
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors du chargement des immobilisations immatriculées : {ex.Message}");
         }
     }
 

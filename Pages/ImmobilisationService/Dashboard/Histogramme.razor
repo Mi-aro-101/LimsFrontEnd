@@ -1,0 +1,271 @@
+@page "/histogramme"
+@inject HttpClient Http
+@inject IJSRuntime JS
+@using MudBlazor
+@using System.Text.Json
+@using LimsUtils.Api
+@using System.Threading.Tasks
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h3" GutterBottom="true">État du Stock des Réactifs</MudText>
+    
+    <MudGrid>
+        <MudItem xs="12" sm="4">
+            <div class="form-group">
+                <label>Rechercher un réactif</label>
+                <InputText class="form-control"
+                           Value="@searchTerm"
+                           ValueChanged="@((string val) => OnSearchChanged(val))"
+                           ValueExpression="@(() => searchTerm)"
+                           placeholder="Ex: acide"
+                           @oninput="@(async (ChangeEventArgs e) => await OnSearchChanged(e.Value?.ToString() ?? string.Empty))" />
+                @if (!string.IsNullOrEmpty(searchTerm))
+                {
+                    <ul class="list-group">
+                        @if (filteredReactifs.Any())
+                        {
+                            @foreach (var reactif in filteredReactifs)
+                            {
+                                <li class="list-group-item" @onclick="() => SelectReactif(reactif)">
+                                    @reactif.Designation
+                                </li>
+                            }
+                        }
+                    </ul>
+                }
+            </div>
+        </MudItem>
+        <MudItem xs="12" sm="2">
+            <MudTextField Label="Année" @bind-Value="anneeInput" Variant="Variant.Outlined" Immediate="true"
+                         Validation="@(new Func<string, IEnumerable<string>>(ValidateYear))"/>
+        </MudItem>
+        <MudItem xs="12" sm="2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ChargerDonnees"
+                      Disabled="@(!isYearValid || selectedReactif == null)">Afficher</MudButton>
+        </MudItem>
+        @if (afficherQuantite && selectedReactif != null && unite != null)
+        {
+            <MudItem xs="12" sm="4">
+                <MudTextField Label="Quantité Restante" Variant="Variant.Outlined" ReadOnly="true"
+                             Value="@(quantiteRestante != null ? $"{quantiteRestante} {unite}" : "N/A")" Class="text-bold"/>
+            </MudItem>
+        }
+    </MudGrid>
+
+    <MudPaper Class="pa-4 ma-4" Elevation="5">
+        <div id="histogrammeDiv" style="width:100%;height:500px;">
+            @if (isLoading)
+            {
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true"
+                                   Style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);" />
+            }
+        </div>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private ReactifDto? selectedReactif;
+    private string anneeInput = DateTime.Now.Year.ToString();
+    private int annee = DateTime.Now.Year;
+    private bool isLoading = false;
+    private bool isYearValid = true;
+    private string? unite;
+    private double? quantiteRestante;
+    private bool afficherQuantite = false; // Nouvelle variable pour contrôler l'affichage
+    private string searchTerm = string.Empty;
+    private List<ReactifDto> reactifs = new();
+
+    private List<ReactifDto> filteredReactifs => reactifs
+        .Where(r => !string.IsNullOrEmpty(r.Designation) &&
+                    r.Designation.StartsWith(searchTerm ?? string.Empty, StringComparison.OrdinalIgnoreCase))
+        .Take(10)
+        .ToList();
+
+    private IEnumerable<string> ValidateYear(string value)
+    {
+        if (value.Length == 4 && int.TryParse(value, out int year) && year >= 2000 && year <= DateTime.Now.Year)
+        {
+            isYearValid = true;
+            return Array.Empty<string>();
+        }
+        isYearValid = false;
+        return new[] { $"Année invalide" };
+    }
+
+    private async Task<List<ReactifDto>> LoadReactifs()
+    {
+        try
+        {
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>(
+                $"/api/reactifs/search?searchTerm={Uri.EscapeDataString(searchTerm)}");
+            if (apiResponse is { IsSuccess: true, Data: not null })
+            {
+                var jsonData = apiResponse.Data.ToString();
+                return JsonSerializer.Deserialize<List<ReactifDto>>(jsonData,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                    ?? new List<ReactifDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Erreur lors de la recherche des réactifs : {ex.Message}");
+        }
+        return new List<ReactifDto>();
+    }
+
+    private async Task OnSearchChanged(string val)
+    {
+        searchTerm = val;
+        reactifs = await LoadReactifs();
+        StateHasChanged();
+    }
+
+    private void SelectReactif(ReactifDto reactif)
+    {
+        selectedReactif = reactif;
+        searchTerm = reactif.Designation;
+        unite = reactif.Unite?.Designation ?? "N/A";
+        afficherQuantite = false; // Réinitialiser pour cacher le champ
+        StateHasChanged();
+    }
+
+    private async Task ChargerDonnees()
+    {
+        if (selectedReactif == null || !int.TryParse(anneeInput, out annee) || annee < 2000 || annee > DateTime.Now.Year)
+        {
+            await JS.InvokeVoidAsync("alert", "Veuillez sélectionner un réactif et une année valide");
+            return;
+        }
+
+        try
+        {
+            isLoading = true;
+            afficherQuantite = false; // Cacher le champ pendant le chargement
+            StateHasChanged();
+
+            // Récupérer la quantité actuelle
+            try
+            {
+                var quantiteResponse = await Http.GetFromJsonAsync<ApiResponse>($"/api/reactifs/{selectedReactif.IdReactif}/current-stock");
+                if (quantiteResponse is { IsSuccess: true, Data: not null })
+                {
+                    if (quantiteResponse.Data is JsonElement jsonElement)
+                    {
+                        quantiteRestante = jsonElement.ValueKind == JsonValueKind.Number ? jsonElement.GetDouble() : null;
+                    }
+                    else
+                    {
+                        quantiteRestante = Convert.ToDouble(quantiteResponse.Data);
+                    }
+                }
+                else
+                {
+                    quantiteRestante = null;
+                    await JS.InvokeVoidAsync("alert", "Erreur lors de la récupération de la quantité restante.");
+                }
+            }
+            catch (Exception ex)
+            {
+                quantiteRestante = null;
+                await JS.InvokeVoidAsync("alert", $"Erreur lors de la récupération de la quantité : {ex.Message}");
+            }
+
+            bool isFunctionAvailable = false;
+            for (int i = 0; i < 10; i++)
+            {
+                isFunctionAvailable = await JS.InvokeAsync<bool>("eval", "typeof window.afficherHistogramme === 'function'");
+                if (isFunctionAvailable)
+                    break;
+                await Task.Delay(500);
+            }
+
+            if (!isFunctionAvailable)
+            {
+                throw new Exception("La fonction afficherHistogramme n'est pas disponible.");
+            }
+
+            var response = await Http.GetFromJsonAsync<ApiResponse>($"/api/reactifs/{selectedReactif.IdReactif}/stock-evolution?year={annee}");
+            if (response?.IsSuccess != true || response.Data == null)
+            {
+                throw new Exception("Erreur lors de la récupération des données de stock.");
+            }
+
+            var stockEvolution = ConvertToDictionary(response.Data);
+
+            var mois = new List<string>();
+            var quantites = new List<double?>();
+
+            for (int m = 1; m <= 12; m++)
+            {
+                string periode = $"{annee}-{m:D2}";
+                mois.Add(System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(m));
+                quantites.Add(stockEvolution.ContainsKey(periode) ? stockEvolution[periode] : null);
+            }
+
+            await JS.InvokeVoidAsync("afficherHistogramme", mois, quantites, $"Stock de {selectedReactif.Designation} ({annee})", unite);
+            afficherQuantite = true; // Afficher le champ après succès
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Erreur lors du chargement des données : {ex.Message}");
+            afficherQuantite = false; // Cacher le champ en cas d'erreur
+        }
+        finally
+        {
+            isLoading = false;
+            await Task.Delay(100);
+            StateHasChanged();
+        }
+    }
+
+    private Dictionary<string, double> ConvertToDictionary(object data)
+    {
+        if (data == null)
+            return new Dictionary<string, double>();
+
+        if (data is Dictionary<string, double> dict)
+            return dict;
+
+        if (data is JsonElement jsonElement && jsonElement.ValueKind == JsonValueKind.Object)
+        {
+            var resultDict = new Dictionary<string, double>();
+            foreach (var property in jsonElement.EnumerateObject())
+            {
+                resultDict[property.Name] = property.Value.GetDouble();
+            }
+            return resultDict;
+        }
+
+        return new Dictionary<string, double>();
+    }
+
+    public class ReactifDto
+    {
+        public int IdReactif { get; set; }
+        public string Designation { get; set; } = string.Empty;
+        public int IdTypeSortie { get; set; }
+        public TypeSortieDto? TypeSortie { get; set; }
+        public int IdUnite { get; set; }
+        public UniteDto? Unite { get; set; }
+    }
+
+    public class TypeSortieDto
+    {
+        public int IdTypeSortie { get; set; }
+        public string Designation { get; set; } = string.Empty;
+    }
+
+    public class UniteDto
+    {
+        public int IdUnite { get; set; }
+        public string Designation { get; set; } = string.Empty;
+    }
+
+    public class ApiResponse
+    {
+        public object Data { get; set; } = null!;
+        public bool IsSuccess { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public int StatusCode { get; set; }
+    }
+}

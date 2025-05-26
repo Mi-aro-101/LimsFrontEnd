@@ -12,9 +12,15 @@
             <MudNavLink Href="/chiffre/affaire/mensuel" IconColor="Color.Inherit" Match="NavLinkMatch.All">Mensuel</MudNavLink>
             <MudNavLink Href="/chiffre/affaire/journalier" IconColor="Color.Inherit" Match="NavLinkMatch.All">Journalier</MudNavLink>
         </MudNavGroup>
-        <MudNavGroup Title="Magasin" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Warehouse" Expanded="false">
-            <MudNavLink Href="/dashboard" Icon="@Icons.Material.Filled.Paid" IconColor="Color.Inherit" Match="NavLinkMatch.All">Dépenses sur stock</MudNavLink>
-        </MudNavGroup>
+       <MudNavGroup Title="Magasin" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Warehouse" Expanded="false">
+    <MudNavLink Href="/dashboard" Icon="@Icons.Material.Filled.Paid" IconColor="Color.Inherit" Match="NavLinkMatch.All">
+        Dépenses sur stock
+    </MudNavLink>
+    <MudNavLink Href="/histogramme" Icon="@Icons.Material.Filled.BarChart" IconColor="Color.Inherit" Match="NavLinkMatch.All">
+        État de stock réactif
+    </MudNavLink>
+</MudNavGroup>
+
     </MudNavGroup>
 </div>
     <div class="nav-item px-3">
