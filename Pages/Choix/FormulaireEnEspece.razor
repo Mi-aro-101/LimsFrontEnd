@@ -1,0 +1,158 @@
+@page "/formulaireEspece/{id_etat_decompte:int}"
+
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient http
+@using LimsFrontEnd.Models
+@inject NavigationManager navigationManager
+
+<MudPaper Class="p-6 mx-auto my-6" Style="max-width: 850px;">
+    <MudText Typo="Typo.h4" GutterBottom="true" Class="text-center mb-6">
+        Formulaire de Paiement en Espèce
+    </MudText>
+
+    <MudForm Model="@espece" @ref="reference">
+        <MudGrid GutterSize="3">
+            <MudItem xs="12" class="text-end">
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ToggleAfficherClient">
+                    Client : @(AfficherClient ? "Oui" : "Non")
+                </MudButton>
+            </MudItem>
+
+            @if (AfficherClient)
+            {
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" Label="Titre" @bind-Value="espece.titre" Disabled="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" Label="Clients" @bind-Value="espece.clients" HelperText="Particulier ou Entreprise" Disabled="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Identité" @bind-Value="espece.identite" HelperText="CIN ou NIF/STAT ou Passeport" Disabled="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Adresse" @bind-Value="espece.adresse" Disabled="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Contact" @bind-Value="espece.contact" Disabled="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Email" @bind-Value="espece.email" Disabled="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="État de Décompte" @bind-Value="espece.etatDecompte" Disabled="true" />
+                </MudItem>
+            }
+            else
+            {
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" Label="Nom du Payant" @bind-Value="espece.nomPayant" Required="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" Label="Prénom du Payant" @bind-Value="espece.prenomPayant" Required="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Contact du Payant" @bind-Value="espece.contactdupayant" Required="true" />
+                </MudItem>
+            }
+
+            <MudItem xs="12" sm="6">
+                <MudDatePicker Label="Date" Date="@SelectedDate" DateChange="OnDateChange" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="double" Label="Montant" @bind-Value="espece.montant" Disabled="true" />
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudHidden T="int" @bind-Value="espece.id_etat_decompte" />
+            </MudItem>
+
+            <MudItem xs="12" class="d-flex justify-center mt-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" OnClick="SubmitPaiementEspece">
+                    Payer
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+</MudPaper>
+
+@code {
+    private bool AfficherClient = false;
+
+    [Parameter] public int id_etat_decompte { get; set; }
+    private DateTime SelectedDate { get; set; } = DateTime.Now;
+
+    MudForm? reference;
+    private PaiementDto espece = new PaiementDto();
+
+    private List<PaiementDto>? especes;
+    private ApiResponse? apiResponse;
+    //string url = "http://localhost:5077/api/paiementenespece";
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"paiementenespece/{id_etat_decompte}", option);
+            apiResponse.HandleResponse<List<PaiementDto>>();
+            especes = apiResponse.Data as List<PaiementDto> ?? new List<PaiementDto>();
+
+            // Initialisez demandeNote
+            espece = especes?.FirstOrDefault() ?? new PaiementDto
+            {
+                id_etat_decompte = id_etat_decompte
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception levé ici: " + ex.Message);
+        }
+    }
+
+    private void OnDateChanged(DateTime newDate)
+    {
+        SelectedDate = newDate;
+    }
+
+    private async Task SubmitPaiementEspece()
+    {
+        try
+        {
+            if (espece == null)
+            {
+                Console.WriteLine("la formulaire est null");
+                return;
+            }
+
+            var nouvellePaiementEspece = new PaiementDto
+            {
+                DatePaiement = SelectedDate,
+                id_modePaiement = 1,
+                //EtatPaiement = 11,
+                id_etat_decompte = espece.id_etat_decompte
+            };
+
+            var response = await http.PostAsJsonAsync("paiementenespece", nouvellePaiementEspece);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Erreur de l'API: " + errorContent);
+            }
+            else
+            {
+                navigationManager.NavigateTo("/receptionEspece");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }    
+
+    private void ToggleAfficherClient()
+    {
+        AfficherClient = !AfficherClient;
+        StateHasChanged();
+    }
+}

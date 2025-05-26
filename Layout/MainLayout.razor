@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@inject AuthenticationStateProvider AuthProvider
+@using System.Security.Claims
 @* Required *@
 <MudThemeProvider />
 <MudPopoverProvider />
@@ -32,7 +34,7 @@
             </div>
             <a href="#" class="profile">
                 <center><img src="./profile.png" alt="Profile"></center>
-                <figcaption>Christine</figcaption>
+                <figcaption>@identifiant</figcaption>
             </a>
         </div>
 
@@ -44,6 +46,19 @@
 
 @code {
     private bool isDropdownOpen;
+    private string? identifiant;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        if(authState.User.Identity.IsAuthenticated)
+        {
+            identifiant = authState.User.FindFirst("identifiant")?.Value;
+        } else
+        {
+            identifiant = "Non connecté";
+        }
+    }
 
     private void ToggleDropdown()
     {

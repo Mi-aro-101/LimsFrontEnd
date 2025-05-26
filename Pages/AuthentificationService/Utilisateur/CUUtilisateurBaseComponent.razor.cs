@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace LimsFrontEnd.Components;
 
-public class CUUtilisateurBaseComponent : ComponentBase
+public class CUUtilisateurBaseComponent : CUBaseComponent
 {
     [Inject] 
     protected HttpClient Http { get; set; } = new HttpClient();

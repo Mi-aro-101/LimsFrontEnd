@@ -1,0 +1,62 @@
+@inject IJSRuntime JS
+@inject NavigationManager navigationManager
+
+@if (IsVisible)
+{
+    <div class="popup-overlay">
+        <div class="popup-content">
+            <h3>Générer les PDF</h3>
+            <h4>Veuillez générer d'abord la demande pour la note de débit s'il vous plaît!!</h4>
+            <MudGrid Gutter="true" Justify="Justify.Center">
+                <MudItem xs="12" sm="4" Class="flex flex-col items-center">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => AfficherPdfsDemande())">
+                        Demande de note de débit
+                    </MudButton>
+                </MudItem>
+                <MudItem xs="12" sm="4" Class="flex flex-col items-center">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@isNoteDebitDisabled" OnClick="@(() => AfficherPdfsNoteDebit())">
+                        Note de débit
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@CloseDialog">
+                Fermer  
+            </MudButton>
+        </div>
+    </div>
+}
+
+@code{
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public List<string> pdfsBase64 { get; set; } = new();
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private bool demandeEffectuee = false;
+    private bool isNoteDebitDisabled => !demandeEffectuee;
+
+    private async Task AfficherPdfsDemande()
+    {
+        if (pdfsBase64.Count > 0 && !string.IsNullOrEmpty(pdfsBase64[0]))
+        {
+            await JS.InvokeVoidAsync("downloadPdfFromBase64", pdfsBase64[0], "demande_note_debit");
+        }
+        demandeEffectuee = true;
+    }
+
+    private async Task AfficherPdfsNoteDebit()
+    {
+        IsVisible = false;
+        if (pdfsBase64.Count > 1 && !string.IsNullOrEmpty(pdfsBase64[1]))
+        {
+            await JS.InvokeVoidAsync("downloadPdfFromBase64", pdfsBase64[1], "note_de_debit");
+        }
+        await OnClose.InvokeAsync();
+        navigationManager.NavigateTo("/demandenotedebit/liste");
+    }
+
+    private async void CloseDialog()
+    {
+        IsVisible = false;
+        await OnClose.InvokeAsync();
+    }
+}

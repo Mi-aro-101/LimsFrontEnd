@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 
+namespace LimsFrontEnd.Pages.ImmatriculationImmobilisation;
 
     public class CUBaseComponent : ComponentBase
     {

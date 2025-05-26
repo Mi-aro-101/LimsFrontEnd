@@ -1,0 +1,169 @@
+@page "/demandenotedebit/{id_etat_decompte:int}"
+
+@using LimsUtils.Api
+@inject IJSRuntime JS
+@using System.Text.Json
+@inject HttpClient http
+@using LimsFrontEnd.Models
+@inject NavigationManager navigationManager
+
+<MudItem Class="pa-4">
+    <MudText Typo="Typo.h2" Class="mb-4">Formulaire de demande de note de débit</MudText>
+    <MudForm Model="@demandeNote" @ref="reference">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Clients" @bind-Value="demandeNote.clients" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Identité" @bind-Value="demandeNote.identite" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="string" Label="Adresse" @bind-Value="demandeNote.adresse" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="string" Label="Contact" @bind-Value="demandeNote.contact" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Email" @bind-Value="demandeNote.email" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Etat de décompte" @bind-Value="demandeNote.etatDecompte" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="string" Label="Nom de l'objet" @bind-Value="demandeNote.objet" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="int" Label="Nombre d'échantillons" @bind-Value="demandeNote.nombreEchantillon" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Travaux éffectuer" @bind-Value="demandeNote.travaux" Margin="Margin.Dense" Disabled="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudDatePicker @bind-Date="demandeNote.datePaiement" Margin="Margin.Dense" Disabled="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="double" Label="Montant en chiffre" @bind-Value="demandeNote.montant" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Montant en lettre" @bind-Value="demandeNote.montant_literal" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
+            </MudItem>
+            <MudItem xs="12" class="d-flex justify-center">
+                <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8" OnClick="SubmitNoteDebit">Ajouter demande</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+</MudItem>
+
+<GeneratePdf IsVisible="@showPdf" pdfsBase64="@pdfsBase64" OnClose="@(() => showPdf = false)"/>
+
+@code {
+    [Parameter] public int id_etat_decompte { get; set; }
+    MudForm? reference;
+    private DemandeDto demandeNote = new DemandeDto();
+    private List<DemandeDto>? demandeNotes;
+    private ApiResponse? apiResponse;
+    //string url = "http://localhost:5077/api/notedebit";
+    public bool showPdf = false;
+    public List<string> pdfsBase64 = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>($"notedebit/{id_etat_decompte}", option);
+            apiResponse.HandleResponse<List<DemandeDto>>();
+            demandeNotes = apiResponse.Data as List<DemandeDto> ?? new List<DemandeDto>();
+
+            // Initialisez demandeNote
+            demandeNote = demandeNotes?.FirstOrDefault() ?? new DemandeDto
+            {
+                idEtatDecompte = id_etat_decompte
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception levé ici: " + ex.Message);
+        }
+    }
+
+    private async Task SubmitNoteDebit()
+    {
+        try
+        {
+            if (demandeNote == null)
+            {
+                Console.WriteLine("demandeNote est null");
+                return;
+            }
+
+            var nouvelleDemande = new DemandeDto
+            {
+                reference = 0,
+                clients = demandeNote.clients,
+                identite = demandeNote.identite,
+                adresse = demandeNote.adresse,
+                contact = demandeNote.contact,
+                email = demandeNote.email,
+                etatDecompte = demandeNote.etatDecompte,
+                nombreEchantillon = demandeNote.nombreEchantillon,                
+                dateDemande = demandeNote.datePaiement,
+                objet = demandeNote.objet,
+                montant = demandeNote.montant,
+                montant_literal = demandeNote.montant_literal,
+                travaux = demandeNote.travaux,
+                idEtatDecompte = demandeNote.idEtatDecompte
+            };
+
+            var response = await http.PostAsJsonAsync("notedebit", nouvelleDemande);            
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Erreur de l'API: " + errorContent);
+            }
+            else
+            {
+                showPdf = true;
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
+
+                // 🔥 Extraction dynamique du PdfURL depuis Data
+                var dataDict = apiResponse.Data as JsonElement?;
+                if (dataDict != null && dataDict.Value.TryGetProperty("pdfBase64", out var pdfBase64Element))
+                {
+                    // Nettoie l'ancienne liste
+                    pdfsBase64.Clear();
+
+                    if (pdfBase64Element.ValueKind == JsonValueKind.Array)
+                    {                        
+                        foreach (var base64Element in pdfBase64Element.EnumerateArray())
+                        {
+                            string? base64 = base64Element.GetString();
+                            if (!string.IsNullOrEmpty(base64))
+                            {
+                                pdfsBase64.Add(base64);
+                            }
+                        }
+                    }
+                    else if (pdfBase64Element.ValueKind == JsonValueKind.String)
+                    {
+                        string base64 = pdfBase64Element.GetString();
+                        if (!string.IsNullOrEmpty(base64))
+                        {
+                           // await JS.InvokeVoidAsync("downloadPdfFromBase64", base64, "demande");
+                           pdfsBase64.Add(base64);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("❌ PdfBase64 n'est pas un tableau !");
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+}

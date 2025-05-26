@@ -1,0 +1,44 @@
+@page "/admin"
+@using LimsFrontEnd.Components
+@inject HttpClient Http
+@using LimsFrontEnd.Models;
+@using LimsUtils.Api
+@using System.Text.Json;
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+         <p> Hello </p>
+    </Authorized>
+    <NotAuthorized>
+        <!-- Optional: Different content when not authorized -->
+        <p>You don't have permission to view this.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code
+{
+    string message;
+    string exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetClients();
+    }
+    private async Task GetClients()
+    {
+        ApiResponse? apiResponse;
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        apiResponse = await Http.GetFromJsonAsync<ApiResponse>("auth/admin-data");
+        if(apiResponse?.IsSuccess == true)
+        {
+            message = apiResponse.Message;
+        }
+        if(apiResponse.StatusCode == 403)
+        {
+            exception = apiResponse.Message;
+        } 
+    }
+}

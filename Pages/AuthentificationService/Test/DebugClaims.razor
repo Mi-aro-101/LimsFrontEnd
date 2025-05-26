@@ -1,0 +1,24 @@
+@page "/debug-claims"
+@inject AuthenticationStateProvider AuthProvider
+@using System.Security.Claims
+
+<h3>Your Claims:</h3>
+@if (_claims.Any())
+{
+    <ul>
+        @foreach (var claim in _claims)
+        {
+            <li>@claim.Type: @claim.Value</li>
+        }
+    </ul>
+}
+
+@code {
+    private IEnumerable<Claim> _claims = new List<Claim>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        _claims = authState.User.Claims;
+    }
+}

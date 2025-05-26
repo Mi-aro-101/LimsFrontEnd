@@ -1,0 +1,122 @@
+@page "/SousContrat/liste"
+
+@using LimsUtils.Api
+@inject HttpClient http
+@using System.Text.Json
+@using LimsFrontEnd.Models
+@inject NavigationManager navigationManager
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">Contrat établie</MudText>
+
+    <MudTextField @bind-Value="searchText" Label="Recherche" Placeholder="client ou Etat de décompte ou référence contrat" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
+
+    <MudTable Items="FilteredData" Dense="true" RowsPerPage="10" Hover="true" FixedHeader="true" Height="300px">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Liste des sous contrats</MudText>
+        </ToolBarContent>
+
+        <HeaderContent>
+            <MudTh> Nom de l'entreprise </MudTh>
+            <MudTh> Réference de l'état de décompte </MudTh>
+            <MudTh> Réference du contrat </MudTh>
+            <MudTh> Date de paiement </MudTh>
+            @* <MudTh> Date de paiement prévu </MudTh> *@
+            <MudTh> Montant (Ar) </MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd> @(context.Paiement?.clients ?? "N/A") </MudTd>
+            <MudTd> @context.Paiement?.etatDecompte </MudTd>
+            <MudTd> @context.Paiement?.ref_contrat </MudTd>
+            <MudTd> @(context.Paiement?.DatePaiement.ToString("dd MMM yyyy") ?? "N/A") </MudTd>
+            @* <MudTd> @(context.Contrat != null && context.Contrat.datePaiement.HasValue
+                        ? context.Contrat.datePaiement.Value.ToString("dd MMM yyyy")
+                        : "N/A") </MudTd> *@
+            <MudTd> @context.Paiement?.montant </MudTd>
+            <MudTd>
+                @if (souscontrat == context)
+                {
+                    <MudButton Color="Color.Success" OnClick="() => SaveRow(context.Paiement.id_etat_decompte)">Faire le paiement</MudButton>
+                    <MudButton Color="Color.Error" OnClick="CancelEdit">Cancel</MudButton>
+                }
+                else
+                {
+                    <MudButton Color="Color.Primary" OnClick="@(() => EditRow(context))">Action</MudButton>
+                }
+            </MudTd>            
+        </RowTemplate>
+    </MudTable>
+
+    <MudPaper Class="pa-3 mt-4" Elevation="4">
+        <MudText Typo="Typo.h6">Arrêté à la somme de : <b>@FilteredData.Sum(x => x.Paiement.montant).ToString("F2") Ar</b></MudText>
+    </MudPaper>
+</MudPaper>
+
+@code {
+    private string searchText = "";
+
+    private SousContratDto? souscontrat;
+    private List<SousContratDto> souscontrats = new List<SousContratDto>();
+    private ApiResponse? apiResponse;
+    //string url = "http://localhost:5077/api/souscontrat";
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>("souscontrat/ListeSousContratApayer", option);
+            if (apiResponse != null)
+            {
+                apiResponse.HandleResponse<List<SousContratDto>>();
+            }
+            souscontrats = apiResponse?.Data as List<SousContratDto> ?? new List<SousContratDto>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+
+    private List<SousContratDto> FilteredData
+    {
+        get
+        {
+            var result = souscontrats
+            .Where(x => string.IsNullOrWhiteSpace(searchText)
+                || (x.Paiement?.etatDecompte?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (x.Paiement?.clients?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (x.Paiement?.ref_contrat?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+            ).ToList();
+            return result;
+        }
+    }
+
+    private void EditRow(SousContratDto sousContrat)
+    {
+        souscontrat = sousContrat; // Mettre à jour la ligne en cours d'édition
+    }
+
+    private async Task SaveRow(int id)
+    {
+        var response = await http.PutAsync($"souscontrat/UpdateSousContrat/{id}", null);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse>();
+            // Gère la réponse ici (ex: afficher un message ou mettre à jour l'UI)
+            Console.WriteLine("Mise à jour réussie !");
+            navigationManager.NavigateTo("/SousContrat/liste");
+        }
+        else
+        {
+            Console.WriteLine("Échec de la mise à jour !");
+            // Tu peux aussi afficher une alerte ou un message utilisateur
+        }        
+    }
+
+    private void CancelEdit()
+    {
+       souscontrat = null; // Annuler l'édition
+    }
+}

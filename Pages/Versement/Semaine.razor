@@ -1,0 +1,66 @@
+@page "/Semaine"
+
+@using LimsUtils.Api
+@inject HttpClient http
+@using LimsFrontEnd.Models
+@inject NavigationManager navigation
+
+<MudItem xs="7">
+    <MudText Typo="Typo.h4" GutterBottom="true">Exportation des états journaliéres</MudText>
+    <MudText Typo="Typo.h6" GutterBottom="true">Veuillez insérer une semaine s'il vous plaît!</MudText>
+    <MudForm Model="@semaine" @ref="reference">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudDatePicker Label="Début du semaine" @bind-Date="semaine.debutSemaine" Margin="Margin.Dense"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudDatePicker Label="Fin du semaine" @bind-Date="semaine.finSemaine" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12" Class="d-flex justify-center">
+                <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8" OnClick="semaineActuel">Exporter</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+</MudItem>
+
+@code {
+    MudForm reference;
+
+    private ApiResponse? apiResponse;
+    //string url = "http://localhost:5077/api/versement";
+    SemaineDto semaine = new();
+
+    private async Task semaineActuel()
+    {
+        try
+        {
+            if (semaine == null)
+            {
+                Console.WriteLine("la semaine est null");
+                return;
+            }
+
+            var week = new SemaineDto
+            {
+                debutSemaine = semaine.debutSemaine,
+                finSemaine = semaine.finSemaine
+            };
+
+            var response = await http.PostAsJsonAsync("versement", week);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Erreur de l'API: " + errorContent);
+            }
+            else
+            {
+                navigation.NavigateTo("/versementhebdomadaire");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception: " + ex.Message);
+        }
+    }
+}

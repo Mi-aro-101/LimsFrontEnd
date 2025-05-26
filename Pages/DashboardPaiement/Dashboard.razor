@@ -1,0 +1,246 @@
+@page "/dashboard/paiement"
+
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient http
+@using LimsFrontEnd.Models
+@inject IJSRuntime JSRuntime
+
+<MudText Typo="Typo.h3" GutterBottom="true">Paiement</MudText>
+<MudSelect T="SemaineDto" Label="Filtrer par semaine" @bind-Value="selectedSemaine">
+    <MudSelectItem Value="@(default(SemaineDto))">Toutes les semaines</MudSelectItem>
+    @foreach (var s in semainesDisponibles)
+    {
+        <MudSelectItem Value="@s">
+            @($"{s.debutSemaine:dd MMM} - {s.finSemaine:dd MMM}")
+        </MudSelectItem>
+    }
+</MudSelect>
+<!--MudButton OnClick="FiltrerParSemaine">Filtrer</MudButton-->
+<MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="FiltrerParSemaine" StartIcon="@Icons.Material.Filled.FilterList">
+    Filtrer par semaine
+</MudButton>
+<MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
+    <MudGrid>  
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
+                    Montant en espèce
+                </MudText>
+                <MudText Typo="Typo.h6" Align="Align.Center" Style="color: blue;">
+                    @totalMontantFiltered Ariary
+                </MudText>
+            </MudPaper>
+        </MudItem>
+        
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4 montant-mobile-card" Style="min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
+                    Montant par mobile
+                </MudText>
+                <MudText Typo="Typo.h6" Align="Align.Center" Style="color: red;">
+                    @totalMontantFilteredMobile Ariary
+                </MudText>
+
+                <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"                   
+                   Class="detail-button mt-2"
+                   OnClick="AfficherDetail">
+                    Détail
+                </MudButton>
+            </MudPaper>
+        </MudItem>
+
+        <MobileDash IsVisible ="@dashboardMobile" OnClose="@(() => dashboardMobile = false)"/>
+
+        <MudItem xs="12" sm="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
+                    Montant par virement
+                </MudText>
+                <MudText Typo="Typo.h6" Align="Align.Center" Style="color: green;">
+                    @totalMontantFilteredVirement Ariary
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        <MudGrid Class="mt-4" GutterSize="3">
+            <!-- Graphique Linéaire -->
+            <MudItem xs="12" md="6">
+                <div id="LineChart"></div>
+            </MudItem>
+            <!-- Donut Chart -->
+            <MudItem xs="12" md="6">
+                <div id="PieChart"></div>
+            </MudItem>
+        </MudGrid>
+    </MudGrid>
+</MudContainer>
+
+
+@code {
+
+    //string url = "http://localhost:5077/api/";
+    /*
+        private ChartOptions options = new ChartOptions();
+        
+        private int index = -1; //default value cannot be 0 -> first selectedindex is 0.
+        int hoveredIndex = -1;
+   
+        string GetHoveredLabel() =>
+            hoveredIndex >= 0 && hoveredIndex < DonutLabels.Length ? DonutLabels[hoveredIndex] : "Total";
+        string GetHoveredValue() =>
+            hoveredIndex >= 0 && hoveredIndex < DonutSeries.Length ?
+                $"{DonutSeries[hoveredIndex]:N0} ({((DonutSeries[hoveredIndex] / DonutSeries.Sum()) * 100):0.0}%)"
+                : DonutSeries.Sum().ToString("N0");
+    */
+
+    public bool dashboardMobile = false;
+
+    private IJSObjectReference? jsModule;
+    private List<SemaineDto> semainesDisponibles = new();
+
+    private List<RecuDto> paiementsComplets = new();
+    private List<RecuDto> paiementsMobile = new();
+    private List<RecuDto> paiementsVirement = new();
+
+    private List<RecuDto> paiementsFiltres = new();
+    private List<RecuDto> paiementsFiltresMobile = new();
+    private List<RecuDto> paiementsFiltresVirement = new();
+
+    private SemaineDto? selectedSemaine = null;
+
+    private ApiResponse? response;
+    private ApiResponse? response2;
+    private ApiResponse? response3;
+
+    private double totalMontantFiltered;
+    private double totalMontantFilteredMobile;
+    private double totalMontantFilteredVirement;
+
+    private int totalNombreFiltered;
+    private int totalNombreFilteredMobile;
+    private int totalNombreFilteredVirement;
+
+    private string[] semaine = ["Lun", "Mar", "Mer", "Jeu", "Ven"];
+    private double[] DonutSeries { get; set; } = Array.Empty<double>();
+    //private int[] DonutLabels { get; set; } = Array.Empty<int>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        //string urli1 = url + "receptionpaiementespece";
+        //string urli2 = url + "receptionpaiementmobile";
+        //string urli3 = url + "receptionpaiementvirement";
+        var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        response = await http.GetFromJsonAsync<ApiResponse>("receptionpaiementespece", option);
+        response2 = await http.GetFromJsonAsync<ApiResponse>("receptionpaiementmobile", option);
+        response3 = await http.GetFromJsonAsync<ApiResponse>("receptionpaiementvirement", option);
+
+        if (response.IsSuccess)
+        {
+            var data = JsonSerializer.Deserialize<DashboardPaiementDto>(response.Data.ToString());
+            var data2 = JsonSerializer.Deserialize<DashboardPaiementDto>(response2.Data.ToString());
+            var data3 = JsonSerializer.Deserialize<DashboardPaiementDto>(response3.Data.ToString());
+
+            semainesDisponibles = data?.Semaines ?? new();
+            paiementsComplets = data?.Paiements ?? new();
+            paiementsMobile = data2?.Paiements ?? new();
+            paiementsVirement = data3?.Paiements ?? new();
+
+            await FiltrerParSemaine();
+        }
+    }
+
+    private void AfficherDetail()
+    {
+        dashboardMobile = true;
+        StateHasChanged(); // Force le rafraîchissement de la vue
+    }
+
+    //private void FiltrerParSemaine()
+    private async Task FiltrerParSemaine()
+    {
+        Console.WriteLine("tu es ici mais il y a un problème avec le filtre et le chart");
+        if (selectedSemaine != null)
+        {
+            Console.WriteLine($"Filtrage entre {selectedSemaine.debutSemaine} et {selectedSemaine.finSemaine}");
+        }
+
+        if (selectedSemaine == null)
+        {
+            // par défaut, on affiche les 4 dernières semaines
+            var dateLimite = DateTime.Today.AddDays(-28);
+
+            paiementsFiltres = paiementsComplets
+                .Where(p => p.Date >= dateLimite)
+                .ToList();
+
+            paiementsFiltresMobile = paiementsMobile
+                .Where(p => p.Date >= dateLimite)
+                .ToList();
+
+            paiementsFiltresVirement = paiementsVirement
+                .Where(p => p.Date >= dateLimite)
+                .ToList();
+
+            totalNombreFiltered = paiementsFiltres.Sum(x => x.NombrePaiement);
+            totalNombreFilteredMobile = paiementsFiltresMobile.Sum(x => x.NombrePaiement);
+            totalNombreFilteredVirement = paiementsFiltresVirement.Sum(x => x.NombrePaiement);
+
+            totalMontantFiltered = paiementsFiltres.Sum(x => x.MontantTotal);
+            totalMontantFilteredMobile = paiementsFiltresMobile.Sum(x => x.MontantTotal);
+            totalMontantFilteredVirement = paiementsFiltresVirement.Sum(x => x.MontantTotal);
+
+        }
+        else
+        {
+            paiementsFiltres = paiementsComplets
+                .Where(p => p.Date >= selectedSemaine.debutSemaine && p.Date <= selectedSemaine.finSemaine)
+                .ToList();
+
+            paiementsFiltresMobile = paiementsMobile
+                .Where(p => p.Date >= selectedSemaine.debutSemaine && p.Date <= selectedSemaine.finSemaine)
+                .ToList();
+
+            paiementsFiltresVirement = paiementsVirement
+                .Where(p => p.Date >= selectedSemaine.debutSemaine && p.Date <= selectedSemaine.finSemaine)
+                .ToList();
+
+            foreach (var paiement in paiementsFiltres)
+            {
+                Console.WriteLine($"Date: {paiement.Date}, Montant: {paiement.MontantTotal}, Nombre: {paiement.NombrePaiement}");
+            }
+            totalMontantFiltered = paiementsFiltres.Sum(x => x.MontantTotal);
+            totalMontantFilteredMobile = paiementsFiltresMobile.Sum(x => x.MontantTotal);
+            totalMontantFilteredVirement = paiementsFiltresVirement.Sum(x => x.MontantTotal);
+
+            totalNombreFiltered = paiementsFiltres.Sum(x => x.NombrePaiement);
+            totalNombreFilteredMobile = paiementsFiltresMobile.Sum(x => x.NombrePaiement);
+            totalNombreFilteredVirement = paiementsFiltresVirement.Sum(x => x.NombrePaiement);
+
+        }
+
+        await UpdateChart();
+    }
+
+    //private void UpdateChart()
+    private async Task UpdateChart()
+    {
+        var dataEspece = paiementsFiltres.Select(p => p.MontantTotal).ToArray();
+        var dataMobile = paiementsFiltresMobile.Select(p => p.MontantTotal).ToArray();
+        var dataVirement = paiementsFiltresVirement.Select(p => p.MontantTotal).ToArray();
+
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/my-dashboard.js");
+        await jsModule.InvokeVoidAsync("PaiementLineSubdivision", semaine, dataEspece, dataMobile, dataVirement);
+
+        DonutSeries = new double[]
+        {
+            totalNombreFiltered,
+            totalNombreFilteredMobile,
+            totalNombreFilteredVirement
+        };
+
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/my-dashboard.js");
+        await jsModule.InvokeVoidAsync("PaiementPieSubdivision", DonutSeries);
+    }
+}

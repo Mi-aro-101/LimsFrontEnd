@@ -1,5 +1,6 @@
 ﻿@using LimsFrontEnd.NavigationMenu
-
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 
 <nav class="top-row ps-3 top-vertical navbar">
     <div class="container-fluid">
@@ -18,12 +19,23 @@
 <MudThemeProvider Theme="MyCustomTheme" />
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
-        <DlabComponent />
-        <AddlabComponent />
-        <GapComponent />
-        <ReactifComponent />
-        <OutillageComponent/>
-        <ImmobilisationComponent/>
+         @* <AuthorizeView Roles="ADDLAB">
+            <Authorized> *@
+                <AddlabComponent />
+            @* </Authorized>
+        </AuthorizeView>
+        <AuthorizeView Roles="CDGAP">
+            <Authorized> *@
+                <GapComponent />
+            @* </Authorized>
+        </AuthorizeView>
+        <AuthorizeView Roles="Technicien">
+            <Authorized> *@
+                <ReactifComponent />
+                <OutillageComponent/>
+                <ImmobilisationComponent/>
+            @* </Authorized>
+        </AuthorizeView> *@
         <MenuDePaiement />
         <MenuDasboard />
 

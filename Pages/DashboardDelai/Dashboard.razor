@@ -1,0 +1,146 @@
+@page "/dashboard/delai"
+
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient Http
+@using LimsFrontEnd.Models
+@inject IJSRuntime JSRuntime
+
+<MudText Typo="Typo.h3" GutterBottom="true">Montant attendu des délais accordés </MudText>
+
+<MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
+    <MudGrid>    
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
+                    Montant délai en espéce
+                </MudText>
+                <MudText Typo="Typo.h5" Align="Align.Center" Style="color: rgb(49,130,189);">
+                    @totalMontantDelaiEnEspece
+                </MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
+                    Montant délai par mobile
+                </MudText>
+                <MudText Typo="Typo.h5" Align="Align.Center" Style="color: rgb(59,12,12);">
+                    @totalMontantDelaiParMobile
+                </MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
+                <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
+                    Montant total des délais
+                </MudText>
+                <MudText Typo="Typo.h5" Align="Align.Center" Style="color: red;">
+                    @(totalMontantDelaiEnEspece + totalMontantDelaiParMobile)
+                </MudText>
+            </MudPaper>
+        </MudItem>
+        <MudGrid Class="mt-4" GutterSize="3">
+            <MudItem xs="12" md="6">
+                <div id="PieChart"></div>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <div id="BarChart"></div>
+            </MudItem>
+        </MudGrid>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    //string url = "http://localhost:5077/api/";
+    private List<DashboardDelaiDto> paiementsDelai = new();
+
+    private ApiResponse? response;
+    private IJSObjectReference? jsModule;
+
+    private double totalMontantDelaiEnEspece;
+    private double totalMontantDelaiParMobile;
+
+    private int totalNombreDelaiEnEspece;
+    private int totalNombreDelaiParMobile;
+
+    private string[] labelsDelaiDivision = ["En espèce", "Par mobile"];
+    private decimal[] dataDelaiDivision = [0, 0];
+
+    private decimal[] dataDelaiEspece = new decimal[5];
+    private decimal[] dataDelaiMobile = new decimal[5];
+    private string[] labelsDelai = new string[5];   
+    private double[] montantDelaiEspece = new double[5];
+    private double[] montantDelaiMobile = new double[5];
+
+    private string[] semaine = ["Lun", "Mar", "Mer", "Jeu", "Ven"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var option = new JsonSerializerOptions{ PropertyNameCaseInsensitive = true };
+        response = await Http.GetFromJsonAsync<ApiResponse>("Delai/DelaiPaiementEnAttente", option);
+
+        if (response?.IsSuccess == true || response != null)
+        {
+            response.HandleResponse<List<DashboardDelaiDto>>();
+            paiementsDelai = response.Data as List<DashboardDelaiDto> ?? new List<DashboardDelaiDto>();
+
+            totalMontantDelaiEnEspece = paiementsDelai.Sum(x => x.montantEnEspece);
+            totalMontantDelaiParMobile = paiementsDelai.Sum(x => x.montantEnMobile);
+
+            totalNombreDelaiEnEspece = paiementsDelai.Sum(x => x.nombreEnEspece);
+            totalNombreDelaiParMobile = paiementsDelai.Sum(x => x.nombreEnMobile);
+
+            await ChartPie();
+            await ChartBar();
+        }
+        else
+        {
+            Console.WriteLine("Une erreur s'est produite lors de la récupération des données.");
+        }
+        Console.WriteLine(JsonSerializer.Serialize(paiementsDelai));        
+    }
+
+    private async Task ChartPie()
+    {
+        dataDelaiDivision = [totalNombreDelaiEnEspece, totalNombreDelaiParMobile];
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/my-dashboard.js");
+        await jsModule.InvokeVoidAsync("DelaiSubdivisionPie", dataDelaiDivision, labelsDelaiDivision);
+    }
+
+    private async Task ChartBar()
+    {
+        await PreparerDataChart();
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/my-dashboard.js");
+        await jsModule.InvokeVoidAsync("DelaiSubdivisionBar", labelsDelai, dataDelaiEspece, dataDelaiMobile, montantDelaiEspece, montantDelaiMobile);
+    }
+
+    private async Task PreparerDataChart()
+    {
+        if (paiementsDelai != null && paiementsDelai.Any())
+        {
+            // On trie par date (normalement déjà fait dans ta requête, mais au cas où)
+            var delaiParDate = paiementsDelai.OrderBy(p => p.dateDujour).ToList();
+
+            // Remplir les tableaux
+            for (int i = 0; i < delaiParDate.Count && i < 5; i++)
+            {
+                dataDelaiEspece[i] = delaiParDate[i].nombreEnEspece;
+                dataDelaiMobile[i] = delaiParDate[i].nombreEnMobile;
+                montantDelaiEspece[i] = delaiParDate[i].montantEnEspece;
+                montantDelaiMobile[i] = delaiParDate[i].montantEnMobile;
+                labelsDelai[i] =  semaine[i] + delaiParDate[i].dateDujour?.ToString("dd/MM");
+            }
+
+            // Si jamais il y a moins de 5 jours, on complète avec des 0 / vides
+            for (int i = delaiParDate.Count; i < 5; i++)
+            {
+                dataDelaiEspece[i] = 0;
+                dataDelaiMobile[i] = 0;
+                montantDelaiEspece[i] = 0;
+                montantDelaiMobile[i] = 0;
+                labelsDelai[i] = semaine[i];
+            }
+        }
+    }
+}

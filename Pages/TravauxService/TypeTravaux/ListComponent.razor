@@ -20,13 +20,94 @@
     tr:hover{
         cursor: pointer;
     }
+    .suggestion-box {
+        position: absolute;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        z-index: 1000;
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-top: 2px;
+    }
+    .suggestion-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .suggestion-item:hover {
+        background: #f0f0f0;
+    }
 </style>
+
+<div style="position:relative;">
+    <MudTextField @bind-Value="searchTerm"
+                  Placeholder="🔍 Rechercher par code ou désignation..."
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  Margin="Margin.Dense"
+                  Variant="Variant.Outlined"
+                  Immediate="true"
+                  OnKeyUp="@(e => OnSearchChanged(e))" />
+
+    @if (searchResults?.Any() == true && !string.IsNullOrWhiteSpace(searchTerm))
+    {
+        <div class="suggestion-box">
+            @foreach (var item in searchResults)
+            {
+                <div class="suggestion-item" @onclick="() => OnSuggestionClicked(item)">
+                    <b>@item.Code</b> - @item.Designation
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private string searchText = "";
+    private string searchTerm = string.Empty;
+    private TypeTravauxDto[] searchResults = Array.Empty<TypeTravauxDto>();
+
+    private async Task OnSearchChanged(KeyboardEventArgs e)
+    {
+        Console.WriteLine("SearchTerm: " + searchTerm);
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            try
+            {
+                var apiresponse = await Http.GetFromJsonAsync<ApiResponse>($"type/travaux/search?search={Uri.EscapeDataString(searchTerm)}");
+                apiresponse.HandleResponse<TypeTravauxDto[]>();
+                searchResults = (TypeTravauxDto[])apiresponse.Data;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Search error: " + ex.Message);
+                searchResults = Array.Empty<TypeTravauxDto>();
+            }
+        }
+        else
+        {
+            searchResults = Array.Empty<TypeTravauxDto>();
+        }
+    }
+
+    private void OnSuggestionClicked(TypeTravauxDto item)
+    {
+        searchTerm = item.Designation;
+        searchResults = Array.Empty<TypeTravauxDto>();
+        NavigateTo(item.IdTypeTravaux);
+    }
+}
+
+
 <div class="col">
     <CreateComponent Departements="departements" TypeEchantillons="typeEchantillons" OnTypeTravauxCreated="@LoadTypeTravaux"/>
 </div>
 
 <div class="col">
-    @if (typetravaux == null || string.IsNullOrEmpty(exception))
+    @if (typetravaux == null || !string.IsNullOrEmpty(exception))
     {
         <p><em>Pas données à afficher</em></p>
         <p><em>@exception</em></p>
