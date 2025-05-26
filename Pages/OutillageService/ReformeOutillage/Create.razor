@@ -12,6 +12,12 @@
 <div class="card border-dark mb-3">
     <div class="card-header">Ajouter une Réforme d'Outillage</div>
     <div class="card-body text-dark">
+        @if (!string.IsNullOrEmpty(messageErreur))
+        {
+            <div class="alert alert-danger" role="alert">
+                @messageErreur
+            </div>
+        }
         <EditForm Model="@reformeOutillage" OnValidSubmit="@HandleOnSubmit" FormName="reformeOutillageForm">
             <DataAnnotationsValidator />
             <div class="form-group">
@@ -21,7 +27,7 @@
             <div class="form-group">
                 <label>Objet</label>
                 <InputText class="form-control" @bind-Value="reformeOutillage.Objet" />
-                @if (isObjetInvalid)
+                @if (isObjetInvalide)
                 {
                     <div class="text-danger">L'objet est obligatoire.</div>
                 }
@@ -29,7 +35,7 @@
             <div class="form-group">
                 <label>Nombre</label>
                 <InputNumber class="form-control" @bind-Value="reformeOutillage.Nombre" />
-                @if (isNombreInvalid)
+                @if (isNombreInvalide)
                 {
                     <div class="text-danger">Le nombre doit être supérieur à zéro.</div>
                 }
@@ -37,7 +43,7 @@
             <div class="form-group">
                 <label>Outillage</label>
                 <div class="position-relative">
-                    <InputText class="form-control" @bind-Value="searchTerm" @oninput="HandleSearch" placeholder="Rechercher un outillage..." />
+                    <InputText class="form-control" @bind-Value="termeRecherche" @oninput="HandleSearch" placeholder="Rechercher un outillage..." />
                     @if (suggestions.Any())
                     {
                         <ul class="list-group position-absolute" style="z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto;">
@@ -50,7 +56,7 @@
                         </ul>
                     }
                 </div>
-                @if (isOutillageSelectionInvalid)
+                @if (isSelectionOutillageInvalide)
                 {
                     <div class="text-danger">Veuillez sélectionner un outillage.</div>
                 }
@@ -62,12 +68,13 @@
 </div>
 
 @code {
-    private ReformeOutillageDto reformeOutillage = new() { DateReforme = DateTime.Today };
-    private string searchTerm = string.Empty;
+    private ReformeOutillageDto reformeOutillage = new() { DateReforme = DateTime.Now };
+    private string termeRecherche = string.Empty;
     private List<OutillageDto> suggestions = new();
-    private bool isObjetInvalid = false;
-    private bool isNombreInvalid = false;
-    private bool isOutillageSelectionInvalid = false;
+    private bool isObjetInvalide = false;
+    private bool isNombreInvalide = false;
+    private bool isSelectionOutillageInvalide = false;
+    private string messageErreur = string.Empty;
 
     private string reformeOutillageUrl = "http://localhost:5077/api/reforme-outillages";
     private string outillageSearchUrl = "http://localhost:5077/api/outillages/search";
@@ -77,8 +84,8 @@
 
     private async Task HandleSearch(ChangeEventArgs e)
     {
-        searchTerm = e.Value?.ToString() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(searchTerm))
+        termeRecherche = e.Value?.ToString() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(termeRecherche))
         {
             suggestions.Clear();
             StateHasChanged();
@@ -87,7 +94,7 @@
 
         try
         {
-            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{outillageSearchUrl}?searchTerm={Uri.EscapeDataString(searchTerm)}");
+            var apiResponse = await Http.GetFromJsonAsync<ApiResponse>($"{outillageSearchUrl}?searchTerm={Uri.EscapeDataString(termeRecherche)}");
             if (apiResponse is { IsSuccess: true, Data: not null })
             {
                 var allResults = JsonSerializer.Deserialize<List<OutillageDto>>(
@@ -96,7 +103,7 @@
                 ) ?? new List<OutillageDto>();
 
                 suggestions = allResults
-                    .Where(o => o.Designation.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    .Where(o => o.Designation.StartsWith(termeRecherche, StringComparison.OrdinalIgnoreCase))
                     .OrderBy(o => o.Designation)
                     .ToList();
             }
@@ -116,51 +123,62 @@
     private void SelectSuggestion(OutillageDto suggestion)
     {
         reformeOutillage.IdOutillage = suggestion.IdOutillage;
-        searchTerm = suggestion.Designation;
+        termeRecherche = suggestion.Designation;
         suggestions.Clear();
         StateHasChanged();
     }
 
     private async Task HandleOnSubmit()
+{
+    isObjetInvalide = string.IsNullOrWhiteSpace(reformeOutillage.Objet);
+    isNombreInvalide = reformeOutillage.Nombre <= 0;
+    isSelectionOutillageInvalide = reformeOutillage.IdOutillage == 0;
+    messageErreur = string.Empty;
+
+    if (isObjetInvalide || isNombreInvalide || isSelectionOutillageInvalide)
     {
-        isObjetInvalid = string.IsNullOrWhiteSpace(reformeOutillage.Objet);
-        isNombreInvalid = reformeOutillage.Nombre <= 0;
-        isOutillageSelectionInvalid = reformeOutillage.IdOutillage == 0;
-
-        if (isObjetInvalid || isNombreInvalid || isOutillageSelectionInvalid)
-        {
-            StateHasChanged();
-            return;
-        }
-
-        string outillageDesignation = suggestions.FirstOrDefault(o => o.IdOutillage == reformeOutillage.IdOutillage)?.Designation ?? searchTerm;
-        string message = $"Veuillez vérifier les informations suivantes avant de créer la réforme d'outillage :\n\n" +
-                         $"Date de la Réforme : {reformeOutillage.DateReforme.ToShortDateString()}\n" +
-                         $"Objet : {reformeOutillage.Objet}\n" +
-                         $"Nombre : {reformeOutillage.Nombre}\n" +
-                         $"Outillage : {outillageDesignation}\n\n" +
-                         "Êtes-vous sûr de ces informations ? Une fois créée, la réforme ne pourra plus être modifiée ou supprimée.";
-
-        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", message);
-        if (!confirmed)
-        {
-            return;
-        }
-
-        try
-        {
-            var response = await Http.PostAsJsonAsync(reformeOutillageUrl, reformeOutillage);
-            response.EnsureSuccessStatusCode();
-            if (OnReformeOutillageCreated.HasDelegate)
-                await OnReformeOutillageCreated.InvokeAsync();
-            reformeOutillage = new ReformeOutillageDto() { DateReforme = DateTime.Today };
-            searchTerm = string.Empty;
-            suggestions.Clear();
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors de la création de la réforme : {ex.Message}");
-        }
+        StateHasChanged();
+        return;
     }
+
+    string designationOutillage = suggestions.FirstOrDefault(o => o.IdOutillage == reformeOutillage.IdOutillage)?.Designation ?? termeRecherche;
+    string message = $"Veuillez vérifier les informations suivantes avant de créer la réforme d'outillage :\n\n" +
+                     $"Date de la Réforme : {reformeOutillage.DateReforme.ToString("g")}\n" + // Affiche date et heure
+                     $"Objet : {reformeOutillage.Objet}\n" +
+                     $"Nombre : {reformeOutillage.Nombre}\n" +
+                     $"Outillage : {designationOutillage}\n\n" +
+                     "Êtes-vous sûr de ces informations ? Une fois créée, la réforme ne pourra plus être modifiée ou supprimée.";
+
+    bool confirme = await JSRuntime.InvokeAsync<bool>("confirm", message);
+    if (!confirme)
+    {
+        return;
+    }
+
+    try
+    {
+        reformeOutillage.DateReforme = DateTime.Now; // Assurer que l’heure est incluse
+        var response = await Http.PostAsJsonAsync(reformeOutillageUrl, reformeOutillage);
+        if (!response.IsSuccessStatusCode)
+        {
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
+            messageErreur = apiResponse?.Message ?? "Une erreur est survenue lors de la création de la réforme.";
+            StateHasChanged();
+            return;
+        }
+
+        if (OnReformeOutillageCreated.HasDelegate)
+            await OnReformeOutillageCreated.InvokeAsync();
+        reformeOutillage = new ReformeOutillageDto() { DateReforme = DateTime.Now }; // Changé ici
+        termeRecherche = string.Empty;
+        suggestions.Clear();
+        StateHasChanged();
+    }
+    catch (Exception ex)
+    {
+        messageErreur = $"Erreur lors de la création de la réforme : {ex.Message}";
+        Console.WriteLine(messageErreur);
+        StateHasChanged();
+    }
+}
 }
