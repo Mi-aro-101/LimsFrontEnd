@@ -9,18 +9,9 @@
         <div class="popup-content">
             <h3>Changer le mode de paiement</h3>
 
-            <!--MudSelect @bind-Value="selectedMode" Label="Mode de paiement">
-                <MudSelectItem Value="1">Espèce</MudSelectItem>
-                <MudSelectItem Value="2">Mobile Money</MudSelectItem>
-                <MudSelectItem Value="3">Banque</MudSelectItem>
-            <MudSelect>
-            <MudButton Color="Color.Primary" OnClick="@ValiderChangement">Valider<MudButton>
-            <MudButton Color="Color.Error" OnClick="@OnClose">Annuler<MudButton-->
-
             <select @bind="selectedMode" class="form-select">
                 <option value="1">Espèce</option>
                 <option value="2">Mobile Money</option>
-                <!--option value="3">Banque<option-->
             </select>
 
             <button class="btn btn-primary mt-2" @onclick="ValiderChangement">Valider</button>
@@ -72,9 +63,6 @@
                 case 2:
                     navigationManager.NavigateTo($"/choixoperateur/{id_etat_decompte}");
                     break;
-                /*case 3:
-                    navigationManager.NavigateTo($"/formulaireVirement/{id_etat_decompte}");
-                    break;*/
                 default:
                     Console.WriteLine("Mode de paiement non reconnu.");
                     break;
