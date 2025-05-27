@@ -37,7 +37,7 @@
             <MudTd>
                 @if (delaiListe == context)
                 {
-                    <MudButton Color="Color.Success" OnClick="@(() => GoToPaiement(context.id_etat_decompte, context.modePaiement))">
+                    <MudButton Color="Color.Success" OnClick="@(() => GoToPaiement(context.id_etat_decompte, context.id_modePaiement, context.id_modePaiementTable))">
                         Payer maintenant
                     </MudButton>
 
@@ -113,9 +113,9 @@
         delaiListe = delai;
     }
 
-    private async void GoToPaiement(int id_etat_decompte, int modePaiement)
+    private async void GoToPaiement(int id_etat_decompte, int modePaiement, int id_modePaiementTable)
     {
-        var requestUri = $"delai/PaiementDirect/{id_etat_decompte}/{modePaiement}";
+        var requestUri = $"delai/PaiementDirect/{id_etat_decompte}/{id_modePaiementTable}";
 
         var response = await http.PutAsJsonAsync<ApiResponse>(requestUri, null);
 

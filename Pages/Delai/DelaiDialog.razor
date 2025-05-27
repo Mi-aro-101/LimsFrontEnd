@@ -11,7 +11,7 @@
             <h3>Délai accordé</h3>           
             <EditForm Model="@delaiDto" OnValidSubmit="@Close">
                 <h4>Choisissez le mode de paiement :</h4>
-                <InputRadioGroup @bind-Value="delaiDto.modePaiement">
+                <InputRadioGroup @bind-Value="delaiDto.id_modePaiement">
                     <label>
                         <InputRadio Value="1" /> Espèce
                     </label>
@@ -82,9 +82,9 @@
                 Console.WriteLine("id_etat_decompte non trouvé dans ViewBag.");
             }
 
-            Console.WriteLine($"selectedModePaiement: {delaiDto.modePaiement}");
-            int etatpaiement = 0;
-            switch (delaiDto.modePaiement)
+            Console.WriteLine($"selectedModePaiement: {delaiDto.id_modePaiement}");
+            //int etatpaiement = 0;
+            /*switch (delaiDto.modePaiement)
             {
                 case 1:
                     etatpaiement = 31;
@@ -94,23 +94,24 @@
                     break;
                  /*case 3:
                     etatpaiement = 33;
-                    break; */
-            }
+                    break; 
+            }*/
 
-            Console.WriteLine($"etatPaiement: {etatpaiement}");
+           /// Console.WriteLine($"etatPaiement: {etatpaiement}");
 
             // Créez une instance de DelaiDto avec les valeurs appropriées
             var delai = new DelaiDto
             {
                 datePaiement = DateTime.Now,
-                @* EtatPaiement = etatpaiement, *@
+                //EtatPaiement = etatpaiement,
                 id_etat_decompte = Id_etat_decompte,
                 DateFinDelai = DateTime.Now.AddDays(7),
-                modePaiement = delaiDto.modePaiement
+                id_modePaiement = delaiDto.id_modePaiement
             };
 
-            Console.WriteLine($"information délai: {delai.datePaiement}, {delai.EtatPaiement}, {delai.id_etat_decompte}, {delai.DateFinDelai}, {delai.modePaiement}");
+            Console.WriteLine($"information délai: {delai.datePaiement}, {delai.EtatPaiement}, {delai.id_etat_decompte}, {delai.DateFinDelai}, {delai.id_modePaiement}");
 
+            Console.WriteLine($"Envoi des données: {JsonSerializer.Serialize(delai)}");
             var response = await http.PostAsJsonAsync("delai", delai);
 
             if (!response.IsSuccessStatusCode)
