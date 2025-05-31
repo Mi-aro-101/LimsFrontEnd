@@ -22,7 +22,9 @@ public class EchantillonDto
     [JsonPropertyName("idTypeEchantillon")]
     [Required]
     public int IdTypeEchantillon { get; set; }
-
+    
+    [JsonPropertyName("idPrestation")]
+    public int IdPrestation { get; set; }
     [NotMapped]
     public string? TypeEchantillonDesignation { get; set; }
     [JsonPropertyName("typeEchantillon")]

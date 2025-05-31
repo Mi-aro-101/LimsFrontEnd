@@ -39,6 +39,11 @@ else
                         <p class="card-text">Date : <strong> @ViewUtils.RenderDateAsFrenchFormat(prestation.DatePrestation) </strong></p>
                         <p class="card-text">Date de cloture : <strong> @ViewUtils.RenderDateAsFrenchFormat(prestation.DateCloture)</strong></p>
                         <p class="card-text">Statut : <strong> @prestation.EtatPrestation?.Designation </strong></p>
+                        @if(@prestation.EtatPrestation?.Designation == "transmissible")
+                        {
+                        <p class="card-text"> <Transmission IdPrestation="@prestation.IdPrestation" /> </p>
+
+                        }
                 </div>
             </div>
         </div>
@@ -104,6 +109,7 @@ else
                             <th>Référence du client</th>
                             <th>Travail demandé</th>
                             <th>Tarif du travail</th>
+                            <th>Etat du travail</th>
                             <th>Qr Code</th>
                         </thead>
                         <tbody>
@@ -114,6 +120,7 @@ else
                                 <td>@details.ReferenceClient</td>
                                 <td>@details.Designation</td>
                                 <td>@details.Tarif</td>
+                                <td>@details.Travail.AvanceeTravail.Designation</td>
                                 <td><QRCodeEchnatillon Id="@details.IdEchantillon"/></td>
                             </tr>
                             }
