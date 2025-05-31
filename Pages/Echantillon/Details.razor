@@ -12,7 +12,7 @@
     }
 </style>
 
-<h2>Details prestation</h2>
+<h2>Details échantillon</h2>
 <hr>
 
     <MudGrid>
@@ -32,7 +32,7 @@
                     {
                         <MudForm ReadOnly="true" Spacing="2">
                             <MudTextField T="string" Label="Reference" @bind-Value="echantillon.Reference"/>
-                            <MudTextField T="string" Label="Type" Value="@echantillon.TypeEchantillon!.Designation"/>
+                            <MudTextField T="string" Label="Type" Value="@((echantillon.TypeEchantillon?.Designation ?? string.Empty))"/>
                             <MudTextField T="string" Label="Date de prélèvement" Value="@ViewUtils.RenderDateAsFrenchFormat(echantillon.DatePrelevement)" />
                             <MudTextField T="string" Label="Provenance" @bind-Value="echantillon.Provenance" />
                             <MudTextField T="string" Label="Note" @bind-Value="echantillon.Note" />

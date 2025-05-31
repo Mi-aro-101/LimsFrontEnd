@@ -63,7 +63,7 @@ public class EmployeDto
     [JsonPropertyName("poste")]
     public PosteDto? Poste { get; set; }
     [JsonIgnore]
-    public DateOnly? _dateNouveauPoste;
+    public DateOnly? _dateNouveauPoste = DateOnly.FromDateTime(DateTime.Now);
     [JsonIgnore]
     public DateOnly? _dateFinPoste;
     [JsonPropertyName("dateNouveauPoste")]

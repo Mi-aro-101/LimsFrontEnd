@@ -3,14 +3,18 @@
     .nav-item{
         color: #ffffff;
     }
+    hr{
+        width: 90%;
+        margin: 0 auto;
+    }
 </style>
-<MudNavMenu Margin="Margin.Dense" Color="Color.Warning">
+<MudNavMenu Margin="Margin.Dense" Color="Color.Success">
     <div class="nav-item px-3">
     <MudNavGroup Title="Dashboard" Icon="@Icons.Material.Filled.SpaceDashboard" IconColor="Color.Inherit" Expanded="false">
         <MudNavGroup Title="Chiffre d'affaire" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AttachMoney" Expanded="false">
-            <MudNavLink Href="/chiffre/affaire/annuel" IconColor="Color.Inherit" Match="NavLinkMatch.All">Annuel</MudNavLink>
-            <MudNavLink Href="/chiffre/affaire/mensuel" IconColor="Color.Inherit" Match="NavLinkMatch.All">Mensuel</MudNavLink>
-            <MudNavLink Href="/chiffre/affaire/journalier" IconColor="Color.Inherit" Match="NavLinkMatch.All">Journalier</MudNavLink>
+            <MudNavLink Href="/chiffre/affaire/annuel" Icon="@Icons.Material.Filled.CalendarToday" IconColor="Color.Inherit" Match="NavLinkMatch.All">Annuel</MudNavLink>
+            <MudNavLink Href="/chiffre/affaire/mensuel" Icon="@Icons.Material.Filled.CalendarMonth" IconColor="Color.Inherit" Match="NavLinkMatch.All">Mensuel</MudNavLink>
+            <MudNavLink Href="/chiffre/affaire/journalier" Icon="@Icons.Material.Filled.Today" IconColor="Color.Inherit" Match="NavLinkMatch.All">Journalier</MudNavLink>
         </MudNavGroup>
        <MudNavGroup Title="Magasin" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Warehouse" Expanded="false">
     <MudNavLink Href="/dashboard" Icon="@Icons.Material.Filled.Paid" IconColor="Color.Inherit" Match="NavLinkMatch.All">
@@ -22,7 +26,20 @@
 </MudNavGroup>
 
     </MudNavGroup>
-</div>
+    </div>
+
+    <br />
+    <hr style="color: #ffffff;" />"
+    <br />
+    <div class="nav-item px-3">
+    <MudNavLink Href="/departement" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AccountTree">
+        Département
+    </MudNavLink>
+    </div>
+    <br />
+    <hr style="color: #ffffff;" />"
+    <br />
+
     <div class="nav-item px-3">
     <MudNavLink Href="/poste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Desk">
         Poste
@@ -42,6 +59,19 @@
         <MudNavLink Href="/utilisateur/new" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.PersonAdd">Utilisateur</MudNavLink>
     </MudNavGroup>
     </div>
+
+    <br />
+    <hr style="color: #ffffff;" />"
+    <br />
+    <div class="nav-item px-3">
+    <MudNavLink Href="/type/travaux" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Science">
+        Travaux
+    </MudNavLink>
+    </div>
+
+    <br />
+    <hr style="color: #ffffff;" />"
+    <br />
     <div class="nav-item px-3">
     <MudNavGroup Title="Client" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.People" Expanded="false">
         <MudNavLink Href="/client" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.FormatListBulleted" Match="NavLinkMatch.All">Liste</MudNavLink>
@@ -54,4 +84,5 @@
             <MudNavLink Href="/echantillon/details" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.IncompleteCircle">Echantillon</MudNavLink>
         </MudNavGroup>
     </div>
+
 </MudNavMenu>

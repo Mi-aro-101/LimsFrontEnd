@@ -9,7 +9,7 @@
 @using BlazorBootstrap
 
 <div class="card border-dark mb-3" style="max-width: 39rem;">
-  <div class="card-header">Creer un travail</div>
+  <div class="card-header">Créer un travail</div>
   <div class="card-body text-dark">
     <EditForm Model="@typetravaux" OnValidSubmit="@HandleOnSubmit">
         <div class="form-group row">
@@ -20,7 +20,7 @@
         </div>
         <br>
         <div class="form-group row">
-            <label for="inputPassword" class="col-sm-2 col-form-label">Designation</label>
+            <label for="inputPassword" class="col-sm-2 col-form-label">Désignation</label>
             <div class="col-sm-8">
             <InputText class="form-control" @bind-Value="typetravaux.Designation" placeholder="" />
             </div>
@@ -38,28 +38,32 @@
         <br>
             @if (typetravaux.HaveFormule == 0)
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <label class="col-sm-2 col-form-label">Fichier Formule</label>
+                    <div class="col-sm-8">
                     <InputFile class="form-control"  OnChange="HandleFileSelected" />
+                    </div>
                 </div>
             }
             else if (typetravaux.HaveFormule == 1)
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <label class="col-sm-2 col-form-label">Tarif</label>
+                    <div class="col-sm-8">
                     <InputNumber class="form-control" @bind-Value="typetravaux.Tarif" />
+                    </div>
                 </div>
             }
         <br>
         <div class="form-group row">
-            <label for="inputPassword" class="col-sm-2 col-form-label">Date de creation</label>
+            <label for="inputPassword" class="col-sm-2 col-form-label">Date de création</label>
             <div class="col-sm-8">
             <InputDate class="form-control" @bind-Value="typetravaux.DateCreation" />
             </div>
         </div>
         <br>
         <div class="form-group row">
-            <label for="inputPassword" class="col-sm-2 col-form-label">Departement</label>
+            <label for="inputPassword" class="col-sm-2 col-form-label">Département</label>
             <div class="col-sm-8">
             <InputSelect class="form-control" @bind-Value="typetravaux.IdDepartement">
                 @foreach(DepartementDto departement in Departements)
@@ -71,7 +75,7 @@
         </div>
         <br>
         <div class="form-group row">
-            <label for="inputPassword" class="col-sm-2 col-form-label">Resultat</label>
+            <label for="inputPassword" class="col-sm-2 col-form-label">Résultat</label>
             <div class="col-sm-8">
             <InputSelect class="form-control" @bind-Value="typetravaux.HasResultat">
                     <option value=0>Oui</option>
@@ -93,7 +97,7 @@
         </div>
         <br>
         <center>
-            <button type="submit" class="btn btn-primary">Creer</button>
+            <button type="submit" class="btn btn-primary">Créer</button>
         </center>
     </EditForm>
   </div>

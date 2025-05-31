@@ -8,18 +8,18 @@
 @inject NavigationManager NavigationManager
 
 <div class="card border-dark mb-3" style="max-width: 39rem;">
-  <div class="card-header">Creer un poste</div>
+  <div class="card-header">Créer un poste</div>
   <div class="card-body text-dark">
     <EditForm Model="@poste" OnValidSubmit="@HandleOnSubmit">
         <div class="form-group row">
-            <label for="inputPassword" class="col-sm-2 col-form-label">Designation</label>
+            <label for="inputPassword" class="col-sm-2 col-form-label">Désignation</label>
             <div class="col-sm-8">
             <InputText class="form-control" @bind-Value="poste.Designation" placeholder="Traitement" />
             </div>
         </div>
         <br>
         <center>
-            <button type="submit" class="btn btn-primary">Creer</button>
+            <button type="submit" class="btn btn-primary">Créer</button>
         </center>
     </EditForm>
   </div>

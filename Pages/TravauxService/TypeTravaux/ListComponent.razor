@@ -4,6 +4,7 @@
 @using System.Threading.Tasks
 @using LimsFrontEnd.Models
 @using LimsUtils.Api
+@using LimsUtils.Utility
 @using System.Text.Json
 @inject NavigationManager NavigationManager
 @using Microsoft.JSInterop;
@@ -40,9 +41,12 @@
     .suggestion-item:hover {
         background: #f0f0f0;
     }
+    .chiffre{
+        text-align: right;
+    }
 </style>
 
-<div style="position:relative;">
+<div style="width: 50%; float: right; position: relative;">
     <MudTextField @bind-Value="searchTerm"
                   Placeholder="🔍 Rechercher par code ou désignation..."
                   Adornment="Adornment.Start"
@@ -64,6 +68,8 @@
         </div>
     }
 </div>
+
+<br />
 
 @code {
     private string searchText = "";
@@ -101,7 +107,11 @@
     }
 }
 
-
+<br />
+<hr />
+<hr />
+<hr />
+<br />
 <div class="col">
     <CreateComponent Departements="departements" TypeEchantillons="typeEchantillons" OnTypeTravauxCreated="@LoadTypeTravaux"/>
 </div>
@@ -114,7 +124,12 @@
     }
     else
     {
-        @if (apiResponse.ViewBag.ContainsKey("position") && apiResponse.ViewBag.ContainsKey("TotalCount") && apiResponse.ViewBag.ContainsKey("nbrPerPage"))
+        @if (
+            apiResponse != null && apiResponse.ViewBag != null &&
+            apiResponse.ViewBag.ContainsKey("position") &&
+            apiResponse.ViewBag.ContainsKey("TotalCount") &&
+            apiResponse.ViewBag.ContainsKey("nbrPerPage")
+        )
         {
 
             var currentPage = int.Parse(apiResponse.ViewBag["position"].ToString());
@@ -125,7 +140,7 @@
                 <thead>
                     <tr>
                         <th scope="col">Code</th>
-                        <th scope="col">Designation</th>
+                        <th scope="col">Désignation</th>
                         <th scope="col">PU en Ar</th>
                         <th scope="col"><center>Actions</center></th>
                     </tr>
@@ -136,7 +151,7 @@
                         <tr @onclick="@(() => NavigateTo(@typetravail.IdTypeTravaux))">
                             <td>@typetravail.Code</td>
                             <td>@typetravail.Designation</td>
-                            <td>@(typetravail.Tarif ?? 0)</td>
+                            <td class="chiffre">@ViewUtils.RenderMoney(typetravail.Tarif)</td>
                             <td class="bordered-cell-one">
                                 <MudButton Size="Size.Small" @onclick="@(() => HandleUpdate(@typetravail.IdTypeTravaux))" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Warning"></MudButton>
                             </td>

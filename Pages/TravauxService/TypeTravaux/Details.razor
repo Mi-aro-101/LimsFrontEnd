@@ -5,6 +5,7 @@
 @using System.Collections.Generic
 @using System.Threading.Tasks
 @using LimsFrontEnd.Models
+@using LimsUtils.Utility
 @using System.Text.Json;
 @inject NavigationManager NavigationManager
 @using System.Globalization
@@ -22,7 +23,7 @@
 
 <center><h2>Details concernant "@typetravaux.Designation"</h2></center>
 
-<hr>
+<hr><br/>
 <div class="row">
     <div class="col">
         <div class="card" style="width: 40rem;">
@@ -38,17 +39,17 @@
                 {
                     <h3 class="card-title">Concernant le travail</h3>
                     <hr>
-                    <p class="card-text">Designation : <strong> @typetravaux.Designation </strong></p>
+                    <p class="card-text">Désignation : <strong> @typetravaux.Designation </strong></p>
                     <p class="card-text">Code : <strong> @typetravaux.Code </strong></p>
-                    <p class="card-text">Date de creation : 
+                    <p class="card-text">Date de création : 
                         <strong> 
                             @string.Format(new CultureInfo("fr-FR"), "{0:dd MMMM yyyy}", typetravaux.DateCreation)
                         </strong>
                     </p>
-                    <p class="card-text">Departement : <strong> @typetravaux.Departement?.Designation </strong></p>
+                    <p class="card-text">Département : <strong> @typetravaux.Departement?.Designation </strong></p>
                     @if(typetravaux.HaveFormule == 1)
                     {
-                        <p class="card-text">Tarif actuel : <strong> @string.Format(CultureInfo.InvariantCulture, "{0:#,##0.00}", typetravaux.Tarif).Replace(",", " ") Ar</strong></p>
+                        <p class="card-text">Tarif actuel : <strong> @ViewUtils.RenderMoney(typetravaux.Tarif) Ar</strong></p>
                     }
                     else{
                         <TarifFormuleComponent TypeTravauxDesigne="@typetravaux" FormuleDesigne="@formule"/>
@@ -63,14 +64,14 @@
                 <h3 class="card-title" >Historique des tarifs</h3>
                 <table class="table table-bordered" border="1">
                         <thead>
-                            <th>Cout</th>
+                            <th>Cout en Ar</th>
                             <th>Date de changement</th>
                         </thead>
                         <tbody>
-                            @foreach(var historique in typetravaux.HistoriqueTarifs)
+                            @foreach(var historique in typetravaux!.HistoriqueTarifs)
                             {
                             <tr>
-                                <td style="text-align: right;">Ar @string.Format(CultureInfo.InvariantCulture, "{0:#,##0.00}", historique.Tarif).Replace(",", " ")</td>
+                                <td style="text-align: right;">@ViewUtils.RenderMoney(historique.Tarif)</td>
                                 <td>
                                     <p>@string.Format(new CultureInfo("fr-FR"), "{0:dd MMMM yyyy}", historique.DateChangement)</p>
                                 </td>
@@ -82,6 +83,7 @@
         </div>
     </div>
 </div>
+<br>
 <div class="row">
      <div class="col">
         <div class="card" style="width: 40rem;">

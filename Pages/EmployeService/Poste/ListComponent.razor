@@ -29,7 +29,10 @@
     }
     else
     {
-        @if (apiResponse.ViewBag.ContainsKey("position") && apiResponse.ViewBag.ContainsKey("TotalCount") && apiResponse.ViewBag.ContainsKey("nbrPerPage"))
+        @if (apiResponse != null && apiResponse.ViewBag != null &&
+            apiResponse.ViewBag.ContainsKey("position") &&
+            apiResponse.ViewBag.ContainsKey("TotalCount") &&
+            apiResponse.ViewBag.ContainsKey("nbrPerPage"))
         {
 
             var currentPage = int.Parse(apiResponse.ViewBag["position"].ToString());
@@ -39,7 +42,7 @@
             <table class="table table-bordered" border="1">
                 <thead>
                     <tr>
-                        <th scope="col">Designation</th>
+                        <th scope="col">Désignation</th>
                         <th scope="col" colspan="2"><center>Actions</center></th>
                     </tr>
                 </thead>
@@ -50,9 +53,6 @@
                             <td>@poste.Designation</td>
                             <td class="bordered-cell-one">
                                 <MudButton Size="Size.Small" @onclick="@(() => HandleUpdate(@poste.IdPoste))" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Warning"></MudButton>
-                            </td>
-                            <td class="bordered-cell-two">
-                                <MudButton Size="Size.Small" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" @onclick="@(() => HandleDelete(currentPage, @poste.IdPoste, @poste.Designation))" Color="Color.Error"></MudButton> 
                             </td>
                         </tr>
                     }
@@ -130,33 +130,6 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Error while calling LoadDpt: {ex.Message}");
-        }
-    }
-
-    private async Task DeletePoste(int position, int id)
-    {
-        try
-        {
-
-            var response = await Http.DeleteAsync(url+$"/{id}");
-            response.EnsureSuccessStatusCode(); // Throw if not successful
-            // Optionally handle the response (e.g., show a success message)
-            await LoadPostes(position);
-        }
-        catch(Exception ex)
-        {
-            Console.WriteLine("Exception : " +ex.Message);
-        }
-    }
-
-    private async Task HandleDelete(int? position, int id, string designation)
-    {
-        int currPage;
-        if(position.HasValue) currPage = position.Value;
-        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Etes-vous sûr de supprimer {designation}");
-        if (confirmed)
-        {
-            await DeletePoste(currentPage, id);
         }
     }
 

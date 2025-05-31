@@ -14,7 +14,7 @@
 <MudItem xs="12" sm="6" md="4">
     <MudPaper Elevation="2" Class="pa-4" Style="min-height: 100px; display: flex; flex-direction: column; justify-content: center;">
         <MudText Typo="Typo.h6" Align="Align.Center" GutterBottom="true">
-            Reste en stock
+            Reste en stock (Théorique)
         </MudText>
         <MudText Typo="Typo.h5" Align="Align.Center" Style="color: rgb(49,130,189);">
             @resteStock.Quantite @resteStock.Unite
@@ -113,7 +113,7 @@
 </div>
 
 @code {
-    private SortieReactifDto sortieReactif = new() { DateSortie = DateTime.Today };
+    private SortieReactifDto sortieReactif = new() { DateSortie = DateTime.Now };
     private List<ReactifDto> reactifs = new();
     private List<DepartementSortieReactifDto> departements = new();
     private List<ObjetSortieReactifDto> objetsSortieReactif = new();
@@ -144,7 +144,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        sortieReactif.DateSortie = DateTime.Today;
+        sortieReactif.DateSortie = DateTime.Now;
         departements = await LoadDepartements();
         objetsSortieReactif = await LoadObjetsSortieReactif();
     }
@@ -220,11 +220,13 @@
     {
 
         resteStock.IdReactif = idReactif;
+        resteStock.DateParam = dateSortie;
         if(sortieReactif.DateSortie == null)
         {
             resteStock.DateParam = DateTime.Now;
         }
-        resteStock.DateParam = dateSortie;
+
+        Console.WriteLine(JsonSerializer.Serialize(resteStock));
 
         var response = await Http.PostAsJsonAsync("reactifs/reste-stock", resteStock);
         using var responseStream = await response.Content.ReadAsStreamAsync();
@@ -237,8 +239,12 @@
             StateHasChanged();
         }
         else{
+            if (OnError.HasDelegate)
+                await OnError.InvokeAsync(apiResponse?.Message);
             StateHasChanged();
         }
+
+        Console.WriteLine("Reste Stock : " + JsonSerializer.Serialize(resteStock));
     }
 
     private void SelectReactif(ReactifDto reactif)
@@ -302,7 +308,7 @@
             }
             if (OnSortieReactifCreated.HasDelegate)
                 await OnSortieReactifCreated.InvokeAsync();
-            sortieReactif = new SortieReactifDto() { DateSortie = DateTime.Today };
+            sortieReactif = new SortieReactifDto() { DateSortie = DateTime.Now };
             searchTerm = string.Empty;
             selectedUnite = string.Empty;
             isQuantiteInvalid = false;

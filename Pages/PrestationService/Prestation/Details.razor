@@ -35,7 +35,7 @@ else
                         <p class="card-text"><strong> </strong></p>
 
                         <hr>
-                        <p class="card-text">Ref : <strong> @prestation.ReferenceFicheTravail </strong></p>
+                        <p class="card-text">Réf : <strong> @prestation.ReferenceFicheTravail </strong></p>
                         <p class="card-text">Date : <strong> @ViewUtils.RenderDateAsFrenchFormat(prestation.DatePrestation) </strong></p>
                         <p class="card-text">Date de cloture : <strong> @ViewUtils.RenderDateAsFrenchFormat(prestation.DateCloture)</strong></p>
                         <p class="card-text">Statut : <strong> @prestation.EtatPrestation?.Designation </strong></p>
@@ -69,10 +69,11 @@ else
     </div>
 
     @* ----------------------------------------------------------------------------- *@
+    <br>
     <hr>
+    <br>
 
     <div class="row">
-    <br>
         <div class="col">
             <div class="card" style="width: 45rem;">
                 <div class="card-body">
@@ -99,8 +100,8 @@ else
                         <hr>
                         <table class="table">
                         <thead>
-                            <th>Reference</th>
-                            <th>Reference du client</th>
+                            <th>Référence</th>
+                            <th>Référence du client</th>
                             <th>Travail demandé</th>
                             <th>Tarif du travail</th>
                             <th>Qr Code</th>

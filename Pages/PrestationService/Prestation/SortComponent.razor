@@ -22,13 +22,13 @@
 
                     <MudGrid>
                         <MudItem xs="12" sm="3">
-                            <MudTextField T="string" Label="Reference fiche de travail" @bind-Value="sorter.ReferenceFicheTravail" />
+                            <MudTextField T="string" Label="Référence fiche de travail" @bind-Value="sorter.ReferenceFicheTravail" />
                         </MudItem>
                         <MudItem xs="12" sm="3">
                             <MudTextField T="int" Label="Année" @bind-Value="sorter.AnneeExercice" />
                         </MudItem>
                         <MudItem xs="12" sm="3">
-                            <MudSelect @bind-Value="sorter.IdEtatPrestation" Label="Statut">
+                            <MudSelect @bind-Value="sorter.IdEtatPrestation" Label="Etat">
                                 <MudSelectItem Value="0">___</MudSelectItem>
                                 @foreach (var etatPrestation in etatPrestations)
                                 {
