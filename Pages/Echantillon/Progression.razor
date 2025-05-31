@@ -1,0 +1,24 @@
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+
+<MudButton Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled" OnClick="ProgressionTravail"> Terminer </MudButton>
+@code
+{
+    [Parameter]
+    public int IdTravail { get; set; }
+    [Parameter]
+    public int IdPrestation { get; set; }
+
+    private async Task ProgressionTravail()
+    {
+        //TODO : Creer la fonction "terminer" pour un travaux
+        var response = await Http.PutAsync($"echantillon?idTravail={IdTravail}&idPrestation={IdPrestation}", null);
+        StateHasChanged();
+        if (response.IsSuccessStatusCode)
+        {
+            NavigationManager.NavigateTo("/echantillon/details"); 
+        }
+    }
+}
