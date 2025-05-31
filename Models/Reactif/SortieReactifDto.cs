@@ -11,7 +11,7 @@ namespace LimsFrontEnd.Models.Reactif
         public double Quantite { get; set; }
 
         [JsonPropertyName("dateSortie")]
-        public DateTime DateSortie { get; set; }
+        public DateTime DateSortie { get; set; } = DateTime.Now;
 
         [JsonPropertyName("idDepartement")]
         public int? IdDepartement { get; set; }

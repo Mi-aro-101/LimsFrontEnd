@@ -3,12 +3,32 @@
     .nav-item{
         color: #ffffff;
     }
+    hr{
+        width: 90%;
+        margin: 0 auto;
+    }
 </style>
-<MudNavMenu Margin="Margin.Dense" Color="Color.Warning">
-    <div class="nav-item px-3">
-        <MudNavGroup Title="Recette previsionnelle" Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Inherit"  Expanded="false">
-            <MudNavLink Href="/recette/previsionnelle/nouveau" IconColor="Color.Inherit" Match="NavLinkMatch.All">Recette Previsionnelle</MudNavLink>
-            <MudNavLink Href="/comparaison" IconColor="Color.Inherit" Match="NavLinkMatch.All">Comparaison avec chiffre reelle</MudNavLink>
-        </MudNavGroup>
-    </div>
-</MudNavMenu>
+
+
+    <MudNavMenu Margin="Margin.Dense" Color="Color.Success">
+        <div class="nav-item px-3">
+            <MudNavGroup Title="Dashboard" Icon="@Icons.Material.Filled.SpaceDashboard" IconColor="Color.Inherit" Expanded="false">
+                <MudNavGroup Title="Chiffre d'affaire" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AttachMoney" Expanded="false">
+                    <MudNavLink Href="/chiffre/affaire/annuel" Icon="@Icons.Material.Filled.CalendarToday" IconColor="Color.Inherit" Match="NavLinkMatch.All">Annuel</MudNavLink>
+                    <MudNavLink Href="/chiffre/affaire/mensuel" Icon="@Icons.Material.Filled.CalendarMonth" IconColor="Color.Inherit" Match="NavLinkMatch.All">Mensuel</MudNavLink>
+                    <MudNavLink Href="/chiffre/affaire/journalier" Icon="@Icons.Material.Filled.Today" IconColor="Color.Inherit" Match="NavLinkMatch.All">Journalier</MudNavLink>
+                </MudNavGroup>
+            </MudNavGroup>
+        </div>
+
+    <br />
+    <hr style="color: #ffffff;" />"
+    <br />
+
+        <div class="nav-item px-3">
+            <MudNavGroup Title="Recette previsionnelle" Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Inherit"  Expanded="false">
+                <MudNavLink Href="/recette/previsionnelle/nouveau" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.DisplaySettings" Match="NavLinkMatch.All">Recette Previsionnelle</MudNavLink>
+                <MudNavLink Href="/comparaison" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.StackedBarChart" Match="NavLinkMatch.All">Taux de réalisation</MudNavLink>
+            </MudNavGroup>
+        </div>
+    </MudNavMenu>

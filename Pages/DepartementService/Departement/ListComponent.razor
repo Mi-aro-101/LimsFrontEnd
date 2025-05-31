@@ -5,8 +5,8 @@
 @using LimsFrontEnd.Models
 @using LimsUtils.Api
 @using System.Text.Json;
-@inject NavigationManager NavigationManager
 @using Microsoft.JSInterop;
+@inject NavigationManager NavigationManager
 
 <style>
     .bordered-cell-one{
@@ -36,18 +36,21 @@
     }
     else
     {
-        @if (apiResponse.ViewBag.ContainsKey("position") && apiResponse.ViewBag.ContainsKey("TotalCount") && apiResponse.ViewBag.ContainsKey("nbrPerPage"))
+        @if (apiResponse != null && apiResponse.ViewBag != null &&
+            apiResponse.ViewBag.ContainsKey("position") &&
+            apiResponse.ViewBag.ContainsKey("TotalCount") &&
+            apiResponse.ViewBag.ContainsKey("nbrPerPage"))
         {
 
-            var currentPage = int.Parse(apiResponse.ViewBag["position"].ToString());
-            var pageSize = int.Parse(apiResponse.ViewBag["nbrPerPage"].ToString());
-            var totalPages = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
+            var currentPage = int.Parse(apiResponse!.ViewBag["position"]!.ToString());
+            var pageSize = int.Parse(apiResponse!.ViewBag["nbrPerPage"]!.ToString());
+            var totalPages = int.Parse(apiResponse!.ViewBag["nbrLinks"]!.ToString());
 
             <table class="table table-bordered" border="1">
                 <thead>
                     <tr>
                         <th scope="col">Code</th>
-                        <th scope="col">Designation</th>
+                        <th scope="col">Désignation</th>
                         <th scope="col" colspan="2"><center>Actions</center></th>
                     </tr>
                 </thead>
@@ -59,9 +62,6 @@
                             <td>@departement.Designation</td>
                             <td class="bordered-cell-one">
                                 <MudButton Size="Size.Small" @onclick="@(() => HandleUpdate(@departement.IdDepartement))" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Warning"></MudButton>
-                            </td>
-                            <td class="bordered-cell-two">
-                                <MudButton Size="Size.Small" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" @onclick="@(() => HandleDelete(currentPage, @departement.IdDepartement, @departement.Designation))" Color="Color.Error"></MudButton> 
                             </td>
                         </tr>
                     }
@@ -94,7 +94,7 @@
 
 @code {
     private List<DepartementDto>? departements = new List<DepartementDto>();
-    private ApiResponse? apiResponse;
+    private ApiResponse apiResponse;
     private int currentPage = 1;
     private int pageSize = 2;
     string url = "http://localhost:5077/api/departement";
@@ -121,12 +121,12 @@
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             apiResponse = await Http.GetFromJsonAsync<ApiResponse>(url+$"?position={currentPage}&pageSize={pageSize}", options);
-            if(currentPage <= int.Parse(apiResponse.ViewBag["nbrLinks"].ToString())){
+            if(currentPage <= int.Parse(apiResponse!.ViewBag["nbrLinks"]!.ToString())){
                 apiResponse.HandleResponse<List<DepartementDto>>();
-                departements = (List<DepartementDto>)apiResponse.Data;
+                departements = (List<DepartementDto>)apiResponse!.Data;
             }
             else{
-                await LoadDepartements(int.Parse(apiResponse.ViewBag["nbrLinks"].ToString()));
+                await LoadDepartements(int.Parse(apiResponse!.ViewBag["nbrLinks"]!.ToString()));
             }
         }
         catch (Exception ex)
@@ -135,33 +135,7 @@
         }
     }
 
-    private async Task DeleteDepartement(int position, int id)
-    {
-        try
-        {
-
-            var response = await Http.DeleteAsync(url+$"/{id}");
-            // Optionally handle the response (e.g., show a success message)
-            await LoadDepartements(position);
-        }
-        catch(Exception ex)
-        {
-            exception = ex.Message;
-        }
-    }
-
-    private async Task HandleDelete(int? position, int id, string designation)
-    {
-        int currPage;
-        if(position.HasValue) currPage = position.Value;
-        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Etes-vous sûr de supprimer {designation}");
-        if (confirmed)
-        {
-            await DeleteDepartement(currentPage, id);
-        }
-    }
-
-    private async Task HandleUpdate(int id)
+    private void HandleUpdate(int id)
     {
         NavigationManager.NavigateTo($"/departement/{id}");
     }

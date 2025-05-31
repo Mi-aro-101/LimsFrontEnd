@@ -6,7 +6,7 @@
 @inject HttpClient Http;
 @inject NavigationManager NavigationManager;
 
-<center><h2>Modifier</h2></center>
+<center><h2>Client</h2></center>
 
 <hr>
 <br>
@@ -36,7 +36,12 @@
 {
     [Parameter]
     public int Id { get; set; }
-    ClientDto? client;
+    ClientDto? client = new ClientDto{
+        Nom = string.Empty,
+        Contact = string.Empty,
+        Adresse = string.Empty,
+        Email = string.Empty
+    };
     string url = "http://localhost:5077/api/";
     string? exception;
 

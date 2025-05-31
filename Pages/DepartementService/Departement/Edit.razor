@@ -10,7 +10,7 @@
 @inject NavigationManager NavigationManager
 
 <div class="card border-dark mb-3" style="max-width: 39rem;">
-  <div class="card-header">Mettre à jour ce departement</div>
+  <div class="card-header">Mettre à jour ce département</div>
   <div class="card-body text-dark">
     @if(!(string.IsNullOrEmpty(exception)))
     {
@@ -22,12 +22,12 @@
         <div class="form-group row">
             <label for="staticEmail" class="col-sm-2 col-form-label">Code</label>
             <div class="col-sm-8">
-            <InputText class="form-control" @bind-Value="departement.Code"/>
+            <InputText class="form-control" @bind-Value="departement!.Code"/>
             </div>
         </div>
         <br>
         <div class="form-group row">
-            <label for="inputPassword" class="col-sm-2 col-form-label">Designation</label>
+            <label for="inputPassword" class="col-sm-2 col-form-label">Désignation</label>
             <div class="col-sm-8">
             <InputText class="form-control" @bind-Value="departement.Designation"/>
             </div>
@@ -42,7 +42,10 @@
 
 @code
 {
-    private DepartementDto? departement;
+    private DepartementDto? departement = new DepartementDto{
+        Code = string.Empty,
+        Designation = string.Empty
+    };
     private string url = "http://localhost:5077/api/departement";
     private string? exception;
     [Parameter]
