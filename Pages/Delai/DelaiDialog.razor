@@ -42,6 +42,7 @@
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public ApiResponse? ApiResponse { get; set; }
+    [Parameter] public int id_etat_decompte { get; set; }
 
     //string url = "http://localhost:5077/api/delai";
     private DelaiDto delaiDto = new DelaiDto();
@@ -104,7 +105,8 @@
             {
                 datePaiement = DateTime.Now,
                 //EtatPaiement = etatpaiement,
-                id_etat_decompte = Id_etat_decompte,
+                //id_etat_decompte = Id_etat_decompte,
+                id_etat_decompte = id_etat_decompte,
                 DateFinDelai = DateTime.Now.AddDays(7),
                 id_modePaiement = delaiDto.id_modePaiement
             };
