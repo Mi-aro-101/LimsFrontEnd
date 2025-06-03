@@ -30,7 +30,7 @@
             <MudTd> @(context.DatePaiement.ToString("dd MMM yyyy") ?? "N/A") </MudTd>
             <MudTd> @context.montant </MudTd>
             <MudTd>
-                <MudButton Color="Color.Primary" OnClick="@(() => EditRow(context.id_etat_decompte))">Payé</MudButton>
+                <MudButton Color="Color.Primary" OnClick="@(() => EditRow(context.id_etat_decompte))">Payer(context.id_etat_decompte)</MudButton>
             </MudTd>
         </RowTemplate>
     </MudTable>

@@ -37,7 +37,7 @@
 
         <!-- Paiement par virement -->
         <MudItem xs="12" sm="4" Class="flex flex-col items-center">
-            <MudLink href="@($"virementBancaire/{id_etat_decompte}")" Style="text-decoration: none;">
+            <MudLink href="@($"formulaireVirement/{id_etat_decompte}")" Style="text-decoration: none;">
                 <MudCard Class="hover:shadow-xl transition duration-300 ease-in-out cursor-pointer p-4">
                     <MudCardContent Class="flex flex-col items-center">
                         <MudImage Src="img/virement.png" Alt="Paiement par virement" Class="mb-4" Style="width: 120px; height: 120px;" />
@@ -49,7 +49,7 @@
     </MudGrid>
 
     <SousContratDialog IsVisible="@showSousContrat" Contrat="@contratDto" OnClose="@(() => showSousContrat = false)" />
-    <DelaiDialog IsVisible="@showDelai" ApiResponse="@apiResponse" OnClose="@(() => showDelai = false)" />
+    <DelaiDialog IsVisible="@showDelai" ApiResponse="@apiResponse" id_etat_decompte="@id_etat_decompte" OnClose="@(() => showDelai = false)" />
 
 </MudPaper>
 
@@ -80,6 +80,7 @@
             if(apiResponseRecu.Message == "Délai accordé pour le test de période de 6 mois" || apiResponseRecu.Message == "Délai accordé pour le test de période de 1 an")
             {
                 Console.WriteLine($"viewbag: {apiResponseRecu.ViewBag["id_etat_decompte"]}");
+
                 apiResponse = apiResponseRecu;
                 showDelai = true;                
             }
