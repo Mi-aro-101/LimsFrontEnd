@@ -44,6 +44,9 @@ namespace LimsFrontEnd.Models
 
         [JsonPropertyName("travaux")]
         public string? travaux { get; set; }
+        
+        [JsonPropertyName("id_destinataire")]
+        public int id_destinataire { get; set; }
 
         // Attributs Etat_decompte utile pour liste
         [JsonPropertyName("referenceEtatDecompte")]

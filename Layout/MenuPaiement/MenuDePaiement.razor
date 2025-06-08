@@ -7,8 +7,8 @@
 </style>
 
 <MudNavMenu Margin="Margin.Dense" Color="Color.Warning">
-
-    <div class="nav-item px-3">
+    <MudNavGroup Title="Paiement" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AttachMoney" Expanded="false">
+    
         <MudNavGroup Title="Dashboard" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Dashboard" Expanded="false">
             <MudNavLink Href="/Dashboard/paiement" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.PieChart">
                 Paiement
@@ -17,29 +17,31 @@
                 Délai
             </MudNavLink>
         </MudNavGroup>
-    </div>
-
-    <div class="nav-item px-3">
-        <MudNavLink Href="/prestation/apayer" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.WorkOutline" Class="nav-item px-3">
+        
+        <br />
+        <hr style="color: #ffffff;" />
+        <br />
+        
+        <MudNavLink Href="/prestation/apayer" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.WorkOutline">
             Prestation
+        </MudNavLink>        
+        
+        <MudNavLink Href="/Delai/liste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.List">
+            Délais
         </MudNavLink>
-    </div>
 
-    <div class="nav-item px-3">
-        <MudNavGroup Title="Liste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.List" Expanded="false">
-            <MudNavLink Href="/Delai/liste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.List">
-                Délais
-            </MudNavLink>
-            <MudNavLink Href="/SousContrat/liste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Description">
-                Sous Contrats
-            </MudNavLink>
-            <MudNavLink Href="/VirementBancaire/Liste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AccountBalance">
-                Virements Bancaires
-            </MudNavLink>
-        </MudNavGroup>
-    </div>
+        <MudNavLink Href="/SousContrat/liste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Description">
+            Sous Contrats
+        </MudNavLink>
 
-    <div class="nav-item px-3">
+        <MudNavLink Href="/VirementBancaire/Liste" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AccountBalance">
+            Virements Bancaires
+        </MudNavLink>      
+
+        <MudNavLink Href="/banque" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AccountBalanceWallet">
+            Banque
+        </MudNavLink>
+
         <MudNavGroup Title="Note de Débit" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.ReceiptLong" Expanded="false">
             <MudNavLink Href="/demandenotedebit/demande" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Create">
                 Nouvelle Demande
@@ -51,16 +53,11 @@
                 Vérification
             </MudNavLink>
         </MudNavGroup>
-    </div>
 
-    <div class="nav-item px-3">
-        <MudNavLink Href="/destinataire" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Person" Class="nav-item px-3">
-            Destinataires
-        </MudNavLink>
-    </div>
-
-    <div class="nav-item px-3">
         <MudNavGroup Title="Départ" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.FlightTakeoff" Expanded="false">
+            <MudNavLink Href="/destinataire" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Person">
+                Destinataires
+            </MudNavLink>
             <MudNavLink Href="/depart" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Create">
                 Nouveau Départ
             </MudNavLink>
@@ -68,15 +65,11 @@
                 Liste des Départs
             </MudNavLink>
         </MudNavGroup>
-    </div>
 
-    <div class="nav-item px-3">
-        <MudNavLink Href="/etatjournalier" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Assessment" Class="nav-item px-3">
+        <MudNavLink Href="/etatjournalier" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Assessment">
             État Journalier
         </MudNavLink>
-    </div>
 
-    <div class="nav-item px-3">
         <MudNavGroup Title="Versement" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.AttachMoney" Expanded="false">
             <MudNavLink Href="/Semaine" IconColor="Color.Inherit" Icon="@Icons.Material.Filled.DateRange">
                 Semaine
@@ -85,6 +78,6 @@
                 Versement Hebdomadaire
             </MudNavLink>
         </MudNavGroup>
-    </div>
 
+    </MudNavGroup>
 </MudNavMenu>

@@ -12,10 +12,10 @@
     <MudForm Model="@recue" @ref="form" >
         <MudGrid>
             <MudItem xs="12">
-                <MudTextField T="string" Label="Etat de décompte" @bind-Value="recue.referenceEtatDecompte" Variant="Variant.Text" Margin="Margin.Dense" />
+                <MudTextField T="string" Label="Etat de décompte" @bind-Value="recue.referenceEtatDecompte" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="12">
-                <MudTextField T="double" Label="Montant à payer" @bind-Value="recue.montantApayer" Variant="Variant.Text" Margin="Margin.Dense"/>
+                <MudTextField T="double" Label="Montant à payer" @bind-Value="recue.montantApayer" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="12">
                 <MudTextField T="double" Label="Montant reçu" @bind-Value="recue.montantRecu" Variant="Variant.Text" Margin="Margin.Dense"/>

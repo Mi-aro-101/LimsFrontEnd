@@ -39,13 +39,20 @@
                 <MudTd> @(context.dateEncaissement?.ToString("dd/MM/yyyy") ?? "N/A") </MudTd>
                 <MudTd> @context.EtatDecompte </MudTd>
                 <MudTd> @context.clients </MudTd>
-                <MudTd> @context.montant </MudTd>
+                <MudTd> 
+                    @context.montant.ToString("N0", new System.Globalization.CultureInfo("fr-FR")) 
+                </MudTd>
                 <MudTd> @(context.observation == 2 ? "interne" : (context.observation == 1 ? "externe" : "")) </MudTd>
             </RowTemplate>
         </MudTable>
 
         <MudPaper Class="pa-3 mt-4" Elevation="4">
-            <MudText Typo="Typo.h6">Arrêté à la somme de : <b>@FilteredData.Sum(x => x.montant).ToString("F2") Ar</b></MudText>
+            <MudText Typo="Typo.h6">
+                Arrêté à la somme de : 
+                <b>
+                    @FilteredData.Sum(x => x.montant).ToString("N2", new System.Globalization.CultureInfo("fr-FR")) Ar
+                </b>
+            </MudText>
         </MudPaper>
     }
 </MudPaper>

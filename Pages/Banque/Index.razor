@@ -1,0 +1,140 @@
+@page "/banque"
+
+@using LimsUtils.Api
+@inject HttpClient Http
+@using System.Text.Json;
+@using LimsFrontEnd.Models
+@using System.Net.Http.Json
+@inject IJSRuntime JSRuntime
+@using System.Threading.Tasks
+@using System.Collections.Generic
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6">
+    <MudGrid Spacing="4">
+        <!-- Formulaire d'ajout -->
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="4" Class="p-6 rounded-2xl">
+                <CreateComponent OnBanqueCreated="@HandleBanqueCreated" />
+            </MudPaper>
+        </MudItem>
+
+        <!-- Liste -->
+        <MudItem xs="12" md="8">
+            <MudPaper Elevation="4" Class="p-6 rounded-2xl">
+                <MudText Typo="Typo.h6" Class="mb-4">📃 Liste des banques</MudText>
+
+                @if (banques == null || banques.Count == 0)
+                {
+                    <MudText Color="Color.Secondary">Aucun banques trouvé.</MudText>
+                }
+                else
+                {
+                    @if (apiResponse != null && apiResponse.ViewBag != null
+                            && apiResponse.ViewBag.ContainsKey("position")
+                            && apiResponse.ViewBag.ContainsKey("TotalCount")
+                            && apiResponse.ViewBag.ContainsKey("nbrPerPage"))
+                    {
+                        var currentPage = int.Parse(apiResponse.ViewBag["position"].ToString());
+                        var pageSize = int.Parse(apiResponse.ViewBag["nbrPerPage"].ToString());
+                        var totalPages = int.Parse(apiResponse.ViewBag["TotalCount"].ToString());
+                        var pageLinks = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
+
+                        <MudTable Items="banques" Dense="true" Hover="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Nom</MudTh>
+                                <MudTh class="text-center">Actions</MudTh>
+                            </HeaderContent>
+                            <RowTemplate Context="banque">
+                                <MudTd>@banque.designation</MudTd>
+                                <MudTd>
+                                    <MudStack Direction="Row" JustifyContent="Center">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Warning"
+                                                    OnClick="() => HandleUpdate(banque.id_banque)" />
+                                    </MudStack>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+
+                        <MudDivider Class="my-4" />
+
+                        <!-- Pagination -->
+                        <MudPagination Page="@currentPage" PageSize="@pageSize" TotalItems="@totalPages"
+                                Count="@pageLinks" SelectedChanged="@(page => LoadPostes(page))" />
+                    }
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+
+@code {
+    private List<BanqueDto> banques = new List<BanqueDto>();
+    private ApiResponse? apiResponse;
+    private int currentPage = 1;
+    private int pageSize = 5;
+
+    private async Task HandleBanqueCreated()
+    {
+        int pageLoaded = int.Parse(apiResponse.ViewBag["nbrLinks"].ToString());
+        int elementNumberOnLastPage = banques.Count;
+        if (elementNumberOnLastPage == pageSize)
+            pageLoaded = pageLoaded + 1;
+        await LoadPostes(pageLoaded);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadPostes(currentPage);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error on Initializing : {ex.Message}");
+        }
+    }
+
+    private async Task LoadPostes(int? activePage)
+    {
+        if (activePage.HasValue) currentPage = activePage.Value;
+        try
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            apiResponse = await Http.GetFromJsonAsync<ApiResponse>("banque" + "?position=" + currentPage + "&pageSize=" + pageSize, options);
+
+            if (apiResponse == null)
+            {
+                Console.WriteLine("⚠️ apiResponse est NULL !");
+                apiResponse = new ApiResponse(); // Évite le null en créant une instance vide
+            }
+
+            if (apiResponse.Data == null)
+            {
+                Console.WriteLine("⚠️ apiResponse.Data est NULL !");
+                apiResponse.Data = new List<BanqueDto>(); // Évite le null en créant une liste vide
+            }
+
+            if (currentPage <= int.Parse(apiResponse.ViewBag["nbrLinks"].ToString()))
+            {
+                apiResponse.HandleResponse<List<BanqueDto>>();
+                banques = apiResponse.Data as List<BanqueDto> ?? new List<BanqueDto>();
+            }
+            else
+            {
+                await LoadPostes(int.Parse(apiResponse.ViewBag["nbrLinks"].ToString()));
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error while calling LoadDpt: {ex.Message}");
+            apiResponse = new ApiResponse(); // Évite que apiResponse reste null en cas d'erreur
+        }
+    }
+
+    private async Task HandleUpdate(int id_banque)
+    {
+        NavigationManager.NavigateTo($"/banque/{id_banque}");
+    }
+}
