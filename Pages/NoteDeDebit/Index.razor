@@ -47,6 +47,18 @@
             <MudItem xs="12">
                 <MudTextField T="string" Label="Montant en lettre" @bind-Value="demandeNote.montant_literal" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
+            <MudItem xs="12">
+                <MudSelect T="int" Label="Destinataire" @bind-Value="departModel.idDestinataire" Required="true">
+                    <MudSelectItem T="int">Sélectionner un destinataire</MudSelectItem>
+                        @if (destinataires != null)
+                        {
+                            @foreach (var d in destinataires)
+                            {
+                                <MudSelectItem Value="d.idDestinataire">@d.designation</MudSelectItem>
+                            }
+                        }
+                </MudSelect>
+            </MudItem>
             <MudItem xs="12" class="d-flex justify-center">
                 <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8" OnClick="SubmitNoteDebit">Ajouter demande</MudButton>
             </MudItem>
@@ -59,9 +71,12 @@
 @code {
     [Parameter] public int id_etat_decompte { get; set; }
     MudForm? reference;
+    private DepartDto departModel = new();
     private DemandeDto demandeNote = new DemandeDto();
     private List<DemandeDto>? demandeNotes;
+    private List<DestinataireDto>? destinataires;
     private ApiResponse? apiResponse;
+    private ApiResponse? apiResponse2;
     //string url = "http://localhost:5077/api/notedebit";
     public bool showPdf = false;
     public List<string> pdfsBase64 = new List<string>();
@@ -74,6 +89,10 @@
             apiResponse = await http.GetFromJsonAsync<ApiResponse>($"notedebit/{id_etat_decompte}", option);
             apiResponse.HandleResponse<List<DemandeDto>>();
             demandeNotes = apiResponse.Data as List<DemandeDto> ?? new List<DemandeDto>();
+
+            apiResponse2 = await http.GetFromJsonAsync<ApiResponse>("depart/destinataireListe",option);
+            apiResponse2.HandleResponse<List<DestinataireDto>>();
+            destinataires = apiResponse2.Data as List<DestinataireDto> ?? new List<DestinataireDto>();
 
             // Initialisez demandeNote
             demandeNote = demandeNotes?.FirstOrDefault() ?? new DemandeDto
@@ -112,7 +131,8 @@
                 montant = demandeNote.montant,
                 montant_literal = demandeNote.montant_literal,
                 travaux = demandeNote.travaux,
-                idEtatDecompte = demandeNote.idEtatDecompte
+                idEtatDecompte = demandeNote.idEtatDecompte,
+                id_destinataire = departModel.idDestinataire
             };
 
             var response = await http.PostAsJsonAsync("notedebit", nouvelleDemande);            

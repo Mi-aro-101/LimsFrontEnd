@@ -17,14 +17,14 @@
         </ToolBarContent>
 
         <HeaderContent>
-            <MudTh> N°</MudTh>
+            @* <MudTh> N°</MudTh> *@
             <MudTh> Réference de l'état de décompte </MudTh>
             <MudTh> Date d'état de décompte </MudTh>
             <MudTh> Montant (Ar) </MudTh>
         </HeaderContent>
 
         <RowTemplate>
-            <MudTd> @context.reference </MudTd>
+            @* <MudTd> @context.reference </MudTd> *@
             <MudTd> @context.referenceEtatDecompte </MudTd>
             <MudTd> @(context.dateEtatDecompte.HasValue ? context.dateEtatDecompte.Value.ToString("dd MMM yyyy") : "N/A") </MudTd>
             <MudTd> @context.montant </MudTd>

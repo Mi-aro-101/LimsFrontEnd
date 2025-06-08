@@ -16,6 +16,9 @@ export function DelaiSubdivisionPie(xs, ys){
     }]
 
     var layout = {
+        title: {
+            text: 'nombre des clients'
+        },
         height: 400,
         width: 400,
         margin: {"t": 0, "b": 0, "l": 0, "r": 0},

@@ -10,6 +10,11 @@
     <MudForm @ref="departForm" Model="departModel">
         <MudText Typo="Typo.h6">Nouveau Départ</MudText>
 
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="my-2">@errorMessage</MudAlert>
+        }
+
         <MudTextField Label="Objet" @bind-Value="departModel.objet" Required="true" />
 
         <MudDatePicker Label="Date de départ" @bind-Date="departModel.DateDepart" Required="true" />
@@ -25,7 +30,7 @@
             }
         </MudSelect>
 
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="SubmitDepart">Ajouter le dépaert</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="SubmitDepart">Ajouter le départ</MudButton>
     </MudForm>
 </MudPaper>
 
@@ -34,6 +39,7 @@
     private DepartDto departModel = new();
     private List<DestinataireDto>? destinataires;
     private ApiResponse? apiresponse;
+    private string? errorMessage;
 
     //private string url = "http://localhost:5077/api/depart";
     protected override async Task OnInitializedAsync()
@@ -47,21 +53,42 @@
 
     private async Task SubmitDepart()
     {
+        errorMessage = null;
         await departForm.Validate();
 
         if (departForm.IsValid)
         {
-            var response = await http.PostAsJsonAsync("depart/addDepart", departModel);
+            try 
+            {
+                // Afficher les données envoyées pour le débogage
+                //Console.WriteLine($"Données envoyées : {JsonSerializer.Serialize(departModel)}");
 
-            if (response.IsSuccessStatusCode)
-            {
-                // Redirection ou message de succès
-                navigationManager.NavigateTo("/depart/liste");
+                var response = await http.PostAsJsonAsync("depart/addDepart", departModel);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    navigationManager.NavigateTo("/depart/liste");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    //Console.WriteLine($"Réponse d'erreur complète : {errorContent}");
+                    
+                    try 
+                    {
+                        var errorResponse = JsonSerializer.Deserialize<ApiResponse>(errorContent);
+                        errorMessage = $"Erreur lors de l'insertion : {errorResponse?.Message ?? errorContent}";
+                    }
+                    catch
+                    {
+                        errorMessage = $"Erreur lors de l'insertion : {errorContent}";
+                    }
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Gestion d'erreur (ex: doublon)
-                Console.WriteLine("Erreur lors de l'insertion.");
+                errorMessage = $"Une erreur est survenue : {ex.Message}";
+                //Console.WriteLine($"Exception complète : {ex}");
             }
         }
     }

@@ -16,13 +16,23 @@
                 <MudTextField T="string" Label="Etat de décompte" @bind-Value="recue.referenceEtatDecompte" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="12">
-                <MudTextField T="double" Label="Montant à payer" @bind-Value="recue.montantApayer" Variant="Variant.Text" Margin="Margin.Dense"/>
+                <MudTextField T="double" Label="Montant à payer" @bind-Value="recue.montantApayer" Variant="Variant.Text" Margin="Margin.Dense" Disabled="true" />
             </MudItem>
             <MudItem xs="12">
                 <MudTextField T="string" Label="Réference de l'ordre de virement" @bind-Value="recue.referenceOV" Variant="Variant.Text" Margin="Margin.Dense" />
             </MudItem>
             <MudItem xs="12">
-                <MudTextField T="string" Label="La banque" @bind-Value="recue.banque" Variant="Variant.Text" Margin="Margin.Dense" />
+                @* <MudTextField T="string" Label="La banque" @bind-Value="recue.banque" Variant="Variant.Text" Margin="Margin.Dense" /> *@
+                <MudSelect T="int" Label="Banque" @bind-Value="banque.id_banque" Required="true">
+                    <MudSelectItem T="int">Sélectionner un destinataire</MudSelectItem>
+                    @if (banques != null)
+                    {
+                        @foreach (var b in banques)
+                        {
+                            <MudSelectItem Value="b.id_banque">@b.designation</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
             </MudItem>
             <MudItem xs="12">
                 <MudHidden T="int" @bind-Value="recue.id_paiement" />
@@ -36,13 +46,15 @@
 
 
 @code {
-    MudForm? form;
-    RecuDto recue = new RecuDto();
+    private MudForm? form;
+    private RecuDto recue = new RecuDto();
     [Parameter] public int id_etat_decompte { get; set; }
-
+    private BanqueDto banque = new ();
 
     private ApiResponse? apiResponse;
+    private ApiResponse? apiResponse2;
     //string url = "http://localhost:5077/api/receptionpaiementvirement";
+    private List<BanqueDto> banques = new ();
 
     protected override async Task OnInitializedAsync()
     {
@@ -50,16 +62,21 @@
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             string uri = $"receptionpaiementvirement/Confirmer/{id_etat_decompte}";
+            string uri2 = $"receptionpaiementvirement/listeBanque";
+
             apiResponse = await http.GetFromJsonAsync<ApiResponse>(uri, option);
             apiResponse.HandleResponse<RecuDto>();
             recue = apiResponse.Data as RecuDto ?? new RecuDto();
+
+            apiResponse2 = await http.GetFromJsonAsync<ApiResponse>(uri2, option);
+            apiResponse2.HandleResponse<List<BanqueDto>>();
+            banques = apiResponse2.Data as List<BanqueDto> ?? new List<BanqueDto>();
         }
         catch (Exception ex)
         {
             Console.WriteLine("Exception levé ici: " + ex.Message);
         }
     }
-
 
     private async Task RecepetionParVirement()
     {
@@ -71,17 +88,14 @@
                 return;
             }
 
-
             var recuPaiementVirement = new RecuDto
-                {
-                    referenceOV = recue.referenceOV,
-                    banque = recue.banque,
-                    id_paiement = recue.id_paiement
-                };
-
+            {
+                referenceOV = recue.referenceOV,
+                id_banque = banque.id_banque,
+                id_paiement = recue.id_paiement
+            };
 
             var response = await http.PostAsJsonAsync("receptionpaiementvirement", recuPaiementVirement);
-
 
             if (!response.IsSuccessStatusCode)
             {

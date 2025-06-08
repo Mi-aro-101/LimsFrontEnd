@@ -28,7 +28,7 @@
                     Montant en espèce
                 </MudText>
                 <MudText Typo="Typo.h6" Align="Align.Center" Style="color: blue;">
-                    @totalMontantFiltered Ariary
+                    @totalMontantFiltered.ToString("N0", new System.Globalization.CultureInfo("fr-FR")) Ariary
                 </MudText>
             </MudPaper>
         </MudItem>
@@ -39,7 +39,7 @@
                     Montant par mobile
                 </MudText>
                 <MudText Typo="Typo.h6" Align="Align.Center" Style="color: red;">
-                    @totalMontantFilteredMobile Ariary
+                    @totalMontantFilteredMobile.ToString("N0", new System.Globalization.CultureInfo("fr-FR")) Ariary
                 </MudText>
 
                 <MudButton Variant="Variant.Outlined"
@@ -59,7 +59,7 @@
                     Montant par virement
                 </MudText>
                 <MudText Typo="Typo.h6" Align="Align.Center" Style="color: green;">
-                    @totalMontantFilteredVirement Ariary
+                    @totalMontantFilteredVirement.ToString("N0", new System.Globalization.CultureInfo("fr-FR")) Ariary
                 </MudText>
             </MudPaper>
         </MudItem>

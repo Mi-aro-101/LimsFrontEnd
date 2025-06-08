@@ -21,7 +21,7 @@
             <MudTh> Nom du client </MudTh>
             <MudTh> Réference de l'état de décompte </MudTh>
             <MudTh> Date d'état de décompte </MudTh>
-            <MudTh> Date du paiement </MudTh>
+            @* <MudTh> Date du paiement </MudTh> *@
             <MudTh> Date du fin de paiement </MudTh>
             <MudTh> Montant (Ar) </MudTh>
         </HeaderContent>
@@ -31,9 +31,11 @@
             <MudTd> @context.nomClient </MudTd>
             <MudTd> @context.referenceEtatDecompte </MudTd>
             <MudTd> @(context.date_etat_decompte.ToString("dd MMM yyyy") ?? "N/A") </MudTd>
-            <MudTd> @(context.datePaiement.HasValue ? context.datePaiement.Value.ToString("dd MMM yyyy") : "N/A") </MudTd>
+            @* <MudTd> @(context.datePaiement.HasValue ? context.datePaiement.Value.ToString("dd MMM yyyy") : "N/A") </MudTd> *@
             <MudTd> @(context.DateFinDelai.ToString("dd MMM yyyy") ?? "N/A") </MudTd>
-            <MudTd> @context.montant </MudTd>
+            <MudTd Align="Right">
+                 @context.montant.ToString("N0", new System.Globalization.CultureInfo("fr-FR"))
+            </MudTd>
             <MudTd>
                 @if (delaiListe == context)
                 {
@@ -58,7 +60,12 @@
     </MudTable>
 
     <MudPaper Class="pa-3 mt-4" Elevation="4">
-        <MudText Typo="Typo.h6">Arrêté à la somme de : <b>@FilteredData.Sum(x => x.montant).ToString("F2") Ar</b></MudText>
+        <MudText Typo="Typo.h6">
+            Arrêté à la somme de : 
+            <b>
+                @FilteredData.Sum(x => x.montant).ToString("N2", new System.Globalization.CultureInfo("fr-FR")) Ar
+            </b>
+        </MudText>
     </MudPaper>
 </MudPaper>
 
