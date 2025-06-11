@@ -129,7 +129,8 @@
                 dataDelaiMobile[i] = delaiParDate[i].nombreEnMobile;
                 montantDelaiEspece[i] = delaiParDate[i].montantEnEspece;
                 montantDelaiMobile[i] = delaiParDate[i].montantEnMobile;
-                labelsDelai[i] =  semaine[i] + delaiParDate[i].dateDujour?.ToString("dd/MM");
+                //labelsDelai[i] =  semaine[i] + delaiParDate[i].dateDujour?.ToString("dd/MM");
+                labelsDelai[i] = delaiParDate[i].dateDujour?.ToString("dd/MM") ?? "";
             }
 
             // Si jamais il y a moins de 5 jours, on complète avec des 0 / vides
