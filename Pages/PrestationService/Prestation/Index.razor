@@ -53,7 +53,12 @@
                 <MudTd Class="chiffre" DataLabel="Montant">@ViewUtils.RenderMoney(context.Montant)</MudTd>
                 <MudTd Class="chiffre" DataLabel="Remise (%)">@context.Remise</MudTd>
                 <MudTd Class="chiffre" DataLabel="Montant total">@ViewUtils.RenderMoney(context.MontantTotal)</MudTd>
-                <MudTd DataLabel="Etat">@context.DesignationEtat</MudTd>
+                @if(@context.DesignationEtat == "livrable")
+                {
+                    <MudTd DataLabel="Etat"> <Livraison IdPrestation="@context.IdPrestation" /> </MudTd>
+                }else{
+                    <MudTd DataLabel="Etat">@context.DesignationEtat</MudTd>
+                }
             </RowTemplate>
             <PagerContent>
                 <MudTablePager />

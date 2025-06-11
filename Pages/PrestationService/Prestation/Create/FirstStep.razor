@@ -17,10 +17,10 @@ else
     <hr>
     <RowTemplate>
         <MudTd DataLabel="Description">
-            <MudSelect Style="width: 200px;" @bind-Value="Prestation.IdClient" TValue="int" TItem="ClientDto" Label="Client">
+            <MudSelect Style="width: 200px;" @bind-Value="Prestation.Client" ToStringFunc="x => x.Nom" TValue="ClientDto" TItem="ClientDto" Label="Client">
                     @foreach (var client in clients)
                     {
-                        <MudSelectItem Value="@client.IdClient" Text="@client.Nom">@client.Nom</MudSelectItem>
+                        <MudSelectItem Value="@client" Text="@client.Nom">@client.Nom</MudSelectItem>
                     }
             </MudSelect>
         </MudTd>
