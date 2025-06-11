@@ -1,0 +1,22 @@
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+
+<MudButton Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled" OnClick="LivraisonPrestation"> Livrer </MudButton>
+@code
+{
+    [Parameter]
+    public int IdPrestation { get; set; }
+
+    private async Task LivraisonPrestation()
+    {
+        //TODO: Ajouter la livraison fonction livraison
+        var response = await Http.PutAsJsonAsync($"prestation/livraison/{IdPrestation}", IdPrestation);
+
+        if (response.IsSuccessStatusCode)
+        {
+            NavigationManager.NavigateTo("/prestation"); 
+        }
+    }
+}

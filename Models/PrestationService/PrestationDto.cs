@@ -25,5 +25,5 @@ public class PrestationDto
     [JsonPropertyName("prestationDetails")]
     public ICollection<VPrestationDetailsDto> PrestationDetails { get; set; } = new List<VPrestationDetailsDto>();
     [JsonPropertyName("remise")]
-    public double Remise { get; set; } = 0;
+    public double? Remise { get; set; }
 }

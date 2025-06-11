@@ -13,7 +13,6 @@
 
     private async Task ProgressionTravail()
     {
-        //TODO : Creer la fonction "terminer" pour un travaux
         var response = await Http.PutAsync($"echantillon?idTravail={IdTravail}&idPrestation={IdPrestation}", null);
         StateHasChanged();
         if (response.IsSuccessStatusCode)
