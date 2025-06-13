@@ -55,7 +55,7 @@
                 <MudTd Class="chiffre" DataLabel="Montant total">@ViewUtils.RenderMoney(context.MontantTotal)</MudTd>
                 @if(@context.DesignationEtat == "livrable")
                 {
-                    <MudTd DataLabel="Etat"> <Livraison IdPrestation="@context.IdPrestation" /> </MudTd>
+                    <MudTd DataLabel="Etat"> <Livraison Reload="LoadPrestations" IdPrestation="@context.IdPrestation" /> </MudTd>
                 }else{
                     <MudTd DataLabel="Etat">@context.DesignationEtat</MudTd>
                 }

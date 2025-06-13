@@ -10,14 +10,16 @@
     public int IdTravail { get; set; }
     [Parameter]
     public int IdPrestation { get; set; }
+    [Parameter]
+    public EventCallback Reload { get; set; }
 
     private async Task ProgressionTravail()
     {
         var response = await Http.PutAsync($"echantillon?idTravail={IdTravail}&idPrestation={IdPrestation}", null);
-        StateHasChanged();
         if (response.IsSuccessStatusCode)
         {
             NavigationManager.NavigateTo("/echantillon/details"); 
         }
+        await Reload.InvokeAsync();
     }
 }

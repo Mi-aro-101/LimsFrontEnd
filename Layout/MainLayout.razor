@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+
+@using LimsUtils.Utility;
 @inject AuthenticationStateProvider AuthProvider
 @using System.Security.Claims
 @* Required *@
@@ -18,8 +20,9 @@
 
     <main>
         <div class="top-row px-4 navbar">
+            
+            @* <a href="" target="_blank">Aujourd'hui : @ViewUtils.RenderDateAsFrenchFormat(DateTime.Today)</a> *@
             @* <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
             <div class="dropdown">
                 <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
                     Options
@@ -34,8 +37,8 @@
             </div> *@
             <a href="#" class="profile">
                 <center><img src="./profile.png" alt="Profile"></center>
-                @* <figcaption>@identifiant</figcaption> *@
-                <figcaption>Itokiana</figcaption>
+                <figcaption>@identifiant</figcaption>
+                @* <figcaption>Itokiana</figcaption> *@
             </a>
         </div>
 

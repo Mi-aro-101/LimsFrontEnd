@@ -96,8 +96,8 @@
                 exception = "Une erreur s'est produite";
             }
             chartTitle = "Chiffre d'affaire mensuel par département "+sorter!.Annee;
+            Console.WriteLine(JsonSerializer.Serialize(chiffreAffaires));
             var datas = await MatchData(chiffreAffaires);
-            Console.WriteLine(JsonSerializer.Serialize(datas));
 
         jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
                 "import", "./js/chiffre-affaire.js");

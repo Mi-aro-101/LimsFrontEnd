@@ -85,12 +85,14 @@
                             </div>
                             <br>
                             <center>
-                                <button type="button" class="btn btn-success" @onclick="@(() => AjouterDepartement())">Ajouter</button>
+                                <button type="button" class="btn btn-sm btn-success" @onclick="@(() => AjouterDepartement())">Ajouter</button>
                             </center>
+                            <br />
                         <hr>
 
+                            <br />
                         <center>
-                            <button type="submit" class="btn btn-primary">Creer</button>
+                            <button type="submit" class="btn btn-lg btn-primary">Créer</button>
                         </center>
                 </EditForm>
             </div>
@@ -115,6 +117,7 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadDepartements();
+        keyTemp = departements.ElementAt(0).IdDepartement;
     }
 
     private async Task HandleOnSubmit()

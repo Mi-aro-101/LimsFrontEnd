@@ -135,6 +135,8 @@
         {
             Console.WriteLine($"Error while calling LoadEmploye {ex.Message}");
         }
+
+        Console.WriteLine(JsonSerializer.Serialize(employes));
     }
 
     private async Task HandleUpdate(int id)

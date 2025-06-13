@@ -33,14 +33,14 @@
             <div class="form-group row">
                 <label for="staticEmail" class="col-sm-4 col-form-label">Identifiant</label>
                 <div class="col-sm-6">
-                <InputText class="form-control" type="password" @bind-Value="logindto.Identifiant" placeholder="Identifiant" />
+                <InputText class="form-control" @bind-Value="logindto.Identifiant" placeholder="Identifiant" />
                 </div>
             </div>
             <br>
             <div class="form-group row">
                 <label for="inputPassword" class="col-sm-4 col-form-label">Mot de passe</label>
                 <div class="col-sm-6">
-                <InputText class="form-control" @bind-Value="logindto.Password" placeholder="Mot de passe" />
+                <InputText class="form-control" type="password" @bind-Value="logindto.Password" placeholder="Mot de passe" />
                 </div>
             </div>
             <br>
@@ -51,6 +51,9 @@
         <p> @errorMessage </p>
         </div>
     </div> </center>
+
+    @* // TODO : Etat de stock global : *derniere date *@
+    @* // TODO : Prestation a payer Mika *@
 
 </body>
 </html>

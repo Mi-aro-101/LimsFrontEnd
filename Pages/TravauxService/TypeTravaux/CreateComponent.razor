@@ -106,8 +106,8 @@
 @code
 {
     private TypeTravauxDto typetravaux = new TypeTravauxDto{
-        Code = "",
-        Designation =""
+        Code = "2488",
+        Designation ="Analyse des éléments"
     };
     private string url = "http://localhost:5077/api/";
     [Parameter]
@@ -125,6 +125,7 @@
             {
                 typetravaux.Tarif = null;
             }
+            if(typetravaux.IdDepartement == 0) typetravaux.IdDepartement = Departements.ElementAt(4).IdDepartement;
             Console.WriteLine(JsonSerializer.Serialize(typetravaux));
             var response = await Http.PostAsJsonAsync(url+$"type/travaux", typetravaux);
             // Optionally handle the response (e.g., show a success message)
