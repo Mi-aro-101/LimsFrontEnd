@@ -19,25 +19,39 @@
 <MudThemeProvider Theme="MyCustomTheme" />
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
-         @* <AuthorizeView Roles="ADDLAB">
-            <Authorized> *@
+        <AuthorizeView Roles="Dlab">
+            <Authorized>
+                <DlabComponent />
+            </Authorized>
+        </AuthorizeView>
+        <AuthorizeView Roles="Admin">
+            <Authorized>
                 <AddlabComponent />
-            @* </Authorized>
+            </Authorized>
         </AuthorizeView>
-        <AuthorizeView Roles="CDGAP">
-            <Authorized> *@
-                @* <GapComponent /> *@
-                @* <SecretaireComponent /> *@
-            @* </Authorized>
+        <AuthorizeView Roles="DGap">
+            <Authorized>
+                <GapComponent />
+            </Authorized>
         </AuthorizeView>
-        <AuthorizeView Roles="Technicien">
-            <Authorized> *@
+        <AuthorizeView Roles="Magasinier">
+            <Authorized>
                 <ReactifComponent />
                 <OutillageComponent/>
                 <ImmobilisationComponent/>
-            @* </Authorized>
-        </AuthorizeView> *@
-        @* <MenuDePaiement /> *@
+            </Authorized>
+        </AuthorizeView>
+        <AuthorizeView Roles="SecDlab">
+            <Authorized>
+                <SecretaireComponent />
+                <MenuDePaiement />
+            </Authorized>
+        </AuthorizeView>
+        <AuthorizeView Roles="Technicien">
+            <Authorized>
+                <TechnicianComponent />
+            </Authorized>
+        </AuthorizeView>
 
     </nav>
 </div>
