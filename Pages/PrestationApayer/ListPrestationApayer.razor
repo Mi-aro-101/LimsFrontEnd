@@ -7,14 +7,14 @@
 @inject NavigationManager navigationManager
 
 <MudPaper Class="pa-4">
-    <MudText Typo="Typo.h5" Class="mb-4"> Prestaions à payer </MudText>
+    <MudText Typo="Typo.h5" Class="mb-4"> Prestations à payer </MudText>
 
     <MudTextField @bind-Value="searchText" Label="Recherche" Placeholder="Client ou Etat de décompte" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
 
     <MudTable Items="FilteredData" Dense="true" RowsPerPage="10" Hover="true" FixedHeader="true" Height="300px">
 
         <ToolBarContent>
-            <MudText Typo="Typo.h6">Liste des prestaions</MudText>
+            <MudText Typo="Typo.h6">Liste des prestations</MudText>
         </ToolBarContent>
 
         <HeaderContent> 

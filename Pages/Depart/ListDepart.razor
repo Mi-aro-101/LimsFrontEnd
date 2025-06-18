@@ -7,8 +7,32 @@
 
 <MudPaper Class="pa-4">
     <MudText Typo="Typo.h2" Class="mb-4">Liste des départs</MudText>
-
-    <MudTextField @bind-Value="searchText" Label="Recherche" Placeholder="Objet ou département ou référence de départ" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
+    
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="searchText" Label="Recherche" Placeholder="Objet ou département ou référence de départ" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudStack Row="true" Spacing="2">
+                <MudTextField @bind-Value="selectedYear" 
+                            Label="Année" 
+                            Variant="Variant.Outlined" 
+                            Class="mb-4" />
+                <MudButton OnClick="ApplyYearFilter" 
+                          Variant="Variant.Filled" 
+                          Color="Color.Primary" 
+                          Class="mt-4">
+                    Filtrer
+                </MudButton>
+                <MudButton OnClick="ResetYearFilter" 
+                          Variant="Variant.Outlined" 
+                          Color="Color.Secondary" 
+                          Class="mt-4">
+                    Réinitialiser
+                </MudButton>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
 
     <MudTable Items="FilteredData" Dense="true" Hover="true" FixedHeader="true" Height="300px">
         <ToolBarContent>
@@ -34,16 +58,37 @@
 
 @code {
     private string searchText = "";
+    private string selectedYear = "";
 
     private List<DepartDto> departs = new List<DepartDto>();
     private ApiResponse? apiResponse;
-    //string url = "http://localhost:5077/api/depart";
+
     protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task ApplyYearFilter()
+    {
+        await LoadData();
+    }
+
+    private async Task ResetYearFilter()
+    {
+        selectedYear = "";
+        await LoadData();
+    }
+
+    private async Task LoadData()
     {
         try
         {
             var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            apiResponse = await http.GetFromJsonAsync<ApiResponse>("depart/ListeDepart", option);
+            var url = !string.IsNullOrEmpty(selectedYear) && int.TryParse(selectedYear, out int year)
+                ? $"depart/ListeDepart?annee={year}"
+                : "depart/ListeDepart";
+                
+            apiResponse = await http.GetFromJsonAsync<ApiResponse>(url, option);
             apiResponse.HandleResponse<List<DepartDto>>();
             departs = apiResponse.Data as List<DepartDto> ?? new List<DepartDto>();
         }
