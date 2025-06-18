@@ -5,28 +5,37 @@
 @inject IJSRuntime JSRuntime
 @* @inject NavigationManager navigationManager *@
 
+<link href="css/mobile-dash.css" rel="stylesheet" />
+
 @if(IsVisible)
 {
      <div class="popup-overlay">
-        <div class="popup-content">
+        <div class="popup-content" style="width: 90%; max-width: 1800px; min-height: 800px; padding: 2rem;">
             <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
-                Détail des montants par opérateur mobile
+                Montants par opérateur mobile
             </MudText>
 
-            @* <MudSelect T="string" Label="Filtrer par semaine" @bind-Value="selectedSemaine">
-                <MudSelectItem Value="">Toutes les semaines</MudSelectItem>
-                @foreach (var s in semainesDisponibles)
-                {
-                    var key = $"{s.debutSemaine:yyyyMMdd}-{s.finSemaine:yyyyMMdd}";
-                    <MudSelectItem Value="@key">
-                        @($"{s.debutSemaine:dd MMM} - {s.finSemaine:dd MMM}")
-                    </MudSelectItem>
-                }
-            </MudSelect> *@
-            
-            @* <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="FiltrerParSemaine" StartIcon="@Icons.Material.Filled.FilterList">
+            <div class="mud-input mud-input-outlined mud-input-text" style="width: 90%; max-width: 1500px;">
+                @* <label class="mud-input-label mud-input-label-outlined">Filtrer par semaine</label> *@
+                <select class="mud-select-native" @bind="selectedSemaineIndex" @bind:event="oninput">
+                    <option value="-1">Toutes les semaines</option>
+                    @for (int i = 0; i < semainesDisponibles.Count; i++)
+                    {
+                        var s = semainesDisponibles[i];
+                        <option value="@i">
+                            @($"{s.debutSemaine?.ToString("dd MMM")} - {s.finSemaine?.ToString("dd MMM")}")
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <MudButton Variant="Variant.Filled" 
+                      Color="Color.Info" 
+                      OnClick="FiltrerParSemaine" 
+                      StartIcon="@Icons.Material.Filled.FilterList"
+                      Class="mt-2">
                 Filtrer par semaine
-            </MudButton> *@
+            </MudButton>
 
             <MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
                 <MudGrid>  
@@ -35,8 +44,8 @@
                             <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
                                 Montant par Yas
                             </MudText>
-                            <MudText Typo="Typo.h6" Align="Align.Center" Style="color: blue;">
-                                @montantYas Ariary
+                            <MudText Typo="Typo.h6" Align="Align.Center" Style="color: green;">
+                                @montantYas.ToString("N0", new System.Globalization.CultureInfo("fr-FR")) Ariary
                             </MudText>
                         </MudPaper>
                     </MudItem>
@@ -47,7 +56,7 @@
                                 Montant par Airtel
                             </MudText>
                             <MudText Typo="Typo.h6" Align="Align.Center" Style="color: red;">
-                                @montantAirtel Ariary
+                                @montantAirtel.ToString("N0", new System.Globalization.CultureInfo("fr-FR")) Ariary
                             </MudText>                           
                         </MudPaper>
                     </MudItem>
@@ -57,8 +66,8 @@
                             <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">
                                 Montant par Orange
                             </MudText>
-                            <MudText Typo="Typo.h6" Align="Align.Center" Style="color: green;">
-                                @montantOrange Ariary
+                            <MudText Typo="Typo.h6" Align="Align.Center" Style="color: orange;">
+                                @montantOrange.ToString("N0", new System.Globalization.CultureInfo("fr-FR")) Ariary
                             </MudText>
                         </MudPaper>
                     </MudItem>
@@ -66,19 +75,25 @@
                     <MudGrid Class="mt-4" GutterSize="3">
                         <!-- Graphique Linéaire -->
                         <MudItem xs="12" md="6">
-                            <div id="LineChartMobile"></div>
+                            <div id="LineChartMobile" style="height: 400px;"></div>
                         </MudItem>
                         <!-- Donut Chart -->
                         <MudItem xs="12" md="6">
-                            <div id="PieChartMobile"></div>
+                            <div id="PieChartMobile" style="height: 400px;"></div>
                         </MudItem>
                     </MudGrid>
                 </MudGrid>              
             </MudContainer>
 
-            <MudButton Color="Color.Error" Variant="Variant.Text" OnClick="Close" Class="mt-4">
-                Fermer
-            </MudButton>
+            <div style="position: absolute; bottom: 20px; right: 20px;">
+                <MudButton Color="Color.Error" 
+                          Variant="Variant.Filled" 
+                          OnClick="Close" 
+                          Size="Size.Large"
+                          StartIcon="@Icons.Material.Filled.Close">
+                    Fermer
+                </MudButton>
+            </div>
         </div>
     </div> 
 }
@@ -104,7 +119,11 @@
     private List<DetailMobileDto> detailsFiltrés = new();
     private bool chartsReady = false;
 
-    private SemaineDto? selectedSemaine = null;
+    @* private SemaineDto? selectedSemaine = null; *@
+    private int selectedSemaineIndex = -1;
+    private SemaineDto? selectedSemaine => selectedSemaineIndex >= 0 && selectedSemaineIndex < semainesDisponibles.Count 
+        ? semainesDisponibles[selectedSemaineIndex] 
+        : null;
 
     private string[] semaine = ["Lun", "Mar", "Mer", "Jeu", "Ven"];
     private double[] DonutSeries { get; set; } = Array.Empty<double>();
@@ -119,35 +138,72 @@
         }
     }
 
+    protected override async Task OnInitializedAsync()
+    { 
+       await OnParametersSetAsync();
+    }
+
     private async Task ChargerDonnees()
     {       
         var option = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         response = await http.GetFromJsonAsync<ApiResponse>("receptionpaiementmobile/operateurmobile", option);
-        Console.WriteLine($"Data brut: {response.Data}");
+        Console.WriteLine($"Réponse API reçue: {response?.IsSuccess}");
 
-        if (response.IsSuccess)
+        if (response?.IsSuccess == true)
         {
             var data = JsonSerializer.Deserialize<DashboardDelaiMobileDto>(response.Data.ToString(), option);
+            Console.WriteLine($"Données désérialisées: {data != null}");
 
             semainesDisponibles = data?.Semaines ?? new List<SemaineDto>();
+            Console.WriteLine($"Nombre de semaines disponibles: {semainesDisponibles.Count}");
+            
+            foreach (var semaine in semainesDisponibles)
+            {
+                Console.WriteLine($"Semaine - Début: {semaine.debutSemaine}, Fin: {semaine.finSemaine}");
+            }
+
             details = data?.Details ?? new List<DetailMobileDto>();
-
-            // Sérialisation en JSON pour affichage dans la console JS
-            var jsonSemaines = JsonSerializer.Serialize(semainesDisponibles, new JsonSerializerOptions { WriteIndented = true });
-            var jsonDetails = JsonSerializer.Serialize(data?.Details, new JsonSerializerOptions { WriteIndented = true });
-
-            await JSRuntime.InvokeVoidAsync("console.log", $"Semaines disponibles : {jsonSemaines}");
-            await JSRuntime.InvokeVoidAsync("console.log", $"Détails : {jsonDetails}");
+            Console.WriteLine($"Nombre de détails: {details.Count}");
 
             await FiltrerParSemaine();
+        }
+        else
+        {
+            Console.WriteLine($"Erreur API: {response?.Message}");
         }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && chartsReady)
+        if (IsVisible && chartsReady)
         {
             await UpdateChart();
+        }
+    }
+
+    private async Task UpdateChart()
+    {   
+        try 
+        {
+            var Yas = detailsFiltrés.Where(d => d.Operateur == "Yas").Select(d => d.MontantTotal).ToArray();
+            var Airtel = detailsFiltrés.Where(d => d.Operateur == "Airtel").Select(d => d.MontantTotal).ToArray();
+            var Orange = detailsFiltrés.Where(d => d.Operateur == "Orange").Select(d => d.MontantTotal).ToArray();
+
+            jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/my-dashboard.js");
+            await jsModule.InvokeVoidAsync("MobilePaiementSubdivisionLine", semaine, Yas, Airtel, Orange);
+
+            DonutSeries = new double[]
+            {
+                nombreYas,
+                nombreAirtel,
+                nombreOrange
+            };
+
+            await jsModule.InvokeVoidAsync("MobilePaiementSubdivisionPie", DonutSeries);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la mise à jour des graphiques: {ex.Message}");
         }
     }
 
@@ -177,7 +233,6 @@
             nombreYas = detailsFiltrés.Count(d => d.Operateur == "Yas");
             nombreAirtel = detailsFiltrés.Count(d => d.Operateur == "Airtel");
             nombreOrange = detailsFiltrés.Count(d => d.Operateur == "Orange");
-
         }
         else 
         {
@@ -202,26 +257,7 @@
             nombreOrange = detailsFiltrés.Count(d => d.Operateur == "Orange");
         }
 
-    }
-
-    private async Task UpdateChart()
-    {   
-        var Yas = details.Where(d => d.Operateur == "Yas").Select(d => d.MontantTotal).ToArray();
-        var Airtel = details.Where(d => d.Operateur == "Airtel").Select(d => d.MontantTotal).ToArray();
-        var Orange = details.Where(d => d.Operateur == "Orange").Select(d => d.MontantTotal).ToArray();
-
-        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/my-dashboard.js");
-        await jsModule.InvokeVoidAsync("MobilePaiementSubdivisionLine", semaine, Yas, Airtel, Orange);
-
-        DonutSeries = new double[]
-        {
-            nombreYas,
-            nombreAirtel,
-            nombreOrange
-        };
-
-        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/my-dashboard.js");
-        await jsModule.InvokeVoidAsync("MobilePaiementSubdivisionPie", DonutSeries);
+        await UpdateChart();
     }
 
     private async Task Close()
