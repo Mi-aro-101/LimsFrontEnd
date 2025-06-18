@@ -32,13 +32,14 @@
     public EventCallback<CreatePrestationDto> OnSubmit { get; set; }
     private CreatePrestationDto Prestation = new CreatePrestationDto();
     private int currentStep = 0;
-    private int totalStep = 3;
+    private int totalStep = 4;
 
     private readonly Type[] steps = 
     {
         typeof(FirstStep),
         typeof(SecondStep),
-        typeof(ThirdStep)
+        typeof(ThirdStep),
+        typeof(FourthStep)
     };
 
     private void NextStep()
@@ -53,5 +54,6 @@
     private void Submit()
     {
         OnSubmit.InvokeAsync(Prestation).GetAwaiter().GetResult();
+        
     }
 }

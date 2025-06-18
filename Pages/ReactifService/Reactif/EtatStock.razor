@@ -22,7 +22,7 @@
     }
 </style>
 
-<center><h2>Etat de stock des reactifs</h2></center>
+<center><h2>Etat de stock des réactifs</h2></center>
 <hr />
 <br />
 
@@ -35,13 +35,13 @@
     </ToolBarContent>
     <HeaderContent>
         <MudTh>Reactif</MudTh>
-        <MudTh>Dernier date de report</MudTh>
-        <MudTh>Quantite restant</MudTh>
-        <MudTh>Unite</MudTh>
+        <MudTh>Dernière date de report</MudTh>
+        <MudTh>Quantité restante</MudTh>
+        <MudTh>Unité</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd Class="@ChangeColor(context.Quantite)"  DataLabel="Reactif">@context.Designation</MudTd>
-        <MudTd DataLabel="Dernier date de report">@ViewUtils.RenderDateAsFrenchFormat(context.DateLastreport)</MudTd>
+        <MudTd DataLabel="Dernière date de report">@ViewUtils.RenderDateAsFrenchFormat(context.DateLastreport)</MudTd>
         <MudTd Class="chiffre"  DataLabel="Quantite restant">@context.Quantite</MudTd>
         <MudTd DataLabel="Unite">@context.Unite</MudTd>
     </RowTemplate>

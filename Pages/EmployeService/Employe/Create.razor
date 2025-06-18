@@ -79,7 +79,7 @@
     {
         departements = await LoadDepartement();
         postes = await LoadPoste();
-        employe.IdPoste = postes.ElementAt(0).IdPoste;
+        @* employe.IdPoste = postes.ElementAt(0).IdPoste; *@
     }
 
     private async Task HandleOnSubmit()

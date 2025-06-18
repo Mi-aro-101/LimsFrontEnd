@@ -13,9 +13,12 @@
 
     private async void HandleSubmit(CreatePrestationDto? createPrestationDto)
     {
+
         prestation = createPrestationDto;
+        prestation.IdClient = createPrestationDto.Client.IdClient;
         try
         {
+            Console.WriteLine("ooooooo : " + JsonSerializer.Serialize(prestation));
             var response = await Http.PostAsJsonAsync("prestation", prestation);
             response.EnsureSuccessStatusCode(); // Throw if not successful
             Navigation.NavigateTo("/prestation");

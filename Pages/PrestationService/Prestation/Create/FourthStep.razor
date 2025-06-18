@@ -1,0 +1,76 @@
+@using LimsFrontEnd.Models
+@using LimsUtils.Api
+@using System.Text.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+
+@if(!string.IsNullOrEmpty(exception))
+{
+    <div class="alert alert-danger">
+        @exception
+    </div>
+}
+else
+{
+<center><h4>Récapitulatif</h4></center>
+<hr>
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4">
+            <!-- Card 1 content -->
+            <h3 class="card-title">Client</h3>
+                        <p class="card-text"><strong> </strong></p>
+
+                        <hr>
+                        <p class="card-text">Nom : <strong> @Prestation.Client?.Nom </strong></p>
+                        <p class="card-text">Email : <strong> @Prestation.Client?.Email </strong></p>
+                        <p class="card-text">Contact : <strong> @Prestation.Client?.Contact </strong></p>
+                        <p class="card-text">Adresse : <strong> @Prestation.Client?.Adresse </strong></p>
+                        <p class="card-text">CIN : <strong> @Prestation.Client?.Cin </strong></p>
+                        <p class="card-text">NifStat : <strong> @Prestation.Client?.NifStat </strong></p>
+               
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4">
+            <!-- Card 2 content -->
+            <h3 class="card-title">Echantillons et travaux</h3>
+                <p class="card-text"><strong> </strong></p>
+
+                <hr>
+                <table class="table">
+                    <thead>
+                        <th>Référence du client</th>
+                        <th>Travail demandé</th>
+                    </thead>
+                    <tbody>
+                        @foreach(var key in Prestation.Echantillons.Keys)
+                        {
+                            @foreach(var travaux in Prestation.Echantillons[key].TypeTravaux)
+                            {
+                                <tr>
+                                    <td>@key</td>
+                                    <td>@travaux.Designation</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+            </table>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+<MudTextField @bind-Value="Prestation.Remise"
+                For="@(() => Prestation.Remise)"
+              Label="Remise"
+              Variant="Variant.Outlined"
+              InputType="InputType.Number"
+              Class="mt-4"
+              Min="0" />
+}
+@code
+{
+    [Parameter]
+    public CreatePrestationDto Prestation { get; set; }
+    string exception = "";
+}

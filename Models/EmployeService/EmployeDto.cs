@@ -39,27 +39,27 @@ public class EmployeDto
     [JsonPropertyName("idEmploye")]
     public int IdEmploye { get; set; }
     [JsonPropertyName("matricule")]
-    public string? Matricule { get; set; }
+    public string? Matricule { get; set; } = "EMP0008";
     [JsonPropertyName("nom")]
-    public string? Nom { get; set; }
+    public string? Nom { get; set; } = "RAKOTOARISOA";
     [JsonPropertyName("prenom")]
-    public string? Prenom { get; set; }
+    public string? Prenom { get; set; } = "Yoan";
     [JsonPropertyName("genre")]
-    public int Genre { get; set; }
+    public int Genre { get; set; } = 0;
     [JsonPropertyName("cin")]
-    public string? Cin { get; set; }
+    public string? Cin { get; set; } = "101021024888";
     [JsonPropertyName("contact")]
-    public string? Contact { get; set; }
+    public string? Contact { get; set; } = "0349862251";
     [JsonPropertyName("adresse")]
-    public string? Adresse { get; set; }
+    public string? Adresse { get; set; } = "Lot IPA 23 bis Anjanahary";
     [JsonPropertyName("manager")]
     public string? Manager { get; set; }
     [JsonPropertyName("idDepartement")]
-    public int? IdDepartement { get; set; }
+    public int? IdDepartement { get; set; } = 4;
     [JsonPropertyName("departement")]
     public DepartementDto? Departement { get; set; }
     [JsonPropertyName("idPoste")] 
-    public int IdPoste { get; set; }
+    public int IdPoste { get; set; } = 4;
     [JsonPropertyName("poste")]
     public PosteDto? Poste { get; set; }
     [JsonIgnore]
@@ -95,7 +95,7 @@ public class EmployeDto
     }
 
     [JsonPropertyName("statut")]
-    public int Statut { get; set; }
+    public int Statut { get; set; } = 0;
     [JsonPropertyName("historiqueEmployes")]
     public ICollection<HistoriqueEmployeDto> HistoriqueEmployes { get; set; } = new List<HistoriqueEmployeDto>();
 

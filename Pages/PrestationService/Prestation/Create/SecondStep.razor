@@ -29,13 +29,12 @@
                               For="@(() => echantillon.Reference)"
                               Immediate="true"
                               Label="Référence" />
-             <div class="form-group row">
+             @* <div class="form-group row">
                             <label for="inputPassword" class="col-sm-2 col-form-label">Date prelevement</label>
-                            <div class="col-sm-8">
-                            <InputDate class="form-control" @bind-Value="echantillon.DatePrelevement" />
-                            </div>
-                        </div>
-            @* <MudDatePicker For="@(() => echantillon.DatePrelevement)" /> *@
+                            <div class="col-sm-6"> *@
+                            <MudDatePicker @bind-Date="DatePrelevementBacking" Label="Date prelevement" />
+                            @* </div>
+            </div> *@
             <MudButton Color="Color.Dark" Size="Size.Small" Variant="Variant.Text" @onclick="Ajouter">Ajouter</MudButton>
         </MudTd>
         <MudTd>
@@ -120,4 +119,9 @@
             }
         }
     }
+    private DateTime? DatePrelevementBacking
+{
+    get => echantillon.DatePrelevement == default ? (DateTime?)null : echantillon.DatePrelevement.ToDateTime(TimeOnly.MinValue);
+    set => echantillon.DatePrelevement = value.HasValue ? DateOnly.FromDateTime(value.Value) : default;
+}
 }
