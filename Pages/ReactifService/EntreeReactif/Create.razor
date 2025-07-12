@@ -29,7 +29,7 @@
                         <br />
                         <div class="form-group">
                             <label>Prix d'achat</label>
-                            <InputNumber class="form-control" @bind-Value="entreeReactif.PrixAchat" />
+                            <InputText id="prixAchatInput" class="form-control" @bind-Value="prixAchatFormatted" @oninput="@(async (ChangeEventArgs e) => await HandlePrixAchatInput(e))" placeholder="0" />
                             @if (isPrixAchatInvalid)
                             {
                                 <div class="text-danger">Le prix d'achat doit être supérieur à zéro.</div>
@@ -188,8 +188,57 @@
     </div>
 }
 
+<script>
+    function formatNumberWithSeparators(value) {
+        if (!value) return '';
+        // Supprimer tous les caractères non numériques sauf le point décimal
+        let cleanValue = value.replace(/[^0-9.]/g, '');
+        if (!cleanValue) return '';
+        // Séparer la partie entière et décimale
+        let parts = cleanValue.split('.');
+        let integerPart = parts[0];
+        let decimalPart = parts.length > 1 ? '.' + parts[1].slice(0, 2) : '.00'; // Toujours inclure 2 décimales
+        // Ajouter des virgules comme séparateurs de milliers
+        integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return integerPart + decimalPart;
+    }
+
+    function applyNumberFormat(elementId) {
+        let element = document.getElementById(elementId);
+        if (element) {
+            // Formater la valeur initiale
+            element.value = formatNumberWithSeparators(element.value);
+            // Positionner le curseur avant le point décimal
+            let decimalIndex = element.value.indexOf('.');
+            if (decimalIndex !== -1) {
+                element.selectionStart = element.selectionEnd = decimalIndex;
+            }
+            element.addEventListener('input', function () {
+                let cursorPosition = element.selectionStart;
+                let originalValue = element.value;
+                let formattedValue = formatNumberWithSeparators(element.value);
+                element.value = formattedValue;
+                // Calculer la position du point décimal dans la nouvelle valeur
+                let newDecimalIndex = formattedValue.indexOf('.');
+                if (newDecimalIndex !== -1) {
+                    // Positionner le curseur avant le point décimal
+                    let offset = formattedValue.length - originalValue.length;
+                    element.selectionStart = element.selectionEnd = Math.min(cursorPosition + offset, newDecimalIndex);
+                }
+            });
+            // Positionner le curseur au focus
+            element.addEventListener('focus', function () {
+                let decimalIndex = element.value.indexOf('.');
+                if (decimalIndex !== -1) {
+                    element.selectionStart = element.selectionEnd = decimalIndex;
+                }
+            });
+        }
+    }
+</script>
+
 @code {
-    private EntreeReactifDto entreeReactif = new() { DateEntree = DateTime.Today, DatePeremption = DateTime.Today };
+    private EntreeReactifDto entreeReactif = new() { DateEntree = DateTime.Today, DatePeremption = DateTime.Today, Quantite = 0, PrixAchat = 0m };
     private List<ReactifDto> reactifs = new();
     private List<FournisseurEntreeReactifDto> fournisseurs = new();
     private string searchTerm = string.Empty;
@@ -198,6 +247,7 @@
     private ICollection<TypeSortieDto> TypeSorties = new List<TypeSortieDto>();
     private ICollection<UniteDto> Unites = new List<UniteDto>();
     private string selectedUnite = string.Empty; // Variable pour stocker l'unité sélectionnée
+    private string prixAchatFormatted = "0.00"; // Chaîne formatée pour l'affichage
 
     private string entreeReactifUrl = "http://localhost:5077/api/entree-reactifs";
     private string fournisseurUrl = "http://localhost:5077/api/fournisseurs-entree";
@@ -221,11 +271,22 @@
     protected override async Task OnInitializedAsync()
     {
         entreeReactif.DateEntree = DateTime.Today;
-        entreeReactif.DatePeremption = DateTime.Today; // Initialiser à aujourd'hui
+        entreeReactif.DatePeremption = DateTime.Today;
         reactifs = await LoadReactifs();
         fournisseurs = await LoadFournisseurs();
         TypeSorties = await LoadTypeSorties();
         Unites = await LoadUnites();
+        // Initialiser la valeur formatée
+        prixAchatFormatted = FormatNumber(entreeReactif.PrixAchat);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Appliquer le formatage JavaScript et positionner le curseur
+            await JSRuntime.InvokeVoidAsync("applyNumberFormat", "prixAchatInput");
+        }
     }
 
     private async Task<List<ReactifDto>> LoadReactifs()
@@ -312,8 +373,8 @@
     {
         entreeReactif.IdReactif = reactif.IdReactif;
         searchTerm = reactif.Designation;
-        selectedUnite = reactif.Unite.Designation; // Assigner l'unité du réactif sélectionné
-        isReactifSelectionInvalid = false; // Réinitialiser le flag lorsque l'utilisateur sélectionne un réactif
+        selectedUnite = reactif.Unite?.Designation ?? string.Empty; // Assigner l'unité du réactif sélectionné
+        isReactifSelectionInvalid = false; // Réinitialiser le flag
     }
 
     private void ShowAddReactifForm(string reactifName)
@@ -329,13 +390,51 @@
             var response = await Http.PostAsJsonAsync(reactifUrl, newReactif);
             response.EnsureSuccessStatusCode();
             reactifs = await LoadReactifs();
+            entreeReactif.IdReactif = reactifs.FirstOrDefault(r => r.Designation == newReactif.Designation)?.IdReactif ?? 0;
+            searchTerm = newReactif.Designation;
+            selectedUnite = Unites.FirstOrDefault(u => u.IdUnite == newReactif.IdUnite)?.Designation ?? string.Empty;
             showAddReactifForm = false;
             newReactif = new ReactifDto();
+            isReactifSelectionInvalid = false; // Réinitialiser le flag
+            StateHasChanged();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Erreur lors de la création du réactif : {ex.Message}");
         }
+    }
+
+    private string FormatNumber(decimal? value)
+    {
+        if (!value.HasValue || value == 0) return "0.00";
+        string[] parts = value.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture).Split('.');
+        string integerPart = long.Parse(parts[0]).ToString("#,##0", System.Globalization.CultureInfo.InvariantCulture);
+        string decimalPart = parts.Length > 1 ? "." + parts[1] : ".00";
+        return integerPart + decimalPart;
+    }
+
+    private async Task HandlePrixAchatInput(ChangeEventArgs e)
+    {
+        prixAchatFormatted = e.Value?.ToString() ?? "";
+        // Supprimer les virgules pour convertir en decimal
+        if (string.IsNullOrWhiteSpace(prixAchatFormatted))
+        {
+            entreeReactif.PrixAchat = 0m;
+            prixAchatFormatted = "0.00";
+        }
+        else if (decimal.TryParse(prixAchatFormatted.Replace(",", ""), System.Globalization.CultureInfo.InvariantCulture, out decimal parsedValue))
+        {
+            entreeReactif.PrixAchat = parsedValue;
+            prixAchatFormatted = FormatNumber(parsedValue); // Reformater après conversion
+        }
+        else
+        {
+            entreeReactif.PrixAchat = 0m;
+            prixAchatFormatted = "0.00";
+        }
+        // Repositionner le curseur via JavaScript
+        await JSRuntime.InvokeVoidAsync("applyNumberFormat", "prixAchatInput");
+        StateHasChanged();
     }
 
     private async Task HandleOnSubmit()
@@ -350,7 +449,7 @@
         isQuantiteInvalid = entreeReactif.Quantite <= 0;
         isPrixAchatInvalid = entreeReactif.PrixAchat <= 0;
         isFournisseurInvalid = entreeReactif.IdFournisseur == 0;
-        isReactifSelectionInvalid = entreeReactif.IdReactif == 0; // Vérifier si un réactif a été sélectionné
+        isReactifSelectionInvalid = entreeReactif.IdReactif == 0;
 
         if (!isDatePeremptionInvalid && !isQuantiteInvalid && !isPrixAchatInvalid && !isFournisseurInvalid && !isReactifSelectionInvalid)
         {
@@ -371,7 +470,7 @@
             string reactifDesignation = reactifs.FirstOrDefault(r => r.IdReactif == entreeReactif.IdReactif)?.Designation ?? "Non sélectionné";
             string unite = selectedUnite;
             string quantite = entreeReactif.Quantite.ToString();
-            string prixAchat = entreeReactif.PrixAchat.ToString();
+            string prixAchat = prixAchatFormatted; // Utiliser la version formatée pour l'affichage
             string bonReception = entreeReactif.BonReception;
             string bonDeCommande = entreeReactif.BonDeCommande;
             string numeroFacture = entreeReactif.NumeroFacture;
@@ -400,14 +499,15 @@
                 response.EnsureSuccessStatusCode();
                 if (OnEntreeReactifCreated.HasDelegate)
                     await OnEntreeReactifCreated.InvokeAsync();
-                entreeReactif = new EntreeReactifDto() { DateEntree = DateTime.Today, DatePeremption = DateTime.Today };
+                entreeReactif = new EntreeReactifDto() { DateEntree = DateTime.Today, DatePeremption = DateTime.Today, Quantite = 0, PrixAchat = 0m };
+                prixAchatFormatted = "0.00";
                 searchTerm = string.Empty;
-                selectedUnite = string.Empty; // Réinitialiser l'unité
+                selectedUnite = string.Empty;
                 StateHasChanged();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la.eot du réactif : {ex.Message}");
+                Console.WriteLine($"Erreur lors de la création du réactif : {ex.Message}");
             }
         }
         else
