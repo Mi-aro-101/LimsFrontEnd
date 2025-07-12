@@ -35,7 +35,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var assignation in assignations)
+                        @foreach (var assignation in assignations.OrderByDescending(a => a.DateAssignation))
                         {
                             <tr>
                                 <td>@(assignation.Employe?.Nom) @(assignation.Employe?.Prenom)</td>
@@ -98,6 +98,8 @@
             {
                 string jsonData = JsonSerializer.Serialize(apiResponse.Data);
                 assignations = JsonSerializer.Deserialize<List<AssignationDto>>(jsonData, options) ?? new List<AssignationDto>();
+                // Fallback sorting in case the backend does not sort correctly
+                assignations = assignations.OrderByDescending(a => a.DateAssignation).ToList();
             }
             else
             {

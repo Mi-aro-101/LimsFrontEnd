@@ -1,5 +1,4 @@
-﻿
-@inject HttpClient Http
+﻿@inject HttpClient Http
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @using System.Net.Http.Json
@@ -30,7 +29,7 @@
                         <br />
                         <div class="form-group">
                             <label>Prix d'achat</label>
-                            <InputNumber class="form-control" @bind-Value="entreeImmobilisation.PrixAchat" />
+                            <InputText id="prixAchatInput" class="form-control" @bind-Value="prixAchatFormatted" @oninput="@(async (ChangeEventArgs e) => await HandlePrixAchatInput(e))" placeholder="0" />
                             @if (isPrixAchatInvalid)
                             {
                                 <div class="text-danger">Le prix d'achat doit être supérieur à zéro.</div>
@@ -168,6 +167,55 @@
     </div>
 }
 
+<script>
+    function formatNumberWithSeparators(value) {
+        if (!value) return '';
+        // Supprimer tous les caractères non numériques sauf le point décimal
+        let cleanValue = value.replace(/[^0-9.]/g, '');
+        if (!cleanValue) return '';
+        // Séparer la partie entière et décimale
+        let parts = cleanValue.split('.');
+        let integerPart = parts[0];
+        let decimalPart = parts.length > 1 ? '.' + parts[1].slice(0, 2) : '.00'; // Toujours inclure 2 décimales
+        // Ajouter des virgules comme séparateurs de milliers
+        integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return integerPart + decimalPart;
+    }
+
+    function applyNumberFormat(elementId) {
+        let element = document.getElementById(elementId);
+        if (element) {
+            // Formater la valeur initiale
+            element.value = formatNumberWithSeparators(element.value);
+            // Positionner le curseur avant le point décimal
+            let decimalIndex = element.value.indexOf('.');
+            if (decimalIndex !== -1) {
+                element.selectionStart = element.selectionEnd = decimalIndex;
+            }
+            element.addEventListener('input', function () {
+                let cursorPosition = element.selectionStart;
+                let originalValue = element.value;
+                let formattedValue = formatNumberWithSeparators(element.value);
+                element.value = formattedValue;
+                // Calculer la position du point décimal dans la nouvelle valeur
+                let newDecimalIndex = formattedValue.indexOf('.');
+                if (newDecimalIndex !== -1) {
+                    // Positionner le curseur avant le point décimal
+                    let offset = formattedValue.length - originalValue.length;
+                    element.selectionStart = element.selectionEnd = Math.min(cursorPosition + offset, newDecimalIndex);
+                }
+            });
+            // Positionner le curseur au focus
+            element.addEventListener('focus', function () {
+                let decimalIndex = element.value.indexOf('.');
+                if (decimalIndex !== -1) {
+                    element.selectionStart = element.selectionEnd = decimalIndex;
+                }
+            });
+        }
+    }
+</script>
+
 @code {
     private EntreeImmobilisationDto entreeImmobilisation = new()
     {
@@ -181,6 +229,7 @@
     private bool showAddImmobilisationForm = false;
     private ImmobilisationDto newImmobilisation = new();
     private ICollection<MarqueDto> Marques = new List<MarqueDto>();
+    private string prixAchatFormatted = "0"; // Chaîne formatée pour l'affichage
 
     private string entreeImmobilisationUrl = "http://localhost:5077/api/entree-immobilisations";
     private string immobilisationUrl = "http://localhost:5077/api/immobilisation";
@@ -208,6 +257,17 @@
         immobilisations = await LoadImmobilisations();
         fournisseurs = await LoadFournisseurs();
         Marques = await LoadMarques();
+        // Initialiser la valeur formatée
+        prixAchatFormatted = FormatNumber(entreeImmobilisation.PrixAchat);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Appliquer le formatage JavaScript et positionner le curseur
+            await JSRuntime.InvokeVoidAsync("applyNumberFormat", "prixAchatInput");
+        }
     }
 
     private async Task<List<ImmobilisationDto>> LoadImmobilisations()
@@ -303,6 +363,39 @@
         }
     }
 
+    private string FormatNumber(decimal? value)
+    {
+        if (!value.HasValue || value == 0) return "0.00";
+        string[] parts = value.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture).Split('.');
+        string integerPart = long.Parse(parts[0]).ToString("#,##0", System.Globalization.CultureInfo.InvariantCulture);
+        string decimalPart = parts.Length > 1 ? "." + parts[1] : ".00";
+        return integerPart + decimalPart;
+    }
+
+    private async Task HandlePrixAchatInput(ChangeEventArgs e)
+    {
+        prixAchatFormatted = e.Value?.ToString() ?? "";
+        // Supprimer les virgules pour convertir en decimal
+        if (string.IsNullOrWhiteSpace(prixAchatFormatted))
+        {
+            entreeImmobilisation.PrixAchat = 0m;
+            prixAchatFormatted = "0.00";
+        }
+        else if (decimal.TryParse(prixAchatFormatted.Replace(",", ""), System.Globalization.CultureInfo.InvariantCulture, out decimal parsedValue))
+        {
+            entreeImmobilisation.PrixAchat = parsedValue;
+            prixAchatFormatted = FormatNumber(parsedValue); // Reformater après conversion
+        }
+        else
+        {
+            entreeImmobilisation.PrixAchat = 0m;
+            prixAchatFormatted = "0.00";
+        }
+        // Repositionner le curseur via JavaScript
+        await JSRuntime.InvokeVoidAsync("applyNumberFormat", "prixAchatInput");
+        StateHasChanged();
+    }
+
     private async Task HandleOnSubmit()
     {
         ResetValidationFlags();
@@ -321,7 +414,7 @@
 
             string immobilisationDesignation = immobilisations.FirstOrDefault(i => i.IdImmobilisation == entreeImmobilisation.IdImmobilisation)?.Designation ?? "Non sélectionné";
             string quantite = entreeImmobilisation.Quantite.ToString();
-            string prixAchat = entreeImmobilisation.PrixAchat.ToString();
+            string prixAchat = prixAchatFormatted; // Utiliser la version formatée pour l'affichage
             string bonReception = entreeImmobilisation.BonReception;
             string bonDeCommande = entreeImmobilisation.BonDeCommande;
             string numeroFacture = entreeImmobilisation.NumeroFacture;
@@ -350,6 +443,7 @@
                 if (OnEntreeImmobilisationCreated.HasDelegate)
                     await OnEntreeImmobilisationCreated.InvokeAsync();
                 entreeImmobilisation = new EntreeImmobilisationDto() { DateEntree = DateTime.Today, Quantite = 0, PrixAchat = 0m };
+                prixAchatFormatted = "0.00";
                 searchTerm = string.Empty;
                 StateHasChanged();
             }
