@@ -2,6 +2,8 @@
 
 @using LimsFrontEnd.Models
 @using System.Text.Json
+@using LimsUtils.Api
+@using LimsUtils.Utility
 @inject HttpClient Http
 @inject NavigationManager Navigation
 
@@ -21,7 +23,11 @@
             Console.WriteLine("ooooooo : " + JsonSerializer.Serialize(prestation));
             var response = await Http.PostAsJsonAsync("prestation", prestation);
             response.EnsureSuccessStatusCode(); // Throw if not successful
-            Navigation.NavigateTo("/prestation");
+            using var responseStream = await response.Content.ReadAsStreamAsync();
+            ApiResponse? apiResponse = await JsonSerializer.DeserializeAsync<ApiResponse>(responseStream);
+            apiResponse.HandleResponse<PrestationDto>();
+            PrestationDto? createdPrestation = (PrestationDto?)apiResponse.Data;
+            Navigation.NavigateTo("/prestation/details/" + createdPrestation?.IdPrestation, true);
             // Optionally handle the response (e.g., show a success message)
         }
         catch(Exception ex)

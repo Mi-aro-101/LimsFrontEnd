@@ -1,0 +1,27 @@
+@page "/bienvenue"
+
+@using LimsUtils.Utility;
+@inject AuthenticationStateProvider AuthProvider
+@using System.Security.Claims
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="d-flex justify-center align-center host-page-wrapper">
+    <MudPaper Class="pa-6 text-center" Elevation="4" Style="width: 100%;">
+        <MudText Typo="Typo.h4" GutterBottom="true">Bienvenue @identifiant </MudText>
+  </MudPaper>
+</MudContainer>
+@code
+{
+    private string? identifiant;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        if(authState.User.Identity.IsAuthenticated)
+        {
+            identifiant = authState.User.FindFirst("identifiant")?.Value;
+        } else
+        {
+            identifiant = "Non connecté";
+        }
+    }
+}

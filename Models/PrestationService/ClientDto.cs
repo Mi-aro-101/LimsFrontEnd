@@ -8,7 +8,7 @@ public class ClientDto
     public string GetInterne()
     {
         string result = "Non";
-        if(this.IsInterne == 0) result = "Oui";
+        if (this.IsInterne == 0) result = "Oui";
 
         return result;
     }
@@ -16,7 +16,7 @@ public class ClientDto
     public string GetSousContrat()
     {
         string result = "Non";
-        if(!string.IsNullOrEmpty(this.RefContrat)) result = this.RefContrat;
+        if (!string.IsNullOrEmpty(this.RefContrat)) result = this.RefContrat;
         return result;
     }
 
@@ -40,6 +40,8 @@ public class ClientDto
     public int IsInterne { get; set; }
     [JsonPropertyName("refContrat")]
     public string? RefContrat { get; set; }
-    [JsonPropertyName("nifStat")]
-    public string? NifStat { get; set; }
+    [JsonPropertyName("nif")]
+    public string? Nif { get; set; }
+    [JsonPropertyName("stat")]
+    public string? Stat { get; set; }
 }
