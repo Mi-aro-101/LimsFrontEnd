@@ -28,7 +28,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        chartTitle = "Chiffre d'affaire "+sorter!.Annee!.Value+" client interne/externe";
+        chartTitle = "Client interne/externe"+sorter!.Annee!.Value;
         await FetchCA();
     }
 
@@ -49,7 +49,7 @@
             exception = "Une erreur s'est produite";
         }
         Console.WriteLine(JsonSerializer.Serialize(chiffreAffaires));
-        chartTitle = chartTitle = "Chiffre d'affaire "+sorter!.Annee!.Value+" client interne/externe";
+        chartTitle = chartTitle = "Client interne/externe "+sorter!.Annee!.Value;
         await MatchData(chiffreAffaires);
         jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
                 "import", "./js/chiffre-affaire.js");

@@ -4,6 +4,7 @@
 @using LimsUtils.Api
 @using LimsUtils.Utility
 @using System.Text.Json
+@using System.Globalization
 
 <div id="yourDiv"></div>
 
@@ -50,7 +51,8 @@
             exception = "Une erreur s'est produite";
         }
         Console.WriteLine(JsonSerializer.Serialize(chiffreAffaires));
-        chartTitle = chartTitle = "Chiffre d'affaire "+sorter!.Annee!.Value+" client interne/externe";
+        string mois = new DateTime(2000, sorter!.Mois!.Value, 1).ToString("MMMM", new CultureInfo("fr-FR"));
+        chartTitle = chartTitle = "Client interne/externe "+mois+" "+sorter!.Annee!.Value;
         await MatchData(chiffreAffaires);
         jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>(
                 "import", "./js/chiffre-affaire.js");

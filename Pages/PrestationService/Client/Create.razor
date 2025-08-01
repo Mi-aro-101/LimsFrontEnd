@@ -61,10 +61,12 @@
 @code
 {
     ClientDto client = new ClientDto{
-        Nom = "",
-        Adresse = "",
-        Contact = "",
-        Email = "@gmail.com",
+        Nom = "Rakoto",
+        Adresse = "LOT IIV 67 TER Talatamaty",
+        Contact = "0345858455",
+        Email = "rakoto@gmail.com",
+        Cin = "101231784522",
+        IsInterne = 1
     };
     string url = "http://localhost:5077/api/";
     string exception = "";
@@ -80,6 +82,6 @@
         Console.WriteLine(JsonSerializer.Serialize(client));
 
         // Should reload to the last page of the pagination to show the added one
-        NavigationManager.NavigateTo("/client");
+        NavigationManager.NavigateTo("/prestation-form");
     }
 }    
