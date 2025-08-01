@@ -19,7 +19,7 @@
     }
 </style>
 
-<center><h2>Liste des prestations</h2></center>
+<center><h2>Taux de réalisation</h2></center>
 <hr>
 
 <MudGrid>
@@ -29,7 +29,7 @@
 
                     <MudGrid>
                         <MudItem xs="12" sm="4">
-                            <MudTextField T="int" Label="Reference fiche de travail" @bind-Value="annee" />
+                            <MudTextField T="int" Label="Année" @bind-Value="annee" />
                         </MudItem>
                         <MudItem xs="12" sm="4">
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(()=>LoadComparaisons())" Class="ml-auto">Valider</MudButton>
@@ -44,7 +44,7 @@
 
 <hr>
 
-<h2>Compraison @annee</h2>
+<h2>Comparaison @annee</h2>
 
 <div class="col">
     @if (!string.IsNullOrEmpty(exception))
