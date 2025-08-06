@@ -29,6 +29,11 @@ public class EchantillonDto
     public string? TypeEchantillonDesignation { get; set; }
     [JsonPropertyName("typeEchantillon")]
     public TypeEchantillonDto? TypeEchantillon { get; set; }
+    [JsonPropertyName("idPreleveur")]
+    public int? IdPreleveur { get; set; }
+    [JsonPropertyName("preleveur")]
+    public PreleveurDto? Preleveur { get; set; }
+
     [JsonPropertyName("detailsEchantillons")]
     public ICollection<VDetailsEchantillonDto> DetailsEchantillons { get; set; } = new List<VDetailsEchantillonDto>();
     [JsonPropertyName("typeTravaux")]

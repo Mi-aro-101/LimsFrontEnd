@@ -35,6 +35,12 @@
                             <MudDatePicker @bind-Date="DatePrelevementBacking" Label="Date prelevement" />
                             @* </div>
             </div> *@
+            <MudSelect Style="width: 200px;" TValue="int" TItem="PreleveurDto" @bind-Value="echantillon.IdPreleveur" Label="Préleveur">
+                    @foreach (var preleveur in preleveurs)
+                    {
+                        <MudSelectItem Value="preleveur.IdPreleveur">@preleveur.Designation</MudSelectItem>
+                    }
+            </MudSelect>
             <MudButton Color="Color.Dark" Size="Size.Small" Variant="Variant.Text" @onclick="Ajouter">Ajouter</MudButton>
         </MudTd>
         <MudTd>
@@ -43,6 +49,7 @@
                     <th>Ref</th>
                     <th>Type</th>
                     <th>Provenance</th>
+                    <th>Préleveur</th>
                 </thead>
                 <tbody>
                     @foreach(var key in Prestation.Echantillons.Keys)
@@ -51,6 +58,7 @@
                             <td>@Prestation.Echantillons[key].Reference</td>
                             <td>@Prestation.Echantillons[key].TypeEchantillonDesignation</td>
                             <td>@Prestation.Echantillons[key].Provenance</td>
+                            <td>@(preleveurs.FirstOrDefault(p => p.IdPreleveur == Prestation.Echantillons[key].IdPreleveur).Designation ?? "")</td>
                             <td><MudIconButton Icon="@Icons.Material.Filled.RestoreFromTrash" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" @onclick="() => Enlever(Prestation.Echantillons[key].Reference)"/></td>
                         </tr>
                     }
@@ -66,12 +74,14 @@
     public CreatePrestationDto Prestation { get; set; }
     private EchantillonDto echantillon = new EchantillonDto();
     private ICollection<TypeEchantillonDto> typeEchantillons = new List<TypeEchantillonDto>();
+    private ICollection<PreleveurDto> preleveurs = new List<PreleveurDto>();
         string exception = "";
 
     protected async override Task OnInitializedAsync()
     {
         Console.WriteLine(JsonSerializer.Serialize(Prestation));
         await LoadTypeEchantillon();
+        await LoadPreleveur();
         echantillon.IdTypeEchantillon = typeEchantillons.First().IdTypeEchantillon;
         StateHasChanged();
     }
@@ -115,6 +125,35 @@
             if(apiResponse.Data is List<TypeEchantillonDto>)
             {
                 typeEchantillons = (List<TypeEchantillonDto>)apiResponse.Data;
+            }
+            else
+            {
+                exception = "Pas de datas reçus";
+            }
+        }
+        else{
+            if(string.IsNullOrEmpty(apiResponse?.Message))
+            {
+                exception = "Une erreur est survenue";
+            }
+            else
+            {
+                exception = (string)apiResponse.Message;
+            }
+        }
+    }
+
+    private async Task LoadPreleveur()
+    {
+        ApiResponse? apiResponse;
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        apiResponse = await Http.GetFromJsonAsync<ApiResponse>("preleveur");
+        if(apiResponse?.IsSuccess == true)
+        {
+            apiResponse.HandleResponse<List<PreleveurDto>>();
+            if(apiResponse.Data is List<PreleveurDto>)
+            {
+                preleveurs = (List<PreleveurDto>)apiResponse.Data;
             }
             else
             {
