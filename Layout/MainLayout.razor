@@ -1,8 +1,10 @@
 ﻿@inherits LayoutComponentBase
 
 @using LimsUtils.Utility;
+@using LimsFrontEnd.Utils;
 @inject AuthenticationStateProvider AuthProvider
 @using System.Security.Claims
+@inject NavigationManager NavigationManager
 @* Required *@
 <MudThemeProvider />
 <MudPopoverProvider />
@@ -13,6 +15,19 @@
 @* Needed for snackbars *@
 <MudSnackbarProvider />
 
+<style>
+    .dropdown-menu {
+        position: absolute;
+        top: 100%; /* Position below the trigger */
+        right: 0;
+        background: white;
+        border: 1px solid #ccc;
+        padding: 8px;
+        z-index: 1000;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+</style>
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
@@ -21,25 +36,34 @@
     <main>
         <div class="top-row px-4 navbar">
             
-            @* <a href="" target="_blank">Aujourd'hui : @ViewUtils.RenderDateAsFrenchFormat(DateTime.Today)</a> *@
-            @* <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-            <div class="dropdown">
-                <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                    Options
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                    <li><a class="dropdown-item" href="#option1">Option 1</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#option2">Option 2</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#option3">Option 3</a></li>
-                </ul>
-            </div> *@
-            <a href="#" class="profile">
+            @* <a class="profile" @onclick="ToggleDropdown">
                 <center><img src="./profile.png" alt="Profile"></center>
                 <figcaption>@identifiant</figcaption>
-                @* <figcaption>Itokiana</figcaption> *@
             </a>
+
+            @if (isOpen)
+            {
+                <div class="dropdown-menu">
+                    <MudButton Color="Color.Error" OnClick="Logout">Logout</MudButton>
+                </div>
+            } *@
+            <div>
+                <a class="profile" @onclick="ToggleDropdown">
+                    <center><img src="./profile.png" alt="Profile" /></center>
+                    <center><figcaption>@identifiant</figcaption></center>
+                </a>
+
+                <MudPopover Open="@isOpen"
+                            AnchorOrigin="Origin.BottomCenter"
+                            TransformOrigin="Origin.TopCenter"
+                            CloseOnOutsideClick="true"
+                            Class="px-4 py-2">
+                    <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="Logout">
+                        Logout
+                    </MudButton>
+                </MudPopover>
+            </div>
+
         </div>
 
         <article class="content px-4">
@@ -49,8 +73,14 @@
 </div>
 
 @code {
-    private bool isDropdownOpen;
     private string? identifiant;
+    private bool isOpen = false;
+
+    private void ToggleDropdown()
+    {
+        Console.WriteLine("ToggleDropdown called");
+        isOpen = !isOpen;
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -64,9 +94,15 @@
         }
     }
 
-    private void ToggleDropdown()
+    private async Task Logout()
     {
-        isDropdownOpen = !isDropdownOpen;
+        if (AuthProvider is AuthStateProvider customProvider)
+        {
+            await customProvider.MarkUserAsLoggedOut();
+            Console.WriteLine("User marked as logged out");
+        }
+        Console.WriteLine("User logged out");
+        NavigationManager.NavigateTo($"/login");
     }
 }
 
