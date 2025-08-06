@@ -28,7 +28,7 @@ else
                         <p class="card-text">Contact : <strong> @Prestation.Client?.Contact </strong></p>
                         <p class="card-text">Adresse : <strong> @Prestation.Client?.Adresse </strong></p>
                         <p class="card-text">CIN : <strong> @Prestation.Client?.Cin </strong></p>
-                        <p class="card-text">NifStat : <strong> @Prestation.Client?.NifStat </strong></p>
+                        <p class="card-text">NifStat : <strong> @Prestation.Client?.Nif ?? @Prestation.Client?.Stat ?? "" </strong></p>
                
         </MudPaper>
     </MudItem>

@@ -44,4 +44,6 @@ public class ClientDto
     public string? Nif { get; set; }
     [JsonPropertyName("stat")]
     public string? Stat { get; set; }
+
+    public override string ToString() => Nom;
 }
