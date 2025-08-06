@@ -15,7 +15,13 @@
 
             </MudCardContent>
             <MudCardActions>
-                <MudGrid Justify="Justify.Center">
+                <MudGrid Justify="Justify.FlexStart">
+                    <MudItem>
+                        <MudButton @onclick="PrevStep" Variant="Variant.Filled">
+                        Précédent</MudButton>
+                    </MudItem>
+                </MudGrid>
+                <MudGrid Justify="Justify.FlexEnd">
                     <MudItem>
                         <MudButton @onclick="NextStep" Variant="Variant.Filled" Color="Color.Primary">Suivant</MudButton>
                     </MudItem>
@@ -49,6 +55,14 @@
             currentStep++;
         }
         else Submit();
+    }
+
+    private void PrevStep()
+    {
+        if(currentStep > 0)
+        {
+            currentStep--;
+        }
     }
 
     private void Submit()

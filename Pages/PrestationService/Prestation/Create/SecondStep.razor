@@ -51,6 +51,7 @@
                             <td>@Prestation.Echantillons[key].Reference</td>
                             <td>@Prestation.Echantillons[key].TypeEchantillonDesignation</td>
                             <td>@Prestation.Echantillons[key].Provenance</td>
+                            <td><MudIconButton Icon="@Icons.Material.Filled.RestoreFromTrash" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" @onclick="() => Enlever(Prestation.Echantillons[key].Reference)"/></td>
                         </tr>
                     }
                 </tbody>
@@ -73,6 +74,18 @@
         await LoadTypeEchantillon();
         echantillon.IdTypeEchantillon = typeEchantillons.First().IdTypeEchantillon;
         StateHasChanged();
+    }
+
+    private void Enlever(string reference)
+    {
+        if(Prestation.Echantillons.ContainsKey(reference))
+        {
+            Prestation.Echantillons.Remove(reference);
+        }
+        else
+        {
+            exception = "L'échantillon n'existe pas";
+        }
     }
 
     private void Ajouter()
