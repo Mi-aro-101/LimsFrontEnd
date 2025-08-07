@@ -20,5 +20,7 @@ namespace LimsFrontEnd.Models
         public double montant { get; set; }
         [JsonPropertyName("observation")]
         public int observation { get; set; }
+        [JsonPropertyName("responsable")]
+        public string? responsable { get; set; }
     }
 }
