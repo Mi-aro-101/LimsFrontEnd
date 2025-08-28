@@ -33,6 +33,7 @@
                 <MudTh> Clients </MudTh>
                 <MudTh> Montant (Ar) </MudTh>
                 <MudTh> Observation </MudTh>
+                <MudTh> Responsable </MudTh>
             </HeaderContent>
 
             <RowTemplate>
@@ -43,6 +44,7 @@
                     @context.montant.ToString("N0", new System.Globalization.CultureInfo("fr-FR")) 
                 </MudTd>
                 <MudTd> @(context.observation == 2 ? "interne" : (context.observation == 1 ? "externe" : "")) </MudTd>
+                <MudTd> @context.responsble <MudTd>
             </RowTemplate>
         </MudTable>
 

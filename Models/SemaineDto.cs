@@ -12,5 +12,9 @@ namespace LimsFrontEnd.Models
 
         [JsonPropertyName("finSemaine")]
         public DateTime? finSemaine { get; set; }
+
+        [JsonPropertyName("responsable")]
+        public string responsable { get; set; } = string.Empty;
+
     }
 }
