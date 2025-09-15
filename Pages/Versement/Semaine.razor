@@ -17,7 +17,7 @@
                 <MudDatePicker Label="Fin du semaine" @bind-Date="semaine.finSemaine" Margin="Margin.Dense" />
             </MudItem>
             <MudItem xs="12">
-                <MudTextField T="string" Label="Responsable" @bind-Value="semaine.responsble" Margin="Margin.Dense" />
+                <MudTextField T="string" Label="Responsable" @bind-Value="semaine.responsable" Margin="Margin.Dense" />
             </MudItem>
             <MudItem xs="12" Class="d-flex justify-center">
                 <MudButton Variant="Variant.Filled" DropShadow="false" Color="Color.Primary" Size="Size.Large" Class="mt-8" OnClick="semaineActuel">Exporter</MudButton>
@@ -47,7 +47,7 @@
             {
                 debutSemaine = semaine.debutSemaine,
                 finSemaine = semaine.finSemaine,
-                responsble = semaine.responsble
+                responsable = semaine.responsable
             };
 
             var response = await http.PostAsJsonAsync("versement", week);
